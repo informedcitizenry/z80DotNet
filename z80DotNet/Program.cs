@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -63,13 +63,14 @@ namespace z80DotNet
             ushort progend = Convert.ToUInt16(controller.Output.ProgramCounter);
             ushort size = Convert.ToUInt16(controller.Output.GetCompilation().Count);
             string name = controller.Options.OutputFile;
-            if (name.Length > 10)
-                name = name.Substring(0, 10);
-            else
-                name = name.PadLeft(10);
 
             if (arch.Equals("zx"))
             {
+                if (name.Length > 10)
+                    name = name.Substring(0, 10);
+                else
+                    name = name.PadLeft(10);
+
                 List<byte> buffer = new List<byte>();
                 // header
                 buffer.Add(0x00);
@@ -93,6 +94,100 @@ namespace z80DotNet
 
                 // write the buffer
                 writer.Write(buffer.ToArray());
+            }
+            else if (arch.Equals("amsdos") || arch.Equals("amstap"))
+            {
+                List<byte> buffer = new List<byte>();
+                if (arch.Equals("amsdos"))
+                {
+                    if (name.Length > 8)
+                        name = name.Substring(0, 8);
+                    else
+                        name = name.PadRight(8);
+
+                    name = string.Format("{0}$$$", name);
+
+                    // user number 0
+                    buffer.Add(0);
+
+                }
+                else
+                {
+                    if (name.Length > 16)
+                        name = name.Substring(0, 16);
+                    else
+                        name = name.PadRight(16, '\0');
+                }
+
+                // name
+                buffer.AddRange(ASCIIEncoding.ASCII.GetBytes(name));
+
+                if (arch.Equals("amsdos"))
+                {
+                    // block
+                    buffer.Add(0);
+
+                    // last block
+                    buffer.Add(0);
+                }
+                else
+                {
+                    buffer.Add(1);
+                    buffer.Add(2);
+                }
+
+                // binary type
+                buffer.Add(2);
+
+                // size
+                buffer.AddRange(BitConverter.GetBytes(size));
+
+                // start address
+                buffer.AddRange(BitConverter.GetBytes(progstart));
+
+                // first block
+                buffer.Add(0xff);
+
+                // logical size
+                buffer.AddRange(BitConverter.GetBytes(size));
+
+                // logical start
+                buffer.AddRange(BitConverter.GetBytes(progstart));
+
+                // unallocated
+                buffer.AddRange(new byte[36]);
+
+                if (arch.Equals("amsdos"))
+                {
+                    // file size (24-bit number)
+                    buffer.AddRange(BitConverter.GetBytes(size));
+                    buffer.Add(0);
+
+                    byte checksum = 0;
+                    buffer.ForEach(b =>
+                    {
+                        checksum = (byte)(checksum + b);
+                    });
+                    buffer.Add(checksum);
+
+                    // bytes 69 - 127 undefined
+                    buffer.AddRange(new byte[60]);
+                }
+                writer.Write(buffer.ToArray());
+            }
+            else if (arch.Equals("msx"))
+            {
+                // ID byte
+                writer.Write(0xfe);
+
+                // start address
+                writer.Write(BitConverter.GetBytes(progstart));
+
+                // end address
+                writer.Write(BitConverter.GetBytes(progend));
+
+                // start address
+                writer.Write(BitConverter.GetBytes(progstart));
             }
             else if (string.IsNullOrEmpty(arch) || arch.Equals("flat"))
             {
