@@ -5,6 +5,8 @@ VisualStudioVersion = 12.0.30110.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "z80DotNet", "z80DotNet\z80DotNet.csproj", "{AE9D39C7-D757-4245-93F8-1BDF3047475B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetAsm", "..\DotNetAsm\DotNetAsm\DotNetAsm.csproj", "{AF1ED085-0D63-4DFD-AE98-612921D1F5EC}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NUnit.z80Tests", "NUnit.z80Tests\NUnit.z80Tests.csproj", "{8EDF4429-251A-416D-BB68-93F227191BCF}"
 EndProject
 Global
