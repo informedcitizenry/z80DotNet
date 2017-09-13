@@ -1193,7 +1193,14 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 <table>
 <tr><td><b>Option</b></td><td><code>--arch</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Specify the target architecture of the binary output. At this time, only two options are available, <code>flat</code> and <code>zx</code>. Use <code>zx</code> to output binary with a ZX Spectrum TAP header. If architecture not specified, output defaults to <code>flat</code>.</td></tr>
+<tr><td><b>Definition</b></td><td>Specify the target architecture of the binary output. Five options are available. If architecture not specified, the default is <code>flat</code>. The options:
+    <ul>
+        <li><code>amsdos</code>    - Amstrad CPC AMS-DOS header</li>
+        <li><code>amstap</code>    - Amstrad CPC tape header</li>
+        <li><code>flat</code>      - Flat binary with no header (default)</li>
+        <li><code>msx</code>       - MSX BIN disk header</li>
+        <li><code>zx</code>        - ZX Spectrum header</li>
+    </ul></td></tr>
 <tr><td><b>Parameter</b></td><td><code>architecture</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>/z80DotNet myproggie.asm -b --arch=zx myproggie.prg</pre>
