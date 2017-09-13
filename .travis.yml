@@ -4,5 +4,5 @@ install:
   - nuget restore z80DotNet.sln
   - nuget install Nunit.Runners -Version 3.6.1.0 -OutputDirectory testrunner
 script:
-  - xbuild /p:Configuration=Release DotNetAsm.sln
+  - xbuild /p:Configuration=Release z80DotNet.sln
   - mono ./testrunner/NUnit.ConsoleRunner.3.6.1/tools/nunit3-console.exe ./NUnit.z80Tests/bin/Release/NUnit.z80Tests.dll
