@@ -892,12 +892,10 @@ print       .macro  value = 13, printsub = $15ef
 <tr><td><b>Example</b></td><td>
 <pre>
             * = $5000
-            
 relocated   =   $6000            
-            
 start       ld  hl,highcode
             ld  de,relocated
--           ld  bc,highcode_end-highcode
+&#45;       ld  bc,highcode_end-highcode
             ldir
             jp  relocated
 highcode    
@@ -928,7 +926,6 @@ highcode_end
 >5018 23        ;             inc hl
 >5019 18 f6     ;             jr  printloop
 >501b c9        ; done        ret
-
 		;; message
 >501c 48 45 4c 4c 4f 2c 20 48    
 >5024 49 47 48 20 43 4f 44 45
