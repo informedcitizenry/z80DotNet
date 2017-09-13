@@ -45,7 +45,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\DotNetAsm\DotNetAsm\DotNetAsm.csproj">
+    <ProjectReference Include="..\DotNetAsm\DotNetAsm.csproj">
       <Project>{af1ed085-0d63-4dfd-ae98-612921d1f5ec}</Project>
       <Name>DotNetAsm</Name>
     </ProjectReference>
