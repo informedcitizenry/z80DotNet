@@ -819,16 +819,13 @@ start       ; same as start .equ *
 <tr><td><b>Example</b></td><td>
 <pre>
         * = $0400
-        
         cycles = 4
-        
         .if cycles == 4
             nop
         .elif cycles == 16
             nop
             nop
         .endif
-        
         ;; will result as:
         ;;
         ;; nop
@@ -858,7 +855,7 @@ inc16       .macro
             jr  nz,+
             inc \1
             inc (\1)
-&#43;       .endmacro
+&#43;           .endmacro
             .inc16 hl
             ;; expands to =>
             inc (hl)
@@ -895,7 +892,7 @@ print       .macro  value = 13, printsub = $15ef
 relocated   =   $6000            
 start       ld  hl,highcode
             ld  de,relocated
-&#45;       ld  bc,highcode_end-highcode
+&#45;           ld  bc,highcode_end-highcode
             ldir
             jp  relocated
 highcode    
@@ -947,7 +944,6 @@ highcode_end
         inc a
         .endrepeat
         ret
-        
         ;; will assemble as:
         ;;
         ;; xor  a
