@@ -864,8 +864,13 @@ inc16       .macro
             inc (hl)
 &#43;         
 print       .macro  value = 13, printsub = $15ef
-            ld  a,\value    ; or ld a,\1 
-            call \printsub  ; or call \2
+            .ifdef BDOS
+                ld  de,\value   ; or ld de,\1
+                ld  c,L_WRITE   ; BDOS function 2
+            .else
+                ld  a,\value    ; or ld a,\1 
+            .endif
+                call \printsub  ; or call \2
             ret
             .endmacro
             .print
@@ -873,10 +878,11 @@ print       .macro  value = 13, printsub = $15ef
             ;; ld   a,$0d
             ;; call $15ef
             ;; ret
-            .print 'E',$0010
+            .print 'E',$0005
             ;; expands to =>
-            ;; ld   a,$45
-            ;; call $0010
+            ;; ld   de,$45
+            ;; ld   c,$02
+            ;; call $0005
             ;; ret
 </pre>
 </td></tr>
