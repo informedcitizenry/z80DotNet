@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -208,7 +208,7 @@ namespace DotNetAsm
                     sb.Append(asm);
                     return;
                 }
-                else if (string.IsNullOrEmpty(line.Disassembly) || Controller.Options.NoDissasembly)
+                else if (string.IsNullOrEmpty(line.Disassembly) && Controller.Options.NoDissasembly == false)
                 {
                     sb.AppendFormat("{0,-29}", asm);
                 }
