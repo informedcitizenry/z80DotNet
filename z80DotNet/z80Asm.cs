@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -2256,132 +2256,6 @@ namespace z80DotNet
             }
             return opc;
         }
-        
-        public void ListMnemonics()
-        {
-            using (System.IO.StreamWriter writer = new System.IO.StreamWriter("z80mnemonics.txt"))
-            {
-                List<string> master = new List<string>();
-                //master.AddRange(Reserved.GetWords("Mnemonics"));
-                /*master.AddRange(Reserved.GetWords("ImpliedA"));
-                master.AddRange(Reserved.GetWords("Bits"));
-                master.AddRange(Reserved.GetWords("Branches"));
-                master.AddRange(Reserved.GetWords("Interrupt"));
-                master.AddRange(Reserved.GetWords("Relatives"));*/
-                master.Sort();
-                //HashSet<string> nonDupes = new HashSet<string>(master);
-
-                //int i = 0;
-                foreach(string s in master)
-                {
-                    writer.Write("\"{0}\",", s);
-                }
-            }
-        }
-
-        public void ListInstructionsAlt()
-        {
-            using (System.IO.StreamWriter writer = new System.IO.StreamWriter("z80instructions.txt"))
-            {
-                writer.WriteLine("nn nn             DD nn          CB nn       FD CB ff nn      ED nn");
-                writer.WriteLine("--------------------------------------------------------------------------");
-                for(int i = 0; i < 256; i++)
-                {
-                    writer.Write(string.Format("{0:X2} ", i));
-                    string opcodesFormat = _opcodes[i].DisasmFormat;
-                    if (string.IsNullOrEmpty(opcodesFormat))
-                    {
-                        opcodesFormat = "****";
-                    }
-                    else
-                    {
-                        opcodesFormat = opcodesFormat.Replace("${0:x2}", "&00")
-                                                     .Replace("${0:x4}", "&0000");
-                    }
-                    writer.Write(string.Format("{0,-15}", opcodesFormat));
-                    if (_ixOpcodes[i] == null || string.IsNullOrEmpty(_ixOpcodes[i].DisasmFormat))
-                    {
-                        opcodesFormat = "-";
-                    }
-                    else
-                    {
-                        opcodesFormat = _ixOpcodes[i].DisasmFormat.Replace("${0:x2}", "&00")
-                                                                  .Replace("${0:x4}", "&0000");
-                    }
-                    writer.Write(string.Format("{0,-15}", opcodesFormat));
-                    if (_bitsOpcodes[i] == null || string.IsNullOrEmpty(_bitsOpcodes[i].DisasmFormat))
-                    {
-                        opcodesFormat = "-";
-                    }
-                    else
-                    {
-                        opcodesFormat = _bitsOpcodes[i].DisasmFormat.Replace("${0:x2}", "&00")
-                                                                    .Replace("${0:x4}", "&0000");
-                    }
-                    writer.Write(string.Format("{0,-12}", opcodesFormat));
-                    if (_iyBitsOpcodes[i] == null || string.IsNullOrEmpty(_iyBitsOpcodes[i].DisasmFormat))
-                    {
-                        opcodesFormat = "-";
-                    }
-                    else
-                    {
-                        opcodesFormat = _iyBitsOpcodes[i].DisasmFormat.Replace("${0:x2}", "&00")
-                                                                      .Replace("${0:x4}", "&0000");
-                    }
-                    writer.Write(string.Format("{0,-17}", opcodesFormat));
-                    if (_exOpcodes[i] == null || string.IsNullOrEmpty(_exOpcodes[i].DisasmFormat))
-                    {
-                        opcodesFormat = "-";
-                    }
-                    else
-                    {
-                        opcodesFormat = _exOpcodes[i].DisasmFormat.Replace("${0:x2}", "&00")
-                                                                  .Replace("${0:x4}", "&0000");
-                    }
-                    writer.WriteLine(string.Format("{0,-15}", opcodesFormat));
-                }
-            }
-        }
-
-        public void ListInstructions()
-        {
-            List<IEnumerable<Opcode>> opcodelists = new List<IEnumerable<Opcode>>();
-            opcodelists.Add(_opcodes);
-            opcodelists.Add(_exOpcodes);
-            opcodelists.Add(_bitsOpcodes);
-            opcodelists.Add(_ixOpcodes);
-            opcodelists.Add(_ixBitsOpcodes);
-            opcodelists.Add(_iyOpcodes);
-            opcodelists.Add(_iyBitsOpcodes);
-
-            using(System.IO.StreamWriter writer = new System.IO.StreamWriter("z80opcodes.txt"))
-            {
-                foreach(Opcode[] list in opcodelists)
-                {
-                    int count = list.Count();
-                    writer.WriteLine(",0,1,2,3,4,5,6,7,8,9,a,b,c,d,e,f");
-                    for(int i = 0; i < count; i += 16)
-                    {
-                        writer.Write(string.Format("{0:x}", (i / 16)));
-                        for(int j = 0; j < 16; j++)
-                        {
-                            if (list[i+j] == null)
-                                continue;
-                            string format = list[i+j].DisasmFormat;
-                            if (string.IsNullOrEmpty(format) == false)
-                            {
-                                format = format.Replace("${0:x2}", "*")
-                                               .Replace("${0:x4}", "**");
-                            }
-                            writer.Write(string.Format(",\"{0}\"", format));
-                        }
-                        writer.WriteLine();
-                    }
-
-                    writer.WriteLine();
-                }
-            }
-        }
 
         /// <summary>
         /// Parses a DotNetAsm.SourceLine's instruction and operand to return a
@@ -2473,10 +2347,10 @@ namespace z80DotNet
                 fmt.StringFormat = opc.DisasmFormat;
                 long eval = long.MinValue, eval2 = long.MinValue;
                 long evalAbs = long.MinValue;
-                int evalsize = 0;
+                
                 if (string.IsNullOrEmpty(fmt.Expression1) == false)
                 {
-                    if (Regex.IsMatch(opc.DisasmFormat, @"\(i(x|y)\+\${0:x2}\)"))
+                    if (Regex.IsMatch(fmt.StringFormat, @"\(i(x|y)\+\${0:x2}\)"))
                     {
                         eval = Controller.Evaluator.Eval(fmt.Expression1, sbyte.MinValue, sbyte.MaxValue);
                         if (eval < 0)
@@ -2510,19 +2384,14 @@ namespace z80DotNet
                         eval &= 0xFF;
                         evalAbs = eval;
                     }
-                    evalsize = eval.Size();
                 }
+
                 if (string.IsNullOrEmpty(fmt.Expression2) == false)
                 {
                     eval2 = (byte)Controller.Evaluator.Eval(fmt.Expression2, sbyte.MinValue, byte.MaxValue);
                     eval2 &= 0xFF;
-                    evalsize += eval2.Size();
                 }
-                if (evalsize >= opc.Size)
-                {
-                    Controller.Log.LogEntry(line, ErrorStrings.IllegalQuantity, eval.ToString());
-                    return;
-                }
+
                 if (eval2 != long.MinValue)
                     line.Disassembly = string.Format(fmt.StringFormat, evalAbs, eval2);
                 else
@@ -2571,12 +2440,7 @@ namespace z80DotNet
 
         public bool AssemblesInstruction(string instruction)
         {
-            return Reserved.IsOneOf("Mnemonics", instruction) ||
-                   Reserved.IsOneOf("Bits", instruction)      ||
-                   Reserved.IsOneOf("ImpliedA", instruction)  ||
-                   Reserved.IsOneOf("Interrupt", instruction) ||
-                   Reserved.IsOneOf("Branches", instruction)  ||
-                   Reserved.IsOneOf("Relatives", instruction);
+            return Reserved.IsReserved(instruction);
         }
 
         protected override bool IsReserved(string token)
