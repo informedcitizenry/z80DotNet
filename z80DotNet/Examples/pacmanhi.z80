@@ -1,0 +1,745 @@
+;;-----------------------------------------------------------------------
+;; 
+;; Pac-Man Hi-Score/Save Enhancement Kit
+;;
+;; (c) 2017 informedcitizenry
+;;
+;; This enhancement provides a high-score table with name registration
+;; capability. In addition, it provides support for a "save" state 
+;; functionality (e.g., non-volatile RAM or volatile RAM with battery 
+;; backup) as well as running the attract/demo screen in free play mode.
+;;
+;;-----------------------------------------------------------------------
+
+    ;; color constants
+            BLACK       = 0
+            RED         = 1
+            PINK        = 3
+            CYAN        = 5
+            GOLD        = 7
+            YELLOW      = 9
+            PEACH       = 14
+            WHITE       = 15
+            BLUE        = 16
+
+            P1_SCR_VRAM = $43f7
+            HIGH_SCORE  = $4e88
+
+    ;; patch $0401 from ld a,($4e6e) to freeplystrt
+    ;; patch $06be from la a,($4e04) to call checkreg
+    ;; patch $0936 & $0955 from rst $28/.db $1c,$05 to call reghiscor
+    ;; patch $0973 from ld ($4e02),a to call starthigh
+    ;; patch $23ee from rst $20/$f3,$23/$00/$24 to call drawhigh/nop/nop
+    ;; patch $24d7 from ld e,b/ld a,b/cp $02 to jp colorscren/.db $02
+    ;; patch $2ae2 from call $2c5e to call $8000
+    
+            * = $8000
+            
+            ld  a,($4e00)
+            and a               ; is a == 0?
+            jp  nz,$2c5e        ; if not in init state jump to routine
+            call $2c5e          ; else call $2ae2 (print "HIGH
+                                ; SCORE")
+            call machininit     ; initialize high score table
+        
+clrhivars:
+            xor a
+            ld b,levelstate-remaintick
+            ld hl,remaintick
+clrhiloop:
+            ld (hl),a
+            inc hl
+            djnz clrhiloop
+            ret
+            
+            ;; DE = player's score, HL = current high score table 
+            
+reghiscor:
+            ld a,($4e00)
+            cp $01              ; is a in attract mode?
+            jr z,finished2      ; yes exit
+            push hl             ; hl = $4e04 ?
+            ld c,$00            ; for c = 0 to 4
+            ld iy,scores+$01c8  ; highest digit of highest score
+nextscor:
+            push iy              ; transfer iy to hl
+            pop hl              
+            ld b,$06            ; for b = 1 to 6
+            ld de,P1_SCR_VRAM+5 ; player one highest digit
+            ld a,($4e09)        ; get current player
+            and a               ; is it player 1?
+            jr z,nextdigit      ; yes skip ahead
+            ld e,$e9            ; else player two highest digit
+nextdigit:
+            ld a,(hl)           ; compare highest digits
+            and $0f             ; only get low nybble (blank space = 0)
+            ld ixl,a            ; save in ixl
+            ld a,(de)           ; get comparison
+            and $0f             ; only get low nybble
+            cp ixl              ; 
+            jr c,playrless      ; player's score less, next score
+            jr nz,regplayer     ; player's score greater, register
+            dec de              ; next lowest digit in player score
+            push bc             ; save BC for a momenet
+            ld bc,$0020
+            sbc hl,bc           ; next lowest table digit
+            pop bc              ; restore bc
+            djnz nextdigit      ; next digit
+            jr regplayer        ; we looked at all digits and player's
+                                ; score is greater or equal
+playrless:
+            inc c
+            ld a,c              ; c -> a
+            cp $05              ; A == 5?
+            jr z,finished       ; looked at all score, player did not
+                                ; get a high score
+            inc iy
+            inc iy              ; now get next lowest score in iy
+            jr  nextscor        ; next score
+finished: 
+            pop hl              ; restore hl 
+finished2:  
+            rst $28             ; insert task
+            .byte $1c           ; draw text
+            .byte $05           ; "GAME OVER"
+           
+            ret                 ; return
+
+regplayer:
+            ld a,c              ; c -> a (high score index)
+            add a,c             ; a = a * 2
+            ld hl,$4208         ; base of top high score
+            rst $10             ; hl = base of current player score
+            ld (currhigh),hl    ; store hl in current ptr
+            ld de,$fec0         ; -320
+            add hl,de           ; add current hs offset
+            ld (currinit),hl    ; store in current init
+            ld a,c              ; c -> a (high score index)
+            add a,c             ; a = a * 2
+            ld hl,$9268         ; base of top high score
+            rst $10             ; hl = base of current player score
+            push hl             ; now player's position in table
+            pop ix              ; save in ix
+            
+            ;; now move all the lower scores and levels down
+            ld hl,$9270         ; 5th level
+xfernext:
+            push hl             ; load HL into de
+            pop de              ; now DE holds the bottom score
+            ld a,ixl            ; get player's high score LSB into A
+            cp e                ; compare with bottom level LSB
+            jr nc,calclevel     ; if player LSB >= bottom LSB finished
+            dec hl              ; decrement HL by two rows above 
+            dec hl              ; now HL holds the higher level/score
+            ld b,$12            ; for B = 1 to 18
+xferloop:
+            ld a,(hl)           ; copy next char from upper
+            ld (de),a           ; to lower
+            push bc             ; save bc for now
+            ld bc,$ffe0         ; next column (-32)
+            add hl,bc           ; for source
+            ex de,hl            ; switch
+            add hl,bc           ; and for dest  
+            ex de,hl            ; switch again
+            pop bc              ; restore bc
+            djnz xferloop       ; next b
+            ld bc,18*32         ; 
+            add hl,bc           ; get back to highest digit of level
+            jr xfernext
+            
+calclevel:  ;; now copy player's high score and clear initial     
+            ld bc,$ffc0         ; b = -64
+            add ix,bc           ; now IX = lowst digit of level
+            xor a               ; a = 0
+            ld (ix+$00),a       ; reset current level digits
+            ld (ix+$20),a       ; 
+            ld (ix+$40),a
+            ld a,($4e13)        ; get current level in a
+            inc a               ; a = a + 1
+            and a               ; clear carry
+sub100:
+            ld b,a              ; save in b
+            sbc a,$64           ; subtract 100
+            jr c,tens           ; less than 100 get tens
+            inc (ix+$40)        ; increment
+            jr sub100           ; and go back
+tens:
+            ld a,b              ; get b back in a
+            and a
+sub10:
+            ld b,a
+            sbc a,$0a
+            jr c,remain
+            inc (ix+$20)
+            jr sub10
+remain:
+            ld a,b              ; get a back from b
+            ld (ix+$00),a       ; store last digit 
+            ld a,(ix+$20)       ; is second digit of level zero?
+            and a
+            jr nz,chk100        ; no check highest
+            ld (ix+$20),$40     ; blank out zero
+chk100: 
+            ld a,(ix+$40)       ; is highest level digit zero?
+            and a
+            jr nz,setscor       ; no set score
+            ld (ix+$40),$40     ; else blank out
+setscor:
+            ld bc,$ff00         ; get lowest digit of player
+            add ix,bc           ; advance ix to that spot
+            
+          
+            ld iy,P1_SCR_VRAM   ; player 1 score (in screen) in ix
+            ld a,($4e09)        ; get current player
+            and a               ; is it player 1?
+            jr z,xferscor       ; if yes skip
+            ld iyl,$e4          ; else player 2 score in ix
+xferscor:
+            ld a,(iy+$00)       ; lowest digit
+            ld (ix+$00),a           
+            ld a,(iy+$01)       ; next lowest
+            ld (ix+$20),a
+            ld a,(iy+$02)       ; 3rd digit
+            ld (ix+$40),a
+            ld a,(iy+$03)       ; 4th digit
+            ld (ix+$60),a
+            
+            ld de,$0080         ; iy = iy + $80
+            add ix,de
+            
+            ld a,(iy+$04)       ; 5th digit
+            ld (ix+$00),a
+            ld a,(iy+$05)       ; highest digit
+            ld (ix+$20),a
+            
+            ld de,$fea0
+            add ix,de           ; now get to last initial (-352)
+            
+            ld a,$40
+            ld (ix+$00),a       ; rub initials
+            ld (ix+$20),a
+            inc a
+            ld (ix+$40),a       ; put 'A' in first initial
+           
+            call setlevel       ; set the current level         
+                                ; at this state of the game)
+            ld a,($4e09)        ; get current player
+            ld (currplayr),a    ; save current player
+            ld a,$3c
+            ld (remaintick),a   ; set remaining ticks to 60
+            
+            jp finished         ; and go back to normal festivities
+            
+            
+drawhigh:
+            rst $20
+            .word $23f3         ; set parts of screen to spaces
+            .word $2400         ; or set entire screen to spaces
+            .word printhis      ; or print the high score table
+            .word printhisr     ; print high score table for registration
+
+printhis:
+            ld hl,scores        ; beginning of highscores
+            ld de,$4040         ; screen ram    
+            ld bc,$0380         ; 896 bytes
+            ldir
+            ret     
+
+printhisr:
+            call printhis
+            ld hl,congrats      ; HL = address of congratulation msg
+            call $2c62          ; print "YOU GOT A HIGH SCORE!"
+            ld hl,instruct      ; HL = address of instruction msg
+            call $2c62          ; print "ENTER YOUR INITIALS"
+            ld hl,timeremain    ; HL = address of timeremain
+            call $2c62          ; print "TIME REMAINING..."
+            ld hl,(currinit)    
+            ld de,$0400
+            add hl,de           ; hl = color ram of initial
+            ld a,YELLOW         ; 
+            ld (hl),a           ; set initial color to yellow
+            ret     
+                        
+checkreg:
+            ld  a,($4e04)       ; get play state routine
+            cp  $26             ; is it < $26?
+            jp c,$06c1          ; yes just go back to play
+            sbc a,$26           ; subtract $26 for
+            rst $20             ; jump table
+            
+            .word $000c         ; wait for "GAME OVER" screen to finish
+            .word reginit       ; initialize registration screen
+            .word $000c         ; wait for initialization to finish
+            .word doregister    ; do registration
+            .word $000c         ; wait after registering
+            .word regfinish     ; finalize
+
+            ;; $0973 will call here when patched 
+starthigh:
+            ld ix,$4e00         ; main routine
+            ld (ix+$02),a       ; $4e02 - attract mode, reset for now
+            ld b,(ix+$00)       ; get main routine 
+            bit 1,b             ; is it attract (%01) or play (%11) mode?
+            ret nz              ; if main routine just return, else
+            ld c,$24            ; C = hiscorinit
+            ld (ix+$02),c       ; set attract
+            ret                 ; return to unpatched pac-man
+            nop
+            
+freeplystrt:
+            
+            ld a,($4e6e)
+            and a
+            jr z,freerunatr
+            cpl
+            and a               ; is free play set?
+            jp nz,$0407         ; no, do "normal" ready to play screen
+            ld a,$01
+            ld ($4e03),a        ; set "ready for play" to 1
+            call $062c          ; else check if start button(s) pressed
+            ld a,($4e03)
+            cp $02              ; is a == 2? (start button pressed?)
+            jr nz,freerunatr    ; no process free play attract
+            ld ($4e00),a        ; else set to ready for play state
+            xor a
+            ld ($4e04),a
+            ld ($4e02),a
+            
+            rst $28
+            .byte $1e           ; task 30
+            .byte $00           ; clear all sprites
+            
+            ret
+            
+freerunatr:    
+            ld a,($4e02)
+            cp  $24             ; is attract state less than $24?
+            jp  c,$0416         ; yes do "normal" attract
+            sbc a,$24           ; else subtract $24 for
+            rst $20             ; jump table
+            
+            .word hiscorinit
+            .word $000C         ; wait
+            .word hiscorfin
+            
+colorscren:
+            ld e,b
+            ld a,b
+            cp $02
+            jp z,$24db
+            jp c,$24df
+            ld a,CYAN
+            jp $24e1
+                       
+reginit:
+            rst $28
+            .byte $00           ; task 0
+            .byte $01           ; clear maze
+            
+            rst $28
+            .byte $01           ; task 1
+            .byte $02           ; color screen white
+            
+            rst $28
+            .byte $00           ; task 0
+            .byte $03           ; show highscore screen for registration
+            
+            rst $28
+            .byte $1e           ; task 30
+            .byte $00           ; clear sprites
+            
+            rst $30
+            .byte $41           ; wait 1/10ths of a second
+            .byte $00           ; task 0
+            .byte $00           ; increment subroutine
+            
+            ld hl,$4e04
+            inc (hl)
+            ret
+                        
+            ;; run registration frame
+doregister:
+            ld hl,$40db         ; HL = lowest digit of counter
+            ld de,$40fb         ; DE = highest digit counter
+            ld a,(de)           ; get highest digit of timer
+            and a               ; is it zero?
+            jr nz,updremtick    ; if not zero update remain ticker
+            ld ($44fb),a        ; else black out leading digit
+            or (hl)             ; or with lowest digit
+            jp z,setfinish      ; if timer zero set finish
+updremtick:
+            ld a,(remaintick)   ; else get ticks to drive remaining timer
+            dec a               ; a == 0?
+            jr nz,flashscore    ; no flash score
+            dec (hl)            ; decrement
+            jp p,resetrem       ; if >= 0 reset reaminder subsecond tickr
+            ld a,$09
+            ld (hl),a           ; else set digit to 9
+            ex de,hl            ; hl = de (higher digit)
+            dec (hl)            ; decrement next digit
+resetrem:
+            ld a,$3c            ; a = 60
+flashscore:
+            ld (remaintick),a   ; update subsecond ticker
+            ld a,(currplayr)    ; current player in A
+            ld hl,$43d8         ; "1UP" screen RAM
+            and a             ; is it player 1? yes skip
+            jr z,checkflash     ; if so check if flashing
+            ld hl,$43c5         ; else "2UP" screen RAM
+checkflash:
+            ld c,BLACK
+            ld a,(hl)           ; read the "UP"
+            cp $40            ; is it a blank space
+            jr z,doflash        ; yes do color score black
+            ld c,WHITE          ; else color score white
+doflash:
+            ld a,c              ; 
+            ld ix,(currhigh)    ; get current score
+            ld de,$0400-$A0     ; add color offset to lowest digit
+            add ix,de
+            ld (ix+$00),a       ; switch color for each digit
+            ld (ix+$20),a       
+            ld (ix+$40),a
+            ld (ix+$60),a
+            ld de,$0080
+            add ix,de           ; ix = ix + $80
+            ld (ix+$00),a
+            ld (ix+$20),a
+            ld de,$5000         ; else DE = IN0
+            ld a,($4e72)        ; upright or cocktail
+            ld c,a              ; save in C
+            ld a,(currplayr)    ; get current player
+            and c               ; is current player player 1 or upright?
+            jr z,inputloop      ; yes, get player input
+            ld de,$5040         ; DE = IN1            
+inputloop:
+            ld hl,(currinit)    ; current initial screen RAM offset
+            ld a,(de)           ; get joystick
+            ld b,a              ; save in b
+            cpl                 ; invert bits (low = input pressed)
+            and %00001111       ; check only lowest 4 bits
+            jr nz,checklock     ; if joy input check lock
+            ld (inputlock),a    ; else reset input lock
+            ret
+checklock:
+            ld a,(inputlock)    ; is input lock set?
+            and a               ; 
+            ret nz              ; if set return
+            ld a,b              ; else get original input back
+            bit 0,a             ; joystick up
+            jp z,initup         ; advance initial
+            bit 1,a             ; joystick left
+            jp z,clearini       ; backtrack initial
+            bit 3,a             ; joystick down
+            jr z,initdown       ; clear initial
+            
+    ;; joystick right pressed select initial
+            push hl
+            ld bc,$0400         ; bc = offset to color
+            add hl,bc           ; add to current initial
+            ld a,WHITE
+            ld (hl),a           ; set to white
+            pop hl              ; get original back
+            ld de,$ffe0         ; advance to next initial
+            add hl,de           ; add offset to next char
+            ld a,l              ; get LSB in a
+            cp $80              ; are we one column past 3rd initial
+            jr c,setfinish      ; yes, finish and return
+setinit:    
+            ld a,'A'
+            ld (hl),a           ; store next initial as 'A'
+setinitclr:
+            ld (currinit),hl    ; save next initial 
+            add hl,bc           ; add offset to color ram
+            ld a,YELLOW
+            ld (hl),a           ; set to YELLOW
+setinlock:
+            ld a,$01
+            ld (inputlock),a    ; set inputlock
+            ret
+                        
+setfinish:
+            ;; clear instruction/time remaining messages
+            ld a,$40            ; blank space
+            ld de,$0020         ; column offset
+            ld ix,$4055         ; last/first column of first rows
+            ld c,$04            ; for c = 1 to 4
+rubrow:     
+            ld b,$1c            ; for b = 1 to 28
+            push ix
+            pop hl
+rubchar:    
+            ld (hl),a           ; blank space
+            add hl,de           ; next column
+            djnz rubchar        ; clear until 28
+            inc ix
+            inc ix              ; next row
+            dec c               ; next c
+            jr nz,rubrow       
+
+            ld hl,nameregistered
+            call $2c62
+            
+            rst $28             
+            .byte $01           ; task 1
+            .byte $02           ; color screen white
+         
+            rst $30             ;  
+            .byte $5a           ; and wait 2.6 seconds
+            .byte 0             ; task 0
+            .byte 0             ; to do final registration tasks
+            
+            ld hl,$4e04
+            inc (hl)            ; increment attract mode routine    
+            ret                 ; return
+            
+initdown:
+            ld a,(hl)           ; read initial
+            dec a               ; decrease
+            cp $40              ; less than $40? (blank space)
+            jr nc,storeleft     ; no just store
+            cp $3f              ; is it 1 < space?
+            jr z,setspace       ; set space
+            ld a,'Z'            ; else less than '.' so make 'Z'
+storeleft:
+            ld (hl),a           ; else store
+            jr setinlock        ; set inputlock
+setspace:
+            ld a,$40
+            jr storeleft        ; set lowest initial char to space
+            
+initup:
+            ld a,(hl)
+            inc a
+            cp $26              ; is it one after '.'?
+            jr nz,comparz       ; no, just compare to Z+1 
+            ld a,$25
+            jr storeleft        ;
+comparz:
+            cp 'Z'+1            ; is it >'Z'
+            jr c,storeleft      ; no store
+            ld a,$25            ; else set rightmost initial to '.'
+            jr storeleft        ; and store
+           
+clearini:
+            ld a,$40            ; clear the initial
+            ld e,l              ; save l in e
+            ld (hl),a         
+            ld bc,$0020         ; move initial back one column
+            add hl,bc
+            ld a,l
+            ld bc,$0400         ; now set BC to color offset
+            cp $d0
+            jp c,setinitclr     ; don't go back too far!
+            ld l,e              ; else restore original LSB
+            jp setinitclr            
+            
+regfinish:
+            ld hl,HIGH_SCORE    ; save high score (for save kit)
+            ld de,highscore
+            ld bc,$0003
+            ldir                ; copy high score
+            ld hl,(currhigh)    ; copy initials, HL = current high score
+            ld de,$fe80         ; add offset to get lowest initial
+            add hl,de
+            push hl             ; save 
+            ld de,$4fc0         ; now add to get corresponding score var
+            add hl,de           ; save
+            push hl
+            pop iy              ; iy = scores initial
+            pop ix              ; ix = screen initial
+            ld a,(ix+$00)
+            ld (iy+$00),a       ; copy each initial
+            ld a,(ix+$20)
+            ld (iy+$20),a
+            ld a,(ix+$40)
+            ld (iy+$40),a
+            ld a,(levelstate)   ; get the level state
+            inc a               ; increment it
+            ld ($4e04),a        ; and set it
+            
+            rst $28
+            .byte $00           ; task 0
+            .byte $01           ; clear high score screen
+            
+            rst $30
+            .byte $41           ; 1/10ths of a second
+            .byte $00           ; task 0
+            .byte $00           ; increment level state
+            
+            jp clrhivars        ; clear high score vars
+            
+hiscorinit:
+            rst $28
+            .byte $00           ; task 0
+            .byte $02           ; show highscore screen
+            
+            rst $28
+            .byte $01           ; task 1
+            .byte $03           ; color screen aqua blue
+            
+            rst $28
+            .byte $1e           ; task 30
+            .byte $00           ; clear sprites
+            
+            rst $30
+            .byte $7f           ; wait 6.3 seconds  
+            .byte 2             ; task 2 
+            .byte 0             ; increase attract mode routine
+            
+            ld hl,$4e02
+            inc (hl)            ; increment
+            ret
+                                 
+hiscorfin:
+            xor a
+            ld ($4e02),a        ; reset attract mode routine
+            ret
+            
+setlevel:   
+            ld hl,$4e04
+            ld a,(hl)           ; get current level state
+            ld b,a              ; store original levelstate in b
+            ld a,$2b            ; $2b - levelstate
+            sub b               ; 
+            ld (hl),a           ; will be either $25 or $26 based on
+                                ; whether is 6 or 5
+            ld a,b              ; get original level back
+            and $fe             ; make it either 4 or 6
+            ld (levelstate),a   ; and save for later to
+            ret
+            
+            ;; this will run on bootup during the initialization mode
+            ;; of the game
+machininit:
+            ld  hl,initflag     ; hl = high score var init flag
+            ld a,(hl)           ; has the high score data already been
+                                ; initialized? (is this the first time
+                                ; machine has been powered up with
+                                ; the hi-score kit? basically, this
+                                ; flag is useful if the hi-score kit
+                                ; had a score "save" capability)
+            and a               ; is flag set?
+            jr nz,sethiscor     ; no print the high score saved
+            inc (hl)            ; else set the flag and initialize
+            ld  hl,defaulthi    ; get default high score data
+            ld  de,scores
+            ld  bc,$0380
+            ldir                ; copy default scores to scores
+            ld hl,$7650         ; high score
+            ld (highscore),hl   ; save in the saved high score
+sethiscor:
+            ld  hl,highscore    ; restore high score
+            ld  de,HIGH_SCORE   ; high score variable destination
+            ld  bc,$0003        ; 3 bytes
+            ldir                ; copy
+            dec de              ; de = high score MSB
+            ld  hl,$43f2        ; hl = high score screen RAM highest dig
+            ld  bc,$0304        ; b = 3, c = 4
+            jp  $2abe           ; print high score
+            
+                ;; default screen dump $4040-$43bf
+defaulthi:
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$45,$40,$40,$43,$40,$46,$40,$49,$40,$4C,$40
+    .byte $4F,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$4D,$40,$40,$42,$40,$45,$40,$48,$40,$4B,$40
+    .byte $4E,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$41,$40,$40,$41,$40,$44,$40,$47,$40,$4A,$40
+    .byte $4D,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$4E,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$45,$40,$40,$00,$40,$00,$40,$00,$40,$00,$40
+    .byte $00,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$52,$40,$40,$05,$40,$00,$40,$05,$40,$05,$40
+    .byte $00,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$4F,$40,$40,$06,$40,$01,$40,$09,$40,$00,$40
+    .byte $03,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$43,$40,$40,$07,$40,$06,$40,$05,$40,$05,$40
+    .byte $04,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$53,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$4C,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$45,$40,$40,$01,$40,$01,$40,$01,$40,$01,$40
+    .byte $01,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$56,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$45,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$4C,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$4B,$40,$40,$54,$40,$44,$40,$44,$40,$48,$40
+    .byte $48,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$4E,$40,$40,$53,$40,$4E,$40,$52,$40,$54,$40
+    .byte $54,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$41,$40,$40,$31,$40,$32,$40,$33,$40,$34,$40
+    .byte $35,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$52,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+
+            
+    ;; format of text strings used in $2c65...
+    ;; bytes 0 and 1 : screen/color offset
+    ;; bytes 2...n-1 : ascii (sort of) text
+    ;; byte n        : terminator ($2f)
+    ;; byte n+1      : text color (high bit set = whole text color)
+    
+congrats:
+            .word $0315+$20
+            .string "YOU@GOT@A@HIGH@SCORE["
+            .byte $2f
+            .byte ($80 | PEACH)
+            
+instruct:
+            .word $0317
+            .string "ENTER@YOUR@INITIALS"
+            .byte $2f
+            .byte ($80 | PEACH)
+            
+timeremain:
+            .word $031b
+            .string "TIME@REMAINING@;@"
+            .byte $05,$00,$2f
+            .byte ($80 | CYAN)
+            
+nameregistered:
+
+            .word $0315+$40
+            .string "YOUR@NAME@IS@REGISTERED"
+            .byte $2f
+            .byte ($80 | WHITE )
+            
+            .fill $8800-*,$ff
+                                
+            * = $9000                       
+                ;; uninitialized variables
+scores      .fill 896
+remaintick  .byte ?
+currplayr   .byte ?
+currhigh    .word ?
+currinit    .word ?
+inputlock   .byte ?
+levelstate  .byte ?
+highscore   .long ?
+initflag    .byte ?
+                 
