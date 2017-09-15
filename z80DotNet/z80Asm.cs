@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------------
+﻿//-----------------------------------------------------------------------------
 // Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -35,220 +35,6 @@ namespace z80DotNet
     /// </summary>
     public class z80Asm : AssemblerBase, ILineAssembler
     {
-        #region Classes
-
-        /// <summary>
-        /// A simple structure representing a formatted string of a Z80 instruction,
-        /// along with captured expressions.
-        /// </summary>
-        public class z80Format
-        {
-            public string StringFormat;
-
-            public string Expression1;
-
-            public string Expression2;
-        };
-
-        /// <summary>
-        /// A class that analyzes an operand expression to create a z80DotNet.z80Asm.z80Format.
-        /// </summary>
-        public class FormatBuilder
-        {
-            #region Members
-
-            private Regex _regex;
-            private string _format;
-            private string _exp1Format;
-            private string _exp2Format;
-            private int _reg1Group, _exp1Group;
-            private int _reg2Group, _exp2Group;
-            private bool _treatParenEnclosureAsExpr;
-            private IEvaluator _evaluator;
-
-            #endregion
-
-            #region Constructors
-
-            /// <summary>
-            /// Constructs an instance of a z80DotNet.z80Asm.FormatBuilder class.
-            /// </summary>
-            /// <param name="regex">A valid System.Text.RegularExpressions.Regex pattern</param>
-            /// <param name="format">The final format of the operand as a valid .Net 
-            /// System.String format</param>
-            /// <param name="exp1format">The format of the first subexpression as a valid .Net
-            /// System.String format</param>
-            /// <param name="exp2format">The format of the second subexpression as a valid .Net
-            /// System.String format</param>
-            /// <param name="reg1">The index of the first register's matching group in the
-            /// regex pattern</param>
-            /// <param name="reg2">The index of the second register's matching group in the
-            /// regex pattern</param>
-            /// <param name="exp1">The index of the first subexpression's matching group in
-            /// the regex pattern</param>
-            /// <param name="exp2">The index of the second subexpression's matching group in
-            /// the regex pattern</param>
-            /// <param name="caseSensitive">Indicates the evaluation is case-sensitive</param>
-            /// <param name="treatParenAsExpr">If the first subexpression is enclosed in 
-            /// paranetheses, enclose the subexpression's position in the final format
-            /// inside paranetheses as well</param>
-            /// <param name="evaluator">If not null, a DotNetAsm.IEvaluator to evaluate the second 
-            /// subexpression as part of the final format</param>
-            public FormatBuilder(string regex, string format, string exp1format, string exp2format, int reg1, int reg2, int exp1, int exp2, bool caseSensitive, bool treatParenAsExpr, IEvaluator evaluator)
-            {
-                RegexOptions options = caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase;
-                _regex = new Regex(regex, options | RegexOptions.Compiled);
-                _format = format;
-                _exp1Format = exp1format;
-                _exp2Format = exp2format;
-                _reg1Group = reg1; _exp1Group = exp1;
-                _reg2Group = reg2; _exp2Group = exp2;
-                _treatParenEnclosureAsExpr = treatParenAsExpr;
-                _evaluator = evaluator;
-            }
-
-            /// <summary>
-            /// Constructs an instance of a z80DotNet.z80Asm.FormatBuilder class.
-            /// </summary>
-            /// <param name="regex">A valid System.Text.RegularExpressions.Regex pattern</param>
-            /// <param name="format">The final format of the operand as a valid .Net 
-            /// System.String format</param>
-            /// <param name="exp1format">The format of the first subexpression as a valid .Net
-            /// System.String format</param>
-            /// <param name="exp2format">The format of the second subexpression as a valid .Net
-            /// System.String format</param>
-            /// <param name="reg1">The index of the first register's matching group in the
-            /// regex pattern</param>
-            /// <param name="reg2">The index of the second register's matching group in the
-            /// regex pattern</param>
-            /// <param name="exp1">The index of the first subexpression's matching group in
-            /// the regex pattern</param>
-            /// <param name="exp2">The index of the second subexpression's matching group in
-            /// the regex pattern</param>
-            /// <param name="caseSensitive">Indicates the evaluation is case-sensitive</param>
-            /// <param name="treatParenAsExpr">If the first subexpression is enclosed in 
-            /// paranetheses, enclose the subexpression's position in the final format
-            /// inside paranetheses as well</param>
-            public FormatBuilder(string regex, string format, string exp1format, string exp2format, int reg1, int reg2, int exp1, int exp2, bool caseSensitive, bool treatParenAsExpr)
-                :this(regex,format,exp1format,exp2format,reg1,reg2,exp1,exp2,caseSensitive,treatParenAsExpr,null)
-            {
-
-            }
-
-            /// <summary>
-            /// Constructs an instance of a z80DotNet.z80Asm.FormatBuilder class.
-            /// </summary>
-            /// <param name="regex">A valid System.Text.RegularExpressions.Regex pattern</param>
-            /// <param name="format">The final format of the operand as a valid .Net 
-            /// System.String format</param>
-            /// <param name="exp1format">The format of the first subexpression as a valid .Net
-            /// System.String format</param>
-            /// <param name="exp2format">The format of the second subexpression as a valid .Net
-            /// System.String format</param>
-            /// <param name="reg1">The index of the first register's matching group in the
-            /// regex pattern</param>
-            /// <param name="reg2">The index of the second register's matching group in the
-            /// regex pattern</param>
-            /// <param name="exp1">The index of the first subexpression's matching group in
-            /// the regex pattern</param>
-            /// <param name="exp2">The index of the second subexpression's matching group in
-            /// the regex pattern</param>
-            /// <param name="caseSensitive">Indicates the evaluation is case-sensitive</param>
-            /// <param name="evaluator">If not null, a DotNetAsm.IEvaluator to evaluate the second 
-            /// subexpression as part of the final format</param>
-            public FormatBuilder(string regex, string format, string exp1format, string exp2format, int reg1, int reg2, int exp1, int exp2, bool caseSensitive, IEvaluator evaluator)
-                :this(regex,format,exp1format,exp2format,reg1,reg2,exp1,exp2,caseSensitive,false,evaluator)
-            {
-
-            }
-
-            /// <summary>
-            /// Constructs an instance of a z80DotNet.z80Asm.FormatBuilder class.
-            /// </summary>
-            /// <param name="regex">A valid System.Text.RegularExpressions.Regex pattern</param>
-            /// <param name="format">The final format of the operand as a valid .Net 
-            /// System.String format</param>
-            /// <param name="exp1format">The format of the first subexpression as a valid .Net
-            /// System.String format</param>
-            /// <param name="exp2format">The format of the second subexpression as a valid .Net
-            /// System.String format</param>
-            /// <param name="reg1">The index of the first register's matching group in the
-            /// regex pattern</param>
-            /// <param name="reg2">The index of the second register's matching group in the
-            /// regex pattern</param>
-            /// <param name="exp1">The index of the first subexpression's matching group in
-            /// the regex pattern</param>
-            /// <param name="exp2">The index of the second subexpression's matching group in
-            /// the regex pattern</param>
-            /// <param name="caseSensitive">Indicates the evaluation is case-sensitive</param>
-            public FormatBuilder(string regex, string format, string exp1format, string exp2format, int reg1, int reg2, int exp1, int exp2, bool caseSensitive)
-                : this(regex,format,exp1format,exp2format,reg1,reg2,exp1,exp2,caseSensitive,false,null)
-            {
-               
-            }
-
-            #endregion
-
-            /// <summary>
-            /// Evaluates an operand expression and returns a z80DotNet.z80Asm.z80Format
-            /// with captured subexpressions.
-            /// </summary>
-            /// <param name="expression">The z80 operand expression to evaluate</param>
-            /// <returns>A z80DotNet.z80Asm.z80Format object</returns>
-            public z80Format GetFormat(string expression)
-            {
-                z80Format fmt = null;
-                if (_regex.IsMatch(expression))
-                {
-                    var m = _regex.Match(expression);
-                    fmt = new z80Format();
-                    fmt.Expression1 = m.Groups[_exp1Group].Value;
-                    fmt.Expression2 = m.Groups[_exp2Group].Value;
-                    string exp1Format = _exp1Format;
-                    string exp2Format = _exp2Format;
-                    if (_evaluator != null)
-                    {
-                        exp2Format = _evaluator.Eval(fmt.Expression2).ToString();
-                        fmt.Expression2 = string.Empty; // we need to empty this because this is a format element, not expression!
-                    }
-                    if (_treatParenEnclosureAsExpr && fmt.Expression1.StartsWith("(") && fmt.Expression1.EndsWith(")"))
-                    {
-                        if (ExpressionEvaluator.FirstParenGroup(fmt.Expression1).Equals(fmt.Expression1))
-                            exp1Format = "(" + _exp1Format + ")";
-                    }
-                    fmt.StringFormat = string.Format(_format, 
-                                        m.Groups[_reg1Group].Value.Replace(" ",""), 
-                                        m.Groups[_reg2Group].Value.Replace(" ",""),
-                                        exp1Format,
-                                        exp2Format);
-
-                }
-                return fmt;
-            }
-
-            public override string ToString()
-            {
-                return _regex.ToString();
-            }
-        };
-
-        /// <summary>
-        /// Represents a z80 opcode, including the .Net System.String format of the disassembly,
-        /// instruction size, and index.
-        /// </summary>
-        private class Opcode
-        {
-            public IEnumerable<Opcode> Extension;
-
-            public string DisasmFormat;
-
-            public int Size;
-
-            public int Index;
-        };
-
-        #endregion
-
         #region Members
 
         private Opcode[] _bitsOpcodes = 
@@ -2223,78 +2009,43 @@ namespace z80DotNet
         #region Methods
 
         /// <summary>
-        /// Performs a recursive opcode lookup based on the .Net System.String format passed.
-        /// </summary>
-        /// <param name="format">A valid .Net System.String format that matches the
-        /// opcode's disassembly string format</param>
-        /// <param name="opcodes">An array of opcodes to lookup</param>
-        /// <returns>If a match is found, a z80DotNet.z80Asm.Opcode from the passed
-        /// array, otherwise null</returns>
-        private Opcode LookupOpcode(string format, Opcode[] opcodes)
-        {
-            Opcode opc = null;
-            for (int i = 0; i < 0x100; i++)
-            {
-                if (opcodes[i] == null)
-                    continue;
-                if (opcodes[i].Extension != null)
-                {
-                    Opcode result = LookupOpcode(format, opcodes[i].Extension.ToArray());
-                    if (result != null)
-                    {
-                        opc = result;
-                        opc.Index = i | (result.Index << 8);
-                        break;
-                    }
-                }
-                else if (opcodes[i].DisasmFormat.Equals(format))
-                {
-                    opc = opcodes[i];
-                    opc.Index = i;
-                    break;
-                }
-            }
-            return opc;
-        }
-
-        /// <summary>
         /// Parses a DotNetAsm.SourceLine's instruction and operand to return a
-        /// z80DotNet.z80Asm.z80Format and correspnding z80DotNet.z80Asm.Opcode.
+        /// DotNetAsm.OperandFormat and correspnding DotNetAsm.Opcode.
         /// </summary>
         /// <param name="line"></param>
-        /// <returns></returns>
-        private Tuple<z80Format,Opcode> GetFormatAndOpcode(SourceLine line)
+        /// <returns>Returns a System.Tuple&lt;DotNetAsm.OperandFormat,DotNetAsm.Opcode&gt;</returns>
+        private Tuple<OperandFormat,Opcode> GetFormatAndOpcode(SourceLine line)
         {
             string operand = line.Operand;
             if (Reserved.IsOneOf("ImpliedA", line.Instruction))
             {
                 operand = Regex.Replace(line.Operand, @"\s*,\s*[aA]$", string.Empty);
             }
-            z80Format fmt = null;
+            OperandFormat fmt = null;
             Opcode opc = null;
 
             if (string.IsNullOrEmpty(line.Operand))
             {
-                fmt = new z80Format();
-                fmt.StringFormat = line.Instruction;
-                opc = LookupOpcode(line.Instruction, _opcodes);
+                fmt = new OperandFormat();
+                fmt.FormatString = line.Instruction;
+                opc = Opcode.LookupOpcode(line.Instruction, _opcodes);
             }
             else if (line.Instruction.Equals("rst", Controller.Options.StringComparison) ||
                         Reserved.IsOneOf("Interrupt", line.Instruction))
             {
-                fmt = new z80Format();
+                fmt = new OperandFormat();
                 if (line.Instruction.Equals("rst", Controller.Options.StringComparison))
                 {
 
-                    fmt.StringFormat = string.Format("rst ${0:x2}",
+                    fmt.FormatString = string.Format("rst ${0:x2}",
                         Controller.Evaluator.Eval(line.Operand));
                 }
                 else
                 {
-                    fmt = new z80Format();
-                    fmt.StringFormat = "im "+ Controller.Evaluator.Eval(line.Operand).ToString();
+                    fmt = new OperandFormat();
+                    fmt.FormatString = "im "+ Controller.Evaluator.Eval(line.Operand).ToString();
                 }
-                opc = LookupOpcode(fmt.StringFormat, _opcodes);
+                opc = Opcode.LookupOpcode(fmt.FormatString, _opcodes);
             }
             else
             {
@@ -2304,17 +2055,17 @@ namespace z80DotNet
                     if (fmt == null)
                         continue;
                     string instruction = Controller.Options.CaseSensitive ? line.Instruction : line.Instruction.ToLower();
-                    string instrFmt = string.Format("{0} {1}", instruction, fmt.StringFormat);
-                    opc = LookupOpcode(instrFmt, _opcodes);
+                    string instrFmt = string.Format("{0} {1}", instruction, fmt.FormatString);
+                    opc = Opcode.LookupOpcode(instrFmt, _opcodes);
                     if (opc == null)
                     {
                         instrFmt = instrFmt.Replace("${0:x4}", "${0:x2}");
-                        opc = LookupOpcode(instrFmt, _opcodes);
+                        opc = Opcode.LookupOpcode(instrFmt, _opcodes);
                     }
                     break;
                 }
             }
-            return new Tuple<z80Format,Opcode>(fmt, opc);
+            return new Tuple<OperandFormat,Opcode>(fmt, opc);
         }
 
         public void AssembleLine(SourceLine line)
@@ -2326,7 +2077,7 @@ namespace z80DotNet
                                         Controller.Output.GetPC().ToString());
                 return;
             }
-            z80Format fmt = null;
+            OperandFormat fmt = null;
             Opcode opc = null;
             try
             {
@@ -2344,18 +2095,18 @@ namespace z80DotNet
                     Controller.Log.LogEntry(line, ErrorStrings.UnknownInstruction, line.Instruction);
                     return;
                 }
-                fmt.StringFormat = opc.DisasmFormat;
+                fmt.FormatString = opc.DisasmFormat;
                 long eval = long.MinValue, eval2 = long.MinValue;
                 long evalAbs = long.MinValue;
                 
                 if (string.IsNullOrEmpty(fmt.Expression1) == false)
                 {
-                    if (Regex.IsMatch(fmt.StringFormat, @"\(i(x|y)\+\${0:x2}\)"))
+                    if (Regex.IsMatch(fmt.FormatString, @"\(i(x|y)\+\${0:x2}\)"))
                     {
                         eval = Controller.Evaluator.Eval(fmt.Expression1, sbyte.MinValue, sbyte.MaxValue);
                         if (eval < 0)
                         {
-                            fmt.StringFormat = fmt.StringFormat.Replace("+", "-");
+                            fmt.FormatString = fmt.FormatString.Replace("+", "-");
                             evalAbs = Math.Abs(eval);
                             eval &= 0xFF;
                         }
@@ -2364,7 +2115,7 @@ namespace z80DotNet
                             evalAbs = eval;
                         }
                     }
-                    else if (fmt.StringFormat.Contains("${0:x4}"))
+                    else if (fmt.FormatString.Contains("${0:x4}"))
                     {
                         evalAbs = Controller.Evaluator.Eval(fmt.Expression1, short.MinValue, ushort.MaxValue);
                         evalAbs &= 0xFFFF;
@@ -2393,9 +2144,9 @@ namespace z80DotNet
                 }
 
                 if (eval2 != long.MinValue)
-                    line.Disassembly = string.Format(fmt.StringFormat, evalAbs, eval2);
+                    line.Disassembly = string.Format(fmt.FormatString, evalAbs, eval2);
                 else
-                    line.Disassembly = string.Format(fmt.StringFormat, evalAbs);
+                    line.Disassembly = string.Format(fmt.FormatString, evalAbs);
                 int opcode = opc.Index & 0xFFFF;
                 if (opcode == 0xCBDD || opcode == 0xCBFD) // bit/res/set <BIT>,(ix+<OFFS),<REG>
                 {
@@ -2429,7 +2180,7 @@ namespace z80DotNet
         public int GetInstructionSize(SourceLine line)
         {
             if (string.IsNullOrEmpty(line.Operand))
-                return LookupOpcode(line.Instruction, _opcodes).Size;
+                return Opcode.LookupOpcode(line.Instruction, _opcodes).Size;
            
             var opc = GetFormatAndOpcode(line);
 
