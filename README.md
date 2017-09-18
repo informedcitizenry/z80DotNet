@@ -1422,8 +1422,6 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 
 `Quote string not enclosed` - The quote string was not enclosed.
 
-`Relative branch out of range` - The relative branch jump was being the allowable 128 bytes.
-
 `Redefinition of label` - A label is redefined or being re-assigned to a new value, which is not allowed.
 
 `Redefinition of macro` - An attempt was made to redefine a macro.
