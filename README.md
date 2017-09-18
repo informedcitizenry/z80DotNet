@@ -160,6 +160,7 @@ done        ret
 Anonymous labels allow one to do away with the need to think of unique label names altogether. There are two types of anonymous labels: forward and backward. Forward anonymous labels are declared with a `+`, while backward anonymous labels are declared using a `-`. They are forward or backward to the current assembly line and are referenced in the operand with one or more `+` or `-` symbols:
 ```
 -               ld  a,(ix+$00)
+		and a
                 jr  nz,+            ; jump to first forward anonymous from here
                 ld  a,' '
 +               rst $10
