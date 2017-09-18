@@ -910,7 +910,7 @@ printloop   ld  a,(hl)
             jr  z,done
             call $15ef
             inc hl
-            jr  printloop
+            jp  printloop
 done        ret
 message     .cstring "HELLO, HIGH CODE!"
             .endrelocate
@@ -922,13 +922,13 @@ highcode_end
 >5006 01 20 00  ; -           ld  bc,highcode_end-highcode
 >5009 ed b0     ;             ldir
 >500b c3 00 60  ;             jp  relocated
->500e 21 0e 60  ;             ld  hl,message
+>500e 21 0f 60  ;             ld  hl,message
 >5011 7e        ; printloop   ld  a,(hl)
 >5012 a7        ;             and a,a
->5013 28 06     ;             jr  z,done
+>5013 28 07     ;             jr  z,done
 >5015 cd ef 15  ;             call $15ef
 >5018 23        ;             inc hl
->5019 18 f6     ;             jr  printloop
+>5019 c3 03 60  ;             jp  printloop
 >501b c9        ; done        ret
 		;; message
 >501c 48 45 4c 4c 4f 2c 20 48    
