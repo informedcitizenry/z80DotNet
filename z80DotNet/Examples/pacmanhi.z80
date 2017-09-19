@@ -196,6 +196,8 @@ regplayer:
 sethigh:    call times12
             ld ix,scores
             add ix,bc
+            ld (ix+0),0         ; reset the top two
+            ld (ix+1),0         ; level vars
             ld a,($4e13)        ; get current level in a
             inc a               ; a = a + 1
             and a               ; clear carry
@@ -769,5 +771,3 @@ nameregistered:
             .byte ($80 | WHITE )
             
             .fill $8800-*,$ff
-
-                 
