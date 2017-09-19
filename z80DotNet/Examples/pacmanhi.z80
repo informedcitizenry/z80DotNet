@@ -455,7 +455,7 @@ updremtick:
             jr nz,flashscore    ; no flash score
             dec (hl)            ; decrement
             jp p,resetrem       ; if >= 0 reset reaminder subsecond tickr
-            ld a,$09
+            ld a,9
             ld (hl),a           ; else set digit to 9
             ex de,hl            ; hl = de (higher digit)
             dec (hl)            ; decrement next digit
@@ -523,7 +523,7 @@ checklock:
             ld a,WHITE
             ld (hl),a           ; set to white
             pop hl              ; get original back
-            ld de,$ffe0         ; advance to next initial
+            ld de,-32           ; advance to next initial
             add hl,de           ; add offset to next char
             ld a,l              ; get LSB in a
             cp $80              ; are we one column past 3rd initial
@@ -537,18 +537,18 @@ setinitclr:
             ld a,YELLOW
             ld (hl),a           ; set to YELLOW
 setinlock:
-            ld a,$01
+            ld a,1
             ld (inputlock),a    ; set inputlock
             ret
                         
 setfinish:
             ;; clear instruction/time remaining messages
-            ld a,$40            ; blank space
+            ld a,'@'            ; blank space
             ld de,$0020         ; column offset
             ld ix,$4055         ; last/first column of first rows
-            ld c,$04            ; for c = 1 to 4
+            ld c,4              ; for c = 1 to 4
 rubrow:     
-            ld b,$1c            ; for b = 1 to 28
+            ld b,28             ; for b = 1 to 28
             push ix
             pop hl
 rubchar:    
@@ -579,36 +579,36 @@ rubchar:
 initdown:
             ld a,(hl)           ; read initial
             dec a               ; decrease
-            cp $40              ; less than $40? (blank space)
+            cp '@'              ; less than $40? (blank space)
             jr nc,storeleft     ; no just store
-            cp $3f              ; is it 1 < space?
+            cp '?'              ; is it 1 < space?
             jr z,setspace       ; set space
             ld a,'Z'            ; else less than '.' so make 'Z'
 storeleft:
             ld (hl),a           ; else store
             jr setinlock        ; set inputlock
 setspace:
-            ld a,$40
+            ld a,'@'
             jr storeleft        ; set lowest initial char to space
             
 initup:
             ld a,(hl)
             inc a
-            cp $26              ; is it one after '.'?
+            cp '&'              ; is it one after '.'?
             jr nz,comparz       ; no, just compare to Z+1 
-            ld a,$25
+            ld a,'%'
             jr storeleft        ;
 comparz:
             cp 'Z'+1            ; is it >'Z'
             jr c,storeleft      ; no store
-            ld a,$25            ; else set rightmost initial to '.'
+            ld a,'%'            ; else set rightmost initial to '.'
             jr storeleft        ; and store
            
 clearini:
-            ld a,$40            ; clear the initial
+            ld a,'@'            ; clear the initial
             ld e,l              ; save l in e
             ld (hl),a         
-            ld bc,$0020         ; move initial back one column
+            ld bc,32            ; move initial back one column
             add hl,bc
             ld a,l
             ld bc,$0400         ; now set BC to color offset
@@ -620,7 +620,7 @@ clearini:
 regfinish:
             ld hl,HIGH_SCORE    ; save high score (for save kit)
             ld de,highscore
-            ld bc,$0003
+            ld bc,3
             ldir                ; copy high score
             ld a,(currhighix)
             ld c,a
@@ -771,3 +771,5 @@ nameregistered:
             .byte ($80 | WHITE )
             
             .fill $8800-*,$ff
+
+                 
