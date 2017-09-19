@@ -24,7 +24,51 @@
 
             P1_SCR_VRAM = $43f7
             HIGH_SCORE  = $4e88
-
+            
+            SCORETABLE_SIZ  = defaulthi_end - defaulthi
+            
+    ;; uninitialized variables
+            * = $4f00
+            
+            scores     
+firstscore  .block
+rank        .lint ?
+score       .lint ?,?
+name        .lint ?
+            .endblock
+secondscore .block
+rank        .lint ?
+score       .lint ?,?
+name        .lint ?
+            .endblock
+thirdscore  .block
+rank        .lint ?
+score       .lint ?,?
+name        .lint ?
+            .endblock
+fourthscore .block
+rank        .lint ?
+score       .lint ?,?
+name        .lint ?
+            .endblock
+lastscore   .block
+rank        .lint ?
+score       .lint ?,?
+name        .lint ?
+            .endblock
+ 
+remaintick  .byte ?
+currplayr   .byte ?
+currscor    .word ?
+currinit    .word ?
+score_ptr   .word ?
+row_ptr     .word ?
+currhighix  .byte ?
+inputlock   .byte ?
+levelstate  .byte ?
+highscore   .long ?
+initflag    .byte ?
+            
     ;; patch $0401 from ld a,($4e6e) to freeplystrt
     ;; patch $06be from la a,($4e04) to call checkreg
     ;; patch $0936 & $0955 from rst $28/.db $1c,$05 to call reghiscor
@@ -33,6 +77,7 @@
     ;; patch $24d7 from ld e,b/ld a,b/cp $02 to jp colorscren/.db $02
     ;; patch $2ae2 from call $2c5e to call $8000
     
+    
             * = $8000
             
             ld  a,($4e00)
@@ -40,8 +85,34 @@
             jp  nz,$2c5e        ; if not in init state jump to routine
             call $2c5e          ; else call $2ae2 (print "HIGH
                                 ; SCORE")
-            call machininit     ; initialize high score table
-        
+                                
+            ;; this will run on bootup during the initialization mode
+            ;; of the game
+            ld  hl,initflag     ; hl = high score var init flag
+            ld a,(hl)           ; has the high score data already been
+                                ; initialized? (is this the first time
+                                ; machine has been powered up with
+                                ; the hi-score kit? basically, this
+                                ; flag is useful if the hi-score kit
+                                ; had a score "save" capability)
+            and a               ; is flag set?
+            jr nz,sethiscor     ; no print the high score saved
+            inc (hl)            ; else set the flag and initialize
+            ld  hl,defaulthi    ; get default high score data
+            ld  de,scores
+            ld  bc,SCORETABLE_SIZ
+            ldir                ; copy default scores to scores
+            ld hl,$7650         ; high score
+            ld (highscore),hl   ; save in the saved high score
+sethiscor:
+            ld  hl,highscore    ; restore high score
+            ld  de,HIGH_SCORE   ; high score variable destination
+            ld  bc,$0003        ; 3 bytes
+            ldir                ; copy
+            dec de              ; de = high score MSB
+            ld  hl,$43f2        ; hl = high score screen RAM highest dig
+            ld  bc,$0304        ; b = 3, c = 4
+            call $2abe          ; print high score
 clrhivars:
             xor a
             ld b,levelstate-remaintick
@@ -57,19 +128,21 @@ clrhiloop:
 reghiscor:
             ld a,($4e00)
             cp $01              ; is a in attract mode?
-            jr z,finished2      ; yes exit
-            push hl             ; hl = $4e04 ?
-            ld c,$00            ; for c = 0 to 4
-            ld iy,scores+$01c8  ; highest digit of highest score
-nextscor:
-            push iy              ; transfer iy to hl
-            pop hl              
-            ld b,$06            ; for b = 1 to 6
-            ld de,P1_SCR_VRAM+5 ; player one highest digit
+            jr z,finished       ; yes exit
+            ld hl,P1_SCR_VRAM+5 ; player one highest digit
             ld a,($4e09)        ; get current player
             and a               ; is it player 1?
-            jr z,nextdigit      ; yes skip ahead
-            ld e,$e9            ; else player two highest digit
+            jr z,+              ; yes skip ahead
+            ld l,$e9            ; else player two highest digit
++           ld (currscor),hl    ; save in player score
+            ld c,$00            ; for c = 0 to 4
+         ;; highest digit of highest score
+            ld iy,firstscore.score+5 
+nextscor:
+            push iy             ; 
+            pop hl              ; next score entry
+            ld de,(currscor)    ; get current player score             
+            ld b,$06            ; for b = 1 to 6
 nextdigit:
             ld a,(hl)           ; compare highest digits
             and $0f             ; only get low nybble (blank space = 0)
@@ -80,10 +153,7 @@ nextdigit:
             jr c,playrless      ; player's score less, next score
             jr nz,regplayer     ; player's score greater, register
             dec de              ; next lowest digit in player score
-            push bc             ; save BC for a momenet
-            ld bc,$0020
-            sbc hl,bc           ; next lowest table digit
-            pop bc              ; restore bc
+            dec hl              ; next lowest digit in high score
             djnz nextdigit      ; next digit
             jr regplayer        ; we looked at all digits and player's
                                 ; score is greater or equal
@@ -93,12 +163,10 @@ playrless:
             cp $05              ; A == 5?
             jr z,finished       ; looked at all score, player did not
                                 ; get a high score
-            inc iy
-            inc iy              ; now get next lowest score in iy
+            ld  de,secondscore.score-firstscore.score
+            add iy,de           ; iy = next score lowest digit
             jr  nextscor        ; next score
-finished: 
-            pop hl              ; restore hl 
-finished2:  
+finished:   
             rst $28             ; insert task
             .byte $1c           ; draw text
             .byte $05           ; "GAME OVER"
@@ -107,53 +175,27 @@ finished2:
 
 regplayer:
             ld a,c              ; c -> a (high score index)
-            add a,c             ; a = a * 2
-            ld hl,$4208         ; base of top high score
-            rst $10             ; hl = base of current player score
-            ld (currhigh),hl    ; store hl in current ptr
-            ld de,$fec0         ; -320
-            add hl,de           ; add current hs offset
-            ld (currinit),hl    ; store in current init
-            ld a,c              ; c -> a (high score index)
-            add a,c             ; a = a * 2
-            ld hl,$9268         ; base of top high score
-            rst $10             ; hl = base of current player score
-            push hl             ; now player's position in table
-            pop ix              ; save in ix
-            
-            ;; now move all the lower scores and levels down
-            ld hl,$9270         ; 5th level
-xfernext:
-            push hl             ; load HL into de
-            pop de              ; now DE holds the bottom score
-            ld a,ixl            ; get player's high score LSB into A
-            cp e                ; compare with bottom level LSB
-            jr nc,calclevel     ; if player LSB >= bottom LSB finished
-            dec hl              ; decrement HL by two rows above 
-            dec hl              ; now HL holds the higher level/score
-            ld b,$12            ; for B = 1 to 18
-xferloop:
-            ld a,(hl)           ; copy next char from upper
-            ld (de),a           ; to lower
-            push bc             ; save bc for now
-            ld bc,$ffe0         ; next column (-32)
-            add hl,bc           ; for source
-            ex de,hl            ; switch
-            add hl,bc           ; and for dest  
-            ex de,hl            ; switch again
-            pop bc              ; restore bc
-            djnz xferloop       ; next b
-            ld bc,18*32         ; 
-            add hl,bc           ; get back to highest digit of level
-            jr xfernext
-            
-calclevel:  ;; now copy player's high score and clear initial     
-            ld bc,$ffc0         ; b = -64
-            add ix,bc           ; now IX = lowst digit of level
-            xor a               ; a = 0
-            ld (ix+$00),a       ; reset current level digits
-            ld (ix+$20),a       ; 
-            ld (ix+$40),a
+            ld e,c              ; c -> e
+            ld (currhighix),a   ; save in current high index
+            rlc e               ; e *= 2
+            ld d,0              ; d = 0
+            ld hl,$40c8         ; highest initial
+            add hl,de           ; 
+            ld (currinit),hl    ; save hl in currinit pointer
+            cp  4               ; a >= 4? if so no need to transfer
+            jr nc,sethigh       
+            ld  a,4             ; else a = 4 - a
+            sub c
+            call times12        ; get a*12 => bc (current high score + 1)
+            ;; last byte of second lowest score => hl
+            ld hl,fourthscore.name+2        
+            ;; last byte of lowest score => de
+            ld de,lastscore.name+2
+            lddr                ; (de--) = (hl--) bc times
+            ld a,(currhighix)
+sethigh:    call times12
+            ld ix,scores
+            add ix,bc
             ld a,($4e13)        ; get current level in a
             inc a               ; a = a + 1
             and a               ; clear carry
@@ -161,7 +203,7 @@ sub100:
             ld b,a              ; save in b
             sbc a,$64           ; subtract 100
             jr c,tens           ; less than 100 get tens
-            inc (ix+$40)        ; increment
+            inc (ix+0)        ; increment
             jr sub100           ; and go back
 tens:
             ld a,b              ; get b back in a
@@ -170,67 +212,47 @@ sub10:
             ld b,a
             sbc a,$0a
             jr c,remain
-            inc (ix+$20)
+            inc (ix+1)
             jr sub10
 remain:
             ld a,b              ; get a back from b
-            ld (ix+$00),a       ; store last digit 
-            ld a,(ix+$20)       ; is second digit of level zero?
+            ld (ix+2),a         ; store last digit 
+            ld a,(ix+1)         ; is second digit of level zero?
             and a
             jr nz,chk100        ; no check highest
-            ld (ix+$20),$40     ; blank out zero
+            ld (ix+1),'@'       ; blank out zero
 chk100: 
-            ld a,(ix+$40)       ; is highest level digit zero?
+            ld a,(ix+0)         ; is highest level digit zero?
             and a
             jr nz,setscor       ; no set score
-            ld (ix+$40),$40     ; else blank out
+            ld (ix+0),'@'       ; else blank out
 setscor:
-            ld bc,$ff00         ; get lowest digit of player
-            add ix,bc           ; advance ix to that spot
-            
-          
-            ld iy,P1_SCR_VRAM   ; player 1 score (in screen) in ix
-            ld a,($4e09)        ; get current player
-            and a               ; is it player 1?
-            jr z,xferscor       ; if yes skip
-            ld iyl,$e4          ; else player 2 score in ix
-xferscor:
-            ld a,(iy+$00)       ; lowest digit
-            ld (ix+$00),a           
-            ld a,(iy+$01)       ; next lowest
-            ld (ix+$20),a
-            ld a,(iy+$02)       ; 3rd digit
-            ld (ix+$40),a
-            ld a,(iy+$03)       ; 4th digit
-            ld (ix+$60),a
-            
-            ld de,$0080         ; iy = iy + $80
-            add ix,de
-            
-            ld a,(iy+$04)       ; 5th digit
-            ld (ix+$00),a
-            ld a,(iy+$05)       ; highest digit
-            ld (ix+$20),a
-            
-            ld de,$fea0
-            add ix,de           ; now get to last initial (-352)
-            
-            ld a,$40
-            ld (ix+$00),a       ; rub initials
-            ld (ix+$20),a
-            inc a
-            ld (ix+$40),a       ; put 'A' in first initial
-           
+            ld iy,(currscor)    ; iy = player score in vram
+            ld a,(iy+0)         ; get lowest digit of player
+            ld (ix+8),a         ; into score entry
+            ld a,(iy-1)
+            ld (ix+7),a
+            ld a,(iy-2)
+            ld (ix+6),a
+            ld a,(iy-3)
+            ld (ix+5),a
+            ld a,(iy-4)
+            ld (ix+4),a
+            ld a,(iy-5)
+            ld (ix+3),a
+            ld  a,'A'
+            ld (ix+9),a         ; rub out initials
+            dec a
+            ld (ix+10),a
+            ld (ix+11),a
             call setlevel       ; set the current level         
                                 ; at this state of the game)
             ld a,($4e09)        ; get current player
             ld (currplayr),a    ; save current player
             ld a,$3c
             ld (remaintick),a   ; set remaining ticks to 60
-            
             jp finished         ; and go back to normal festivities
-            
-            
+                        
 drawhigh:
             rst $20
             .word $23f3         ; set parts of screen to spaces
@@ -238,13 +260,71 @@ drawhigh:
             .word printhis      ; or print the high score table
             .word printhisr     ; print high score table for registration
 
-printhis:
-            ld hl,scores        ; beginning of highscores
-            ld de,$4040         ; screen ram    
-            ld bc,$0380         ; 896 bytes
-            ldir
-            ret     
-
+printhis:   
+            call $2400          ; clear screen
+            ld  hl,scores
+            ld  de,rows
+            ld  (score_ptr),hl
+            ld  (row_ptr),de
+            ld  hl,tableheader
+            call $2c62          ; print the table header
+            ld  c,5
+printhiloop:     
+            ld  iy,(row_ptr)
+            ld  e,(iy+0)        ; read (iy) -> de
+            ld  d,(iy+1)
+            push de
+            pop ix              ; move to ix
+            ld  a,(iy+2)
+            ld  (ix+0),a        ; first draw the rank numbers
+            ld  a,(iy+3)
+            ld  (ix-$20),a
+            ld  a,(iy+4)
+            ld  (ix-$40),a
+            ld  iy,(score_ptr)
+            ld  de,-192         ; offset to next data column
+            add ix,de           ; now ix is start of current level
+            ld  a,(iy+0)
+            ld  (ix+0),a
+            ld  a,(iy+1)
+            ld  (ix-$20),a
+            ld  a,(iy+2)
+            ld  (ix-$40),a
+            add ix,de
+            ld  a,(iy+8)        ; score highest digit
+            ld  (ix+$20),a
+            ld  a,(iy+7)
+            ld  (ix+$00),a
+            ld  a,(iy+6)
+            ld  (ix-$20),a
+            ld  a,(iy+5)
+            ld  (ix-$40),a
+            ld  a,(iy+4)
+            ld  (ix-$60),a
+            ld  a,(iy+3)
+            ld  (ix-$80),a
+            add ix,de
+            ld  a,(iy+9)        ; first initial
+            ld  (ix-$60),a
+            ld  a,(iy+10)
+            ld  (ix-$80),a
+            ld  de,-160         ; offset to final initial
+            add ix,de
+            ld  a,(iy+11)
+            ld  (ix+0),a        ; last initial
+            dec c
+            jr  z,done
+            ld  de,12
+            ld  hl,(score_ptr)
+            add hl,de           ; hl := scores
+            ld  (score_ptr),hl
+            ld  hl,(row_ptr)
+            ld  de,5
+            add hl,de
+            ld (row_ptr),hl
+            jp  printhiloop
+done:       ret 
+            
 printhisr:
             call printhis
             ld hl,congrats      ; HL = address of congratulation msg
@@ -378,7 +458,7 @@ updremtick:
             ex de,hl            ; hl = de (higher digit)
             dec (hl)            ; decrement next digit
 resetrem:
-            ld a,$3c            ; a = 60
+            ld a,60             ; a = ticks per second
 flashscore:
             ld (remaintick),a   ; update subsecond ticker
             ld a,(currplayr)    ; current player in A
@@ -389,22 +469,23 @@ flashscore:
 checkflash:
             ld c,BLACK
             ld a,(hl)           ; read the "UP"
-            cp $40            ; is it a blank space
+            cp '@'            ; is it a blank space
             jr z,doflash        ; yes do color score black
             ld c,WHITE          ; else color score white
 doflash:
-            ld a,c              ; 
-            ld ix,(currhigh)    ; get current score
-            ld de,$0400-$A0     ; add color offset to lowest digit
+            ld ix,$4608         ; highest digit of highest score in color ram
+            ld a,(currhighix)   ; get current high index
+            sla a               ; a = a * 2
+            add a,ixl           ; 
+            ld ixl,a            ; HL = HL + a * 2
+            ld (ix+$00),c       ; switch color for each digit
+            ld (ix-$20),c       
+            ld (ix-$40),c
+            ld (ix-$60),c
+            ld (ix-$80),c
+            ld de,-$a0
             add ix,de
-            ld (ix+$00),a       ; switch color for each digit
-            ld (ix+$20),a       
-            ld (ix+$40),a
-            ld (ix+$60),a
-            ld de,$0080
-            add ix,de           ; ix = ix + $80
-            ld (ix+$00),a
-            ld (ix+$20),a
+            ld (ix+$00),c
             ld de,$5000         ; else DE = IN0
             ld a,($4e72)        ; upright or cocktail
             ld c,a              ; save in C
@@ -539,21 +620,20 @@ regfinish:
             ld de,highscore
             ld bc,$0003
             ldir                ; copy high score
-            ld hl,(currhigh)    ; copy initials, HL = current high score
-            ld de,$fe80         ; add offset to get lowest initial
-            add hl,de
-            push hl             ; save 
-            ld de,$4fc0         ; now add to get corresponding score var
-            add hl,de           ; save
-            push hl
-            pop iy              ; iy = scores initial
-            pop ix              ; ix = screen initial
-            ld a,(ix+$00)
-            ld (iy+$00),a       ; copy each initial
-            ld a,(ix+$20)
-            ld (iy+$20),a
-            ld a,(ix+$40)
-            ld (iy+$40),a
+            ld a,(currhighix)
+            ld c,a
+            sla c               ; c = c * 2
+            ld ix,$40c8         ; highest initial 
+            add ix,bc           ; add offset from c
+            call times12        ; now get offset to the name
+            ld iy,firstscore.name
+            add iy,bc
+            ld a,(ix+0)
+            ld (iy+0),a
+            ld a,(ix-$20)
+            ld (iy+1),a
+            ld a,(ix-$40)
+            ld (iy+2),a
             ld a,(levelstate)   ; get the level state
             inc a               ; increment it
             ld ($4e04),a        ; and set it
@@ -609,100 +689,59 @@ setlevel:
             ld (levelstate),a   ; and save for later to
             ret
             
-            ;; this will run on bootup during the initialization mode
-            ;; of the game
-machininit:
-            ld  hl,initflag     ; hl = high score var init flag
-            ld a,(hl)           ; has the high score data already been
-                                ; initialized? (is this the first time
-                                ; machine has been powered up with
-                                ; the hi-score kit? basically, this
-                                ; flag is useful if the hi-score kit
-                                ; had a score "save" capability)
-            and a               ; is flag set?
-            jr nz,sethiscor     ; no print the high score saved
-            inc (hl)            ; else set the flag and initialize
-            ld  hl,defaulthi    ; get default high score data
-            ld  de,scores
-            ld  bc,$0380
-            ldir                ; copy default scores to scores
-            ld hl,$7650         ; high score
-            ld (highscore),hl   ; save in the saved high score
-sethiscor:
-            ld  hl,highscore    ; restore high score
-            ld  de,HIGH_SCORE   ; high score variable destination
-            ld  bc,$0003        ; 3 bytes
-            ldir                ; copy
-            dec de              ; de = high score MSB
-            ld  hl,$43f2        ; hl = high score screen RAM highest dig
-            ld  bc,$0304        ; b = 3, c = 4
-            jp  $2abe           ; print high score
+times12     ld  b,a
+            rlca
+            rlca
+            rlca                ; a = a * 8
+            rlc b               ; 
+            rlc b               ; b = b * 4
+            add a,b             ; a now = original a * 12
+            ld c,a
+            ld b,0              ; bc = a
+            ret
             
-                ;; default screen dump $4040-$43bf
 defaulthi:
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$45,$40,$40,$43,$40,$46,$40,$49,$40,$4C,$40
-    .byte $4F,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$4D,$40,$40,$42,$40,$45,$40,$48,$40,$4B,$40
-    .byte $4E,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$41,$40,$40,$41,$40,$44,$40,$47,$40,$4A,$40
-    .byte $4D,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$4E,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$45,$40,$40,$00,$40,$00,$40,$00,$40,$00,$40
-    .byte $00,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$52,$40,$40,$05,$40,$00,$40,$05,$40,$05,$40
-    .byte $00,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$4F,$40,$40,$06,$40,$01,$40,$09,$40,$00,$40
-    .byte $03,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$43,$40,$40,$07,$40,$06,$40,$05,$40,$05,$40
-    .byte $04,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$53,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$4C,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$45,$40,$40,$01,$40,$01,$40,$01,$40,$01,$40
-    .byte $01,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$56,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$45,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$4C,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$4B,$40,$40,$54,$40,$44,$40,$44,$40,$48,$40
-    .byte $48,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$4E,$40,$40,$53,$40,$4E,$40,$52,$40,$54,$40
-    .byte $54,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$41,$40,$40,$31,$40,$32,$40,$33,$40,$34,$40
-    .byte $35,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$52,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-    .byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+            .string "@@",1
+            .byte 0,5,6,7,'@','@'
+            .string "ABC"
+            .string "@@",1
+            .byte 0,0,1,6,'@','@'
+            .string "DEF"
+            .string "@@",1
+            .byte 0,5,9,5,'@','@'
+            .string "GHI"
+            .string "@@",1
+            .byte 0,5,0,5,'@','@'
+            .string "JKL"
+            .string "@@",1
+            .byte 0,0,3,4,'@','@'
+            .string "MNO"
+            
+defaulthi_end
 
+rows:       
+            .word $4368
+            .string "1ST"
+            .word $436a
+            .string "2ND"
+            .word $436c
+            .string "3RD"
+            .word $436e
+            .string "4TH"
+            .word $4370
+            .string "5TH"
             
     ;; format of text strings used in $2c65...
     ;; bytes 0 and 1 : screen/color offset
     ;; bytes 2...n-1 : ascii (sort of) text
     ;; byte n        : terminator ($2f)
     ;; byte n+1      : text color (high bit set = whole text color)
+    
+tableheader:
+            .word $0385
+            .string "RANK@@LEVEL@@SCORE@@@NAME"
+            .byte $2f
+            .byte ($80 | WHITE)
     
 congrats:
             .word $0315+$20
@@ -730,16 +769,5 @@ nameregistered:
             .byte ($80 | WHITE )
             
             .fill $8800-*,$ff
-                                
-            * = $9000                       
-                ;; uninitialized variables
-scores      .fill 896
-remaintick  .byte ?
-currplayr   .byte ?
-currhigh    .word ?
-currinit    .word ?
-inputlock   .byte ?
-levelstate  .byte ?
-highscore   .long ?
-initflag    .byte ?
+
                  
