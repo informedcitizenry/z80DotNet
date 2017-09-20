@@ -758,11 +758,11 @@ namespace NUnit.z80Tests
             TestInstruction(line, 0x0002, new byte[] { 0xdd, 0x63 }, "ld ixh,e");
 
             line.Operand = "ixh,h";
-            TestForFailure(line);
+            Assert.Throws<ExpressionEvaluator.ExpressionException>(() => TestForFailure(line));
             //TestInstruction(line, 0x0002, new byte[] { 0xdd, 0x64 }, "ld ixh,h");
 
             line.Operand = "ixh,l";
-            TestForFailure(line);
+            Assert.Throws<ExpressionEvaluator.ExpressionException>(() => TestForFailure(line));
             //TestInstruction(line, 0x0002, new byte[] { 0xdd, 0x65 }, "ld ixh,l");
 
             line.Operand = "ixh,ixh";
@@ -790,11 +790,11 @@ namespace NUnit.z80Tests
             TestInstruction(line, 0x0002, new byte[] { 0xdd, 0x6b }, "ld ixl,e");
 
             line.Operand = "ixl,h";
-            TestForFailure(line);
+            Assert.Throws<ExpressionEvaluator.ExpressionException>(() => TestForFailure(line));
             //TestInstruction(line, 0x0002, new byte[] { 0xdd, 0x6c }, "ld ixl,h");
 
             line.Operand = "ixl,l";
-            TestForFailure(line);
+            Assert.Throws<ExpressionEvaluator.ExpressionException>(() => TestForFailure(line));
             //TestInstruction(line, 0x0002, new byte[] { 0xdd, 0x6d }, "ld ixl,l");
 
             line.Operand = "ixl,ixh";
@@ -909,11 +909,11 @@ namespace NUnit.z80Tests
             TestInstruction(line, 0x0002, new byte[] { 0xfd, 0x63 }, "ld iyh,e");
 
             line.Operand = "iyh,h";
-            TestForFailure(line);
+            Assert.Throws<ExpressionEvaluator.ExpressionException>(() => TestForFailure(line));
             //TestInstruction(line, 0x0002, new byte[] { 0xfd, 0x64 }, "ld iyh,h");
 
             line.Operand = "iyh,l";
-            TestForFailure(line);
+            Assert.Throws<ExpressionEvaluator.ExpressionException>(() => TestForFailure(line));
             //TestInstruction(line, 0x0002, new byte[] { 0xfd, 0x65 }, "ld iyh,l");
 
             line.Operand = "iyh,iyh";
@@ -941,11 +941,11 @@ namespace NUnit.z80Tests
             TestInstruction(line, 0x0002, new byte[] { 0xfd, 0x6b }, "ld iyl,e");
 
             line.Operand = "iyl,h";
-            TestForFailure(line);
+            Assert.Throws<ExpressionEvaluator.ExpressionException>(() => TestForFailure(line));
             //TestInstruction(line, 0x0002, new byte[] { 0xfd, 0x6c }, "ld iyl,h");
 
             line.Operand = "iyl,l";
-            TestForFailure(line);
+            Assert.Throws<ExpressionEvaluator.ExpressionException>(() => TestForFailure(line));
             //TestInstruction(line, 0x0002, new byte[] { 0xfd, 0x6d }, "ld iyl,l");
 
             line.Operand = "iyl,iyh";
@@ -1726,7 +1726,7 @@ namespace NUnit.z80Tests
             line.Operand = "5,d";
             TestInstruction(line, 0x0002, new byte[] { 0xcb, 0x6a }, "bit 5,d");
 
-            line.Operand = "5,e";
+            line.Operand = "10-5,e";
             TestInstruction(line, 0x0002, new byte[] { 0xcb, 0x6b }, "bit 5,e");
 
             line.Operand = "5,h";
@@ -4371,15 +4371,19 @@ namespace NUnit.z80Tests
             TestForFailure(line);
 
             line.Operand = "(ix+129),a";
-            TestForFailure(line);
-
+            Assert.Throws<OverflowException>(() => TestForFailure(line));
+            
             line.Operand = "(ix-129),b";
-            TestForFailure(line);
+            Assert.Throws<OverflowException>(() => TestForFailure(line));
 
             line.Operand = "(ix+127),-2";
             TestInstruction(line, 0x0004, new byte[] { 0xdd, 0x36, 0x7f, 0xfe }, "ld (ix+$7f),$fe");
 
+            line.Operand = "($10000),a";
+            Assert.Throws<OverflowException>(() => TestForFailure(line));
 
+            line.Operand = "a,-129";
+            Assert.Throws<OverflowException>(() => TestForFailure(line));
         }
     }
 }
