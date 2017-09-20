@@ -23,102 +23,85 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.IO;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace DotNetAsm
 {
-    public class AssemblyController : AssemblerBase, IAssemblyController
+    /// <summary>
+    /// A Compilation manages the internal state of a compiled assembly, including
+    /// Program Counters and binary data.
+    /// </summary>
+    public class Compilation
     {
-        #region Constants
+        #region Exception
 
-        /// <summary>
-        /// The default token indicating a scope block opening. This field is constant.
-        /// </summary>
-        internal const string OPEN_SCOPE = ".block";
+        public class InvalidPCAssignmentException : Exception
+        {
+            private int pc_;
 
-        /// <summary>
-        /// The default token indicating a scope block closure. This field is constant.
-        /// </summary>
-        internal const string CLOSE_SCOPE = ".endblock";
+            public InvalidPCAssignmentException(int value)
+            {
+                pc_ = value;
+            }
+            public override string Message
+            {
+                get
+                {
+                    return pc_.ToString();
+                }
+            }
+        }
 
         #endregion
 
         #region Members
 
-        private List<ILineAssembler> _assemblers;
-        private ConditionAssembler _conditionAssembler;
-        private ExpressionEvaluator _evaluator;
+        int log_pc_;
 
-        private SourceLine _currentLine;
-        
-        private int _passes;
+        int pc_;
 
-        private Regex _specialLabels;
+        bool overflow_;
 
         #endregion
 
         #region Constructors
 
         /// <summary>
-        /// Constructs an instance of a DotNetAsm.AssemblyController, which controls the 
-        /// assembly process.
+        /// Initializes a new compilation
         /// </summary>
-        /// <param name="args">The array of System.String args passed by the commandline.</param>
-        public AssemblyController(string[] args) 
-            : base()
+        /// <param name="isLittleEndian">Determines whether to compile as little endian</param>
+        public Compilation(bool isLittleEndian)
         {
-            Reserved.DefineType("Directives", new string[]
-                {
-                    ".endrelocate", ".equ", ".pseudopc", ".realpc", ".relocate", ".end",
-                    ".proff", ".pron", ".repeat", ".endrepeat"
-                });
+            Transforms = new Stack<Func<byte, byte>>();
+            IsLittleEndian = isLittleEndian;
+            Bytes = new List<byte>();
+            Reset();
+        }
 
-            Reserved.DefineType("Functions", new string[]
-                {
-                     "abs", "acos", "asin", "atan", "cbrt", "ceil", "cos", "cosh", "deg", 
-                     "exp", "floor", "frac", "hypot", "ln", "log10", "pow", "rad", "random", 
-                     "round", "sgn", "sin", "sinh", "sqrt", "tan", "tanh", "trunc"
-                });
+        /// <summary>
+        /// Initializes a new compilation.
+        /// </summary>
+        public Compilation()
+            : this(true)
+        {
 
-            Reserved.DefineType("Blocks", new string[]
-                {
-                    OPEN_SCOPE, CLOSE_SCOPE
-                });
+        }
 
-            Reserved.DefineType("UserDefined");
+        #endregion
 
-            Log = new ErrorLog();
-            Options = new AsmCommandLineOptions();
-            FileRegistry = new HashSet<string>();
-            AnonPlus = new HashSet<int>();
-            AnonMinus = new HashSet<int>();
-            ProcessedLines = new List<SourceLine>();
+        #region Static Methods
 
-            Disassembler = new Disassembler(this);
-
-            Options.ProcessArgs(args);
-
-            Labels = new Dictionary<string, string>(Options.StringComparar);
-            Reserved.Comparer = Options.StringComparison;
-            Output = new Compilation(!Options.BigEndian);
-
-            _specialLabels = new Regex(@"^\*|\+|-$", RegexOptions.Compiled);
-
-            _assemblers = new List<ILineAssembler>();
-            _evaluator = new ExpressionEvaluator(!Options.CaseSensitive);
-
-            _evaluator.SymbolLookups.Add(@"(?>_?[a-zA-Z][a-zA-Z0-9_.]*)(?!\()", GetLabelValue);
-            _evaluator.SymbolLookups.Add(@"^\++$|^-+$|\(\++\)|\(-+\)", ConvertAnonymous);
-            _evaluator.SymbolLookups.Add(@"(?<![a-zA-Z0-9_.)])\*(?![a-zA-Z0-9_.(])", (str) => Output.GetPC().ToString());
-
-            _evaluator.AllowAlternateBinString = true;
-
-            _conditionAssembler = new ConditionAssembler(this);
-
-            _assemblers.Add(new PseudoAssembler(this));
-            _assemblers.Add(new MiscAssembler(this));
+        /// <summary>
+        /// Get the actual amount by which the PC must be increased to align to the given amount.
+        /// </summary>
+        /// <param name="amount">The amount to align</param>
+        /// <returns></returns>
+        public static int GetAlignmentSize(int pc, int amount)
+        {
+            int align = 0;
+            while ((pc + align) % amount != 0)
+                align++;
+            return align;
         }
 
         #endregion
@@ -126,962 +109,445 @@ namespace DotNetAsm
         #region Methods
 
         /// <summary>
-        /// Used by the expression evaluator to convert an anonymous symbol
-        /// to an address.
+        /// Reset the compilation, clearing all bytes and resetting the Program Counter.
         /// </summary>
-        /// <param name="symbol">The anonymous symbol.</param>
-        /// <param name="notused">The match group (not used)</param>
-        /// <param name="obj">A helper object, in this case a SourceLine.</param>
-        /// <returns>The actual address the anonymous symbol will resolve to.</returns>
-        private string ConvertAnonymous(string symbol)
+        public void Reset()
         {
-            string trimmed = symbol.Trim(new char[] { '(', ')' });
-            int addr = GetAnonymousAddress(_currentLine, trimmed);
-            if (addr < 0)
-            {
-                Log.LogEntry(_currentLine, ErrorStrings.CannotResolveAnonymousLabel);
-                return "0";
-            }
-            return addr.ToString();
+            Bytes.Clear();
+            pc_ = log_pc_ = 0;
+            MaxAddress = ushort.MaxValue;
+            overflow_ = false;
         }
 
         /// <summary>
-        /// Determines whether the token is a reserved keyword, such as an instruction
-        /// or assembler directive.
+        /// Gets the current logical Program Counter.
         /// </summary>
-        /// <param name="token">The token to test.</param>
-        /// <returns>True, if the token is a reserved word, otherwise false.</returns>
-        protected override bool IsReserved(string token)
-        {
-            bool reserved = Reserved.IsReserved(token) || 
-                _conditionAssembler.AssemblesInstruction(token);
-
-            if (!reserved)
-            {
-                foreach (var asm in _assemblers)
-                {
-                    if (asm.AssemblesInstruction(token))
-                    {
-                        reserved = true;
-                        break;
-                    }
-                }
-            }
-            return reserved;
-        }
-
-
-        /// <summary>
-        /// Checks whether the token is a valid symbol/label name.
-        /// </summary>
-        /// <param name="token">The token to check.</param>
-        /// <param name="allowLeadUnderscore">Allow the token to have a leading underscore
-        /// for it to be a symbol.</param>
-        /// <param name="allowDot">Allow the token to have separating dots for it to be
-        /// considered a symbol.</param>
         /// <returns></returns>
-        private bool IsSymbolName(string token, bool allowLeadUnderscore = true, bool allowDot = true)
+        public int GetPC()
         {
-            // empty string 
-            if (string.IsNullOrEmpty(token))
-                return false;
-
-            // is a reserved word
-            if (IsReserved(token))
-                return false;
-
-            // if leading underscore not allowed
-            if (!allowLeadUnderscore && token.StartsWith("_"))
-                return false;
-
-            if (token.Contains("."))
-            {
-                if (!allowDot || token.EndsWith("."))
-                    return false;
-            }
-
-            // otherwise...
-            return Regex.IsMatch(token, @"^_?[a-zA-Z][a-zA-Z0-9_.]*$");
+            return LogicalPC;
         }
 
         /// <summary>
-        /// Preprocess the source file into a System.IEnumerable&lt;DotNetAsm.SourceLine&gt;.
-        /// Define macros and segments, and add included source files.
+        /// Change the first value in the compilation
         /// </summary>
-        /// <returns>The preprocessed System.IEnumerable&lt;DotNetAsm.SourceLine&gt;</returns>
-        private IEnumerable<SourceLine> Preprocess()
+        /// <param name="value">The value of the first compiled data</param>
+        /// <param name="size">The size of the data to change</param>
+        public void ChangeFirst(int value, int size)
         {
-            List<SourceLine> source = new List<SourceLine>();
-
-            source.AddRange(ProcessDefinedLabels());
-
-            Preprocessor processor = new Preprocessor(this,
-                                                      IsReserved,
-                                                      s => IsSymbolName(s.TrimEnd(':'), true, false));
-            processor.FileRegistry = FileRegistry;
-            foreach (var file in Options.InputFiles)
-            {
-                if (processor.FileRegistry.Add(file) == false)
-                {
-                    throw new Exception(string.Format(ErrorStrings.FilePreviouslyIncluded, file));
-                }
-                source.AddRange(processor.ConvertToSource(file));
-
-                if (Log.HasErrors)
-                    break;
-            }
-
-            if (Log.HasErrors == false)
-               return processor.ExpandMacros(source);
-            return null;
+            if ((size % 5) > Bytes.Count)
+                size = Bytes.Count;
+            if (size == 0)
+                return;
+            var bytes = BitConverter.GetBytes(value).ToList().GetRange(0, size);
+            if (BitConverter.IsLittleEndian != this.IsLittleEndian)
+                bytes.Reverse();
+            Bytes.RemoveRange(0, size);
+            Bytes.InsertRange(0, bytes);
         }
 
         /// <summary>
-        /// Add labels defined with command-line -D option
+        /// Change the last value in the compilation
         /// </summary>
-        /// <returns>Returns a System.Collections.Generic.IEnumerable&lt;SourceLine&gt; 
-        /// that will define the labels at assembly time.</returns>
-        private IEnumerable<SourceLine> ProcessDefinedLabels()
+        /// <param name="value">The value of the last compiled data</param>
+        /// <param name="size">The size of the data to change</param>
+        public void ChangeLast(int value, int size)
         {
-            var labels = new List<SourceLine>();
-
-            foreach (var label in Options.LabelDefines)
-            {
-                string name = label;
-                string definition = "1";
-
-                if (label.Contains("="))
-                {
-                    var def = label.Split(new string[] { "=" }, StringSplitOptions.RemoveEmptyEntries);
-
-                    if (def.Count() != 2)
-                        throw new Exception("Bad argument in label definition '" + label + "'");
-
-                    name = def.First(); definition = def.Last();
-                }
-
-                if (IsSymbolName(name, false, false) == false)
-                    throw new Exception(string.Format(ErrorStrings.LabelNotValid, name));
-
-                labels.Add(new SourceLine
-                {
-                    Label = name,
-                    Instruction = "=",
-                    Operand = definition,
-                    SourceString = string.Format("{0}={1} ;-D {2}", name, definition, label)
-                });
-            }
-            return labels;
+            if ((size % 5) > Bytes.Count)
+                size = Bytes.Count;
+            if (size == 0)
+                return;
+            var ix = Bytes.Count - size;
+            var bytes = BitConverter.GetBytes(value).ToList().GetRange(0, size);
+            if (BitConverter.IsLittleEndian != this.IsLittleEndian)
+                bytes.Reverse();
+            Bytes.RemoveAt(ix);
+            Bytes.AddRange(bytes);
         }
 
         /// <summary>
-        /// Convert a System.Stack&lt;string&gt; into a string.
+        /// Set the logical Program Counter. Also sets the internal Program Counter.
         /// </summary>
-        /// <param name="scope">The System.Stack&lt;string&gt; to convert.</param>
-        /// <returns></returns>
-        private string GetScopeString(Stack<string> scope)
+        /// <param name="value">The program counter value</param>
+        /// <exception cref="InvallidPCAssignmentException"></exception>
+        public void SetPC(int value)
         {
-            if (scope.Count == 0)
-                return string.Empty;
-            string scopestring = string.Join(".", scope.Reverse());
-            return scopestring;
+            LogicalPC = value;
+            ProgramCounter = value;
         }
 
         /// <summary>
-        /// Performs a first (or more) pass of preprocessed source to resolve all 
-        /// actual symbol values, process conditions and repetitions, and add to 
-        /// Processed Lines.
+        /// Set the logical Program Counter. This is useful when compiling re-locatable code.
         /// </summary>
-        /// <param name="source">The preprocessed System.IEnumerable&lt;DotNetAsm&gt;</param>
-        private void FirstPass(IEnumerable<SourceLine> source)
+        /// <param name="value">The logical program counter value</param>
+        public void SetLogicalPC(int value)
         {
-            _passes = 0;
-
-            Stack<string> scope = new Stack<string>();
-            
-            int anon = 0;
-            int id = 0;
-
-            RepetitionHandler handler = new RepetitionHandler(this);
-
-            foreach(SourceLine line in source)
-            {
-                try
-                {
-                    if (line.DoNotAssemble)
-                    {
-                        if (line.IsComment)
-                            ProcessedLines.Add(line);
-                        continue;
-                    }
-                    _currentLine = line;
-
-                    _conditionAssembler.AssembleLine(line);
-
-                    if (line.DoNotAssemble)
-                        continue;
-
-                    if (line.Instruction.Equals(".end", Options.StringComparison))
-                        break;
-
-                    if (handler.Processes(line.Instruction) || handler.IsProcessing)
-                    {
-                        handler.Process(line);
-                        if (handler.IsProcessing == false)
-                        {
-                            var processedLines = handler.ProcessedLines;
-                            foreach (SourceLine l in processedLines)
-                            {
-                                l.Id = id;
-                                FirstPassLine(l, scope, ref anon);
-                                id++;
-                            }
-                            handler.Reset();
-                        }
-                    }
-                    else
-                    {
-                        line.Id = id;
-                        FirstPassLine(line, scope, ref anon);
-                        id++;
-                    }
-                }
-                catch (Compilation.InvalidPCAssignmentException ex)
-                {
-                    Log.LogEntry(line, ErrorStrings.InvalidPCAssignment, ex.Message);
-                }
-                catch (StackOverflowException)
-                {
-                    _passes = 4;
-                }
-                catch (Exception)
-                {
-                    Log.LogEntry(line, ErrorStrings.None);
-                }
-            }
-            if (scope.Count > 0 || handler.IsProcessing || _conditionAssembler.InConditionBlock)
-            {
-                Log.LogEntry(ProcessedLines.Last(), ErrorStrings.MissingClosure);
-            }
+            if (value < 0 || value > MaxAddress)
+                throw new InvalidPCAssignmentException(value);
+            log_pc_ = value;
         }
 
         /// <summary>
-        /// Performs a first pass on the DotNetAsm.SourceLine, including updating 
-        /// the Program Counter and definining labels.
+        /// Reset the logical Program Counter back to the internal Program Counter value.
+        /// Used with SetLogicalPC().
         /// </summary>
-        /// <param name="line">The DotNetAsm.SourceLine to perform a pass</param>
-        /// <param name="scope">The current scope as a System.Stack&lt;string;&gt;</param>
-        /// <param name="anon">The counter of anonymous blocks</param>
-        private void FirstPassLine(SourceLine line, Stack<string> scope, ref int anon)
+        /// <returns>Returns the new logical Program Counter</returns>
+        public int SynchPC()
         {
-            UpdatePC(line);
-
-            line.PC = Output.GetPC();
-
-            DefineLabel(line, scope, ref anon);
-
-            if (!IsDefiningConstant(line))
-                Output.AddUninitialized(GetInstructionSize(line));
-            
-            ProcessedLines.Add(line);
+            //LogicalPC = ProgramCounter;
+            log_pc_ = ProgramCounter;
+            return LogicalPC;
         }
 
         /// <summary>
-        /// Perform a second or final pass on a DotNetAsm.SourceLine, including final 
-        /// assembly of bytes.
+        /// Add a value to the compilation
         /// </summary>
-        /// <param name="line">The DotNetAsm.SourceLine to perform pass</param>
-        /// <param name="anon">The current counter of anonymous blocks</param>
-        /// <param name="finalPass">A flag indicating this is a final pass</param>
-        /// <returns>True, if another pass is needed. Otherwise false.</returns>
-        private bool SecondPassLine(SourceLine line, ref int anon, bool finalPass)
+        /// <param name="value">The value to add</param>
+        /// <param name="size">The size, in bytes, of the value</param>
+        public void Add(Int64 value, int size)
         {
-            UpdatePC(line);
-            bool passNeeded = false;
-            if (IsDefiningConstant(line))
+            var bytes = BitConverter.GetBytes(value);
+            AddBytes(bytes, size, false);
+        }
+
+        /// <summary>
+        /// Add uninitialized memory to the compilation. This is the same as incrementing the 
+        /// logical Program Counter by the specified size, but without adding any data to the
+        /// compilation.
+        /// </summary>
+        /// <param name="size">The number of bytes to add to the memory space</param>
+        public void AddUninitialized(int size)
+        {
+            ProgramCounter += size;
+            LogicalPC += size;
+        }
+
+        /// <summary>
+        /// Add the bytes for an UTF8-encoded string to the compilation
+        /// </summary>
+        /// <param name="value">The value to add</param>
+        public void Add(string value)
+        {
+            byte[] utf8bytes = Encoding.UTF8.GetBytes(value);
+            AddBytes(utf8bytes);
+        }
+
+        /// <summary>
+        /// Add a 32-bit integral value to the compilation
+        /// </summary>
+        /// <param name="value">The value to add</param>
+        public void Add(int value)
+        {
+            Add(value, 4);
+        }
+
+        /// <summary>
+        /// Add a byte value to the compilation
+        /// </summary>
+        /// <param name="value">The value to add</param>
+        public void Add(byte value)
+        {
+            Add(Convert.ToInt32(value), 1);
+        }
+
+        /// <summary>
+        /// Add a 16-bit integral value to the compilation
+        /// </summary>
+        /// <param name="value">The value to add</param>
+        public void Add(ushort value)
+        {
+            Add(Convert.ToInt32(value), 2);
+        }
+
+        /// <summary>
+        /// Reserve uninitialized memory in the compilation by an unspecified amount
+        /// </summary>
+        /// <param name="amount">The amount to reserve</param>
+        public void Fill(int amount)
+        {
+            LogicalPC += amount;
+            ProgramCounter += amount;
+        }
+
+        /// <summary>
+        /// Fill memory with the specified values by the specified amount.
+        /// </summary>
+        /// <param name="amount">The amount to fill</param>
+        /// <param name="value">The fill value</param>
+        /// <param name="repeatNotFill">Repeat the value not fill to the amount.</param>
+        public void Fill(int amount, Int64 value, bool repeatNotFill)
+        {
+            int size = value.Size();
+            byte[] fillbytes;
+
+            if (BitConverter.IsLittleEndian)
             {
-                if (line.Label.Equals("*")) return false;
-                long val = Evaluator.Eval(line.Operand);
-                if (line.Instruction.Equals("-") || line.Instruction.Equals("+"))
-                {
-                    passNeeded = (int)val != line.PC;
-                }
-                else
-                {
-                    string scoped = GetNearestScope(line.Label, line.Scope);
-                    passNeeded = !(val.ToString().Equals(Labels[scoped]));
-                    Labels[scoped] = val.ToString();
-                }
-                line.PC = (int)val;
+                // d2 ff 00 00 
+                fillbytes = BitConverter.GetBytes(value).Take(size).ToArray(); // d2 ff
+                if (!IsLittleEndian)
+                    fillbytes = fillbytes.Reverse().ToArray(); // ff d2
             }
             else
             {
-
-                if (IsSymbolName(line.Label, true, false) ||
-                    line.Instruction.Equals(".block", Options.StringComparison))
-                {
-                    string label = line.Label;
-                    if (string.IsNullOrEmpty(label))
-                    {
-                        label = anon.ToString();
-                        anon++;
-                    }
-                    label = GetNearestScope(label, line.Scope);
-                    Labels[label] = Output.GetPC().ToString();
-                }
-                passNeeded = line.PC != Output.GetPC();
-                line.PC = Output.GetPC();
-                if (finalPass)
-                    AssembleLine(line);
-                else
-                    Output.AddUninitialized(GetInstructionSize(line));
+                // 00 00 ff d2
+                fillbytes = BitConverter.GetBytes(value).Reverse().Take(size).ToArray(); // d2 ff
+                if (!IsLittleEndian)
+                    fillbytes = fillbytes.Reverse().ToArray(); // ff d2
             }
-            return passNeeded;
+            List<byte> repeated = new List<byte>();
+            for (int i = 0; i < amount; i++)
+            {
+                for (int j = 0; j < size; j++)
+                    repeated.Add(fillbytes[j]);
+
+            }
+            if (repeatNotFill)
+                AddBytes(repeated, true);
+            else
+                AddBytes(repeated.GetRange(0, amount), true);
         }
 
         /// <summary>
-        /// Perform a second pass on the processed source, including output to binary.
+        /// Offset the compilation by a specified amount without updating the logical Program Counter. 
+        /// This can be used to create re-locatable code.
         /// </summary>
-        private void SecondPass()
+        /// <param name="amount">The offset amount</param>
+        public void Offset(int amount)
         {
-            const int MAX_PASSES = 4;
-            bool passNeeded = true;
-            bool finalPass = false;
-            _passes++;
-
-            var assembleLines = ProcessedLines.Where(l => l.DoNotAssemble == false);
-
-            while (_passes <= MAX_PASSES && Log.HasErrors == false)
-            {
-                passNeeded = false;
-                Output.Reset();
-                int anon = 0;
-
-                foreach(SourceLine line in assembleLines)
-                {
-                    try
-                    {
-                        if (line.Instruction.Equals(".end", Options.StringComparison))
-                            break;
-
-                        _currentLine = line;
-
-                        bool needpass = SecondPassLine(line, ref anon, finalPass);
-                        if (!passNeeded)
-                            passNeeded = needpass;
-
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.LogEntry(line, ex.Message);
-                    }
-                }
-                if (finalPass)
-                    break;
-                _passes++;
-                finalPass = !passNeeded;
-            }
-            if (_passes > MAX_PASSES)
-            {
-                throw new Exception("Too many passes attempted.");
-            }
-        }
-
-        public void AddAssembler(ILineAssembler lineAssembler)
-        {
-            _assemblers.Add(lineAssembler);
-        }
-
-        public void AddSymbol(string symbol)
-        {
-            Reserved.AddWord("UserDefined", symbol);
-        }
-
-        public void AssembleLine(SourceLine line)
-        {
-            if (string.IsNullOrEmpty(line.Instruction))
-            {
-                if (!string.IsNullOrEmpty(line.Operand))
-                    Log.LogEntry(line, ErrorStrings.None);
-                return;
-            }
-
-            foreach(var asm in _assemblers)
-            {
-                if (asm.AssemblesInstruction(line.Instruction))
-                {
-                    asm.AssembleLine(line);
-                    GetAssemblyBytes(line);
-                    return;
-                }
-            }
-            if (Reserved.IsReserved(line.Instruction) == false)
-                Log.LogEntry(line, ErrorStrings.UnknownInstruction, line.Instruction);
+            AddBytes(new List<byte>(amount), amount, true, false);
         }
 
         /// <summary>
-        /// Copy the output bytes to the DotNetAsm.SourceLine assembly.
+        /// Align the compilation to the specified boundary and fill with the specified values.
+        /// For instance, to align the next byte(s) in the compilation to a page boundary you would
+        /// set the align amount to 256.
         /// </summary>
-        /// <param name="line">The DotNetAsm.SourceLine to copy bytes to.</param>
-        private void GetAssemblyBytes(SourceLine line)
+        /// <param name="amount">The amount to align the compilation</param>
+        /// <param name="value">The value to fill before the alignment</param>
+        /// <returns>Returns the offset needed to align the Program Counter</returns>
+        public int Align(int amount, long value)
         {
-            line.Assembly.Clear();
-            int range = Output.GetPC() - line.PC; 
-            var robytes = Output.GetCompilation().ToList();
-            int logicalsize = Output.ProgramCounter - Output.ProgramStart;
-            if (robytes.Count - range < 0)
-            {
-                if (robytes.Count == 0)
-                    return;
-                range = robytes.Count;
-            }
-            else if (logicalsize > robytes.Count)
-            {
-                if (logicalsize > robytes.Count + range)
-                    return;
-                range = range - (logicalsize - robytes.Count);
-            }
-            if (range > 0)
-                line.Assembly.AddRange(robytes.GetRange(robytes.Count - range, range));
+            int align = GetAlignmentSize(LogicalPC, amount);
+            Fill(align, value, false);
+            return align;
         }
 
         /// <summary>
-        /// Gets all subscopes from the current parent scope.
+        /// Align the compilation to the specified boundary. For instance, to align the next byte(s)
+        /// in the compilation to a page boundary you would set the align amount to 256.
         /// </summary>
-        /// <param name="parent">The parent scope.</param>
-        /// <returns>A listing of all scopes, including parent.</returns>
-        private IEnumerable<string> GetSubScopes(string parent)
+        /// <param name="amount">The amount to align</param>
+        /// <returns>Returns the offset needed to align the Program Counter</returns>
+        public int Align(int amount)
         {
-            if (string.IsNullOrEmpty(parent))
-            {
-                return new List<string>();
-            }
-            var result = new List<string>();
-            result.Add(parent);
-            var split = parent.Split('.').ToList();
-            split.RemoveAt(split.Count - 1);
-            string combined = string.Join(".", split);
-            result.AddRange(GetSubScopes(combined).ToList());
-            return result;
+            int align = GetAlignmentSize(LogicalPC, amount);
+            LogicalPC += align;
+            ProgramCounter += align;
+            return align;
         }
 
         /// <summary>
-        /// Gets the nearest scope for the given token in its given scope.
+        /// Add a range of bytes to the compilation.
         /// </summary>
-        /// <param name="token">The line token.</param>
-        /// <param name="scope">The line scope.</param>
-        /// <returns>Returns the nearest scope for the token.</returns>
-        private string GetNearestScope(string label, string linescope)
+        /// <param name="bytes">The collection of bytes to add</param>
+        /// <param name="size">The number of bytes in the collection to add</param>
+        /// <param name="ignoreEndian">Ignore the endianness when adding to the compilation</param>
+        /// <param name="updateProgramCounter">Update the Program Counter automatically</param>
+        public void AddBytes(IEnumerable<byte> bytes, int size, bool ignoreEndian, bool updateProgramCounter)
         {
-            List<string> scopes = GetSubScopes(linescope).ToList();
-
-            foreach (var s in scopes)
+            if (CompilingHasStarted == false)
             {
-                string scoped = s + "." + label;
-                if (Labels.ContainsKey(scoped.TrimStart('.')))
-                {
-                    return scoped.TrimStart('.');
-                }
-            }
-            return label;
-        }
-
-        /// <summary>
-        /// This does a quick and "dirty" look at instructions. It will catch
-        /// some but not all syntax errors, concerned mostly with the probable 
-        /// size of the instruction. 
-        /// </summary>
-        /// <param name="line">The SourceLine to read</param>
-        /// <param name="instruction_ix">The index of the instruction in the line tokens</param>
-        /// <returns>The size in bytes of the instruction, including opcode and operand</returns>
-        private int GetInstructionSize(SourceLine line)
-        {
-            foreach(var asm in _assemblers)
-            {
-                if (asm.AssemblesInstruction(line.Instruction))
-                    return asm.GetInstructionSize(line);
-            }
-            return 0;
-        }
-
-        /// <summary>
-        /// Examine a DotNetAsm.SourceLine and determine if a label is being defined.
-        /// </summary>
-        /// <param name="line">The DotNetAsm.SourceLine to examine</param>
-        /// <param name="scope">The current scope as a Stack&lt;string&gt;</param>
-        /// <param name="anon">The current counter to the anonymous blocks</param>
-        private void DefineLabel(SourceLine line, Stack<string> scope, ref int anon)
-        {
-            string currentScope = line.Scope = GetScopeString(scope);
-
-            if (string.IsNullOrEmpty(line.Label) == false ||
-                    line.Instruction.Equals(".block", Options.StringComparison))
-            {
-                if (line.Label.Equals("*"))
-                    return;
-
-                string scopedLabel = string.Empty;
-
-                if (string.IsNullOrEmpty(line.Label) || _specialLabels.IsMatch(line.Label))
-                {
-                    if (IsDefiningConstant(line))
-                    {
-                        line.PC = Convert.ToInt32(Evaluator.Eval(line.Operand));
-                    }
-                    else
-                    {
-                        line.PC = Output.GetPC();
-                    }
-                    if (line.Instruction.Equals(".block", Options.StringComparison))
-                    {
-                        scopedLabel = currentScope + "." + anon.ToString();
-                        scopedLabel = scopedLabel.TrimStart('.');
-
-                        if (string.IsNullOrEmpty(line.Label))
-                            line.Scope = scopedLabel;
-
-                        Labels.Add(scopedLabel, line.PC.ToString());
-                        scope.Push(anon.ToString());
-                        anon++;
-                    }
-                    if (line.Label.Equals("+") || line.Label.Equals("-"))
-                    {
-                        if (line.Label == "+")
-                            AnonPlus.Add(line.Id);
-                        else
-                            AnonMinus.Add(line.Id);
-
-                    }
-                }
-                else
-                {
-                    if (IsSymbolName(line.Label, true, false) == false)
-                    {
-                        Log.LogEntry(line, ErrorStrings.LabelNotValid, line.Label);
-                        return;
-                    }
-
-                    scopedLabel = currentScope + "." + line.Label;
-                    line.Scope = scopedLabel = scopedLabel.TrimStart('.');
-                    if (line.Instruction.Equals(".block", Options.StringComparison))
-                    {
-                        scope.Push(line.Label);
-                    }
-                    if (Labels.ContainsKey(scopedLabel))
-                    {
-                        Log.LogEntry(line, ErrorStrings.LabelRedefinition, line.Label);
-                        return;
-                    }
-                    string val = line.PC.ToString();
-                    if (IsDefiningConstant(line))
-                    {
-                        val = Evaluator.Eval(line.Operand).ToString();
-                    }
-                    Labels.Add(scopedLabel, val);
-                }
-            }
-
-            if (line.Instruction.Equals(".endblock", Options.StringComparison))
-            {
-                if (scope.Count < 1)
-                {
-                    Log.LogEntry(line, ErrorStrings.ClosureDoesNotCloseBlock);
-                    return;
-                }
-                scope.Pop();
-            }
-        }
-
-        /// <summary>
-        /// Determine if the DotNetAsm.SourceLine updates the output's Program Counter
-        /// </summary>
-        /// <param name="line">The DotNetAsm.SourceLine to examine</param>
-        private void UpdatePC(SourceLine line)
-        {
-            long val = 0;
-            if (line.Label.Equals("*"))
-            {
-                if (IsDefiningConstant(line))
-                {
-                    val = Evaluator.Eval(line.Operand);
-                    if (val < UInt16.MinValue || val > UInt16.MaxValue)
-                    {
-                        Log.LogEntry(line, ErrorStrings.IllegalQuantity, val.ToString());
-                        return;
-                    }
-                    Output.SetPC(Convert.ToUInt16(val));
-                }
-                else
-                {
-                    Log.LogEntry(line, ErrorStrings.None);
-                }
-                return;
-            }
-            string instruction = Options.CaseSensitive ? line.Instruction : line.Instruction.ToLower();
-            
-            switch (instruction)
-            {
-                case ".relocate":
-                case ".pseudopc":
-                    {
-                        if (string.IsNullOrEmpty(line.Operand))
-                        {
-                            Log.LogEntry(line, ErrorStrings.TooFewArguments, line.Instruction);
-                            return;
-                        }
-                        val = Evaluator.Eval(line.Operand);
-                        if (val < UInt16.MinValue || val > UInt16.MaxValue)
-                        {
-                            Log.LogEntry(line, ErrorStrings.IllegalQuantity, val.ToString());
-                            return;
-                        }
-                        Output.SetLogicalPC(Convert.ToUInt16(val));
-                    }
-                    break;
-                case ".endrelocate":
-                case ".realpc":
-                    {
-                        if (string.IsNullOrEmpty(line.Operand) == false)
-                        {
-                            Log.LogEntry(line, ErrorStrings.TooManyArguments, line.Instruction);
-                            return;
-                        }
-                        Output.SynchPC();
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// Determines whether the SourceLine is defining a constant.
-        /// </summary>
-        /// <param name="line">The SourceLine to test.</param>
-        /// <returns>True, if the line is defining a constant, otherwise false.</returns>
-        private bool IsDefiningConstant(SourceLine line)
-        {
-            if (line.Operand.EnclosedInQuotes())
-                return false; // define a constant string??
-
-            if (line.Instruction.Equals("=") || line.Instruction.Equals(".equ", Options.StringComparison))
-                return true;
-
-            return false;
-        }
-
-        /// <summary>
-        /// Print the status of the assembly results to console output.
-        /// </summary>
-        private void PrintStatus(DateTime asmTime)
-        {
-            if (Log.HasWarnings && !Options.NoWarnings)
-            {
-                Console.WriteLine();
-                Log.DumpWarnings();
-            }
-            if (Log.HasErrors == false)
-            {
-                Console.WriteLine("\n********************************");
-                Console.WriteLine("Assembly start: ${0:X4}", Output.ProgramStart);
-                Console.WriteLine("Assembly end:   ${0:X4}", Output.ProgramEnd);
-                Console.WriteLine("Passes: {0}", _passes);
+                ProgramStart = ProgramCounter;
             }
             else
             {
-                Log.DumpErrors();
+                int diff = ProgramCounter - (ProgramStart + Bytes.Count);
+                if (diff > 0)
+                    Bytes.AddRange(new byte[diff]);
             }
 
-            Console.WriteLine("Number of errors: {0}", Log.ErrorCount);
-            Console.WriteLine("Number of warnings: {0}", Log.WarningCount);
-
-            if (Log.HasErrors == false)
+            if (updateProgramCounter)
             {
-                TimeSpan ts = DateTime.Now.Subtract(asmTime);
-
-                Console.WriteLine("{0} bytes, {1} sec.", 
-                    Output.GetCompilation().Count,
-                    ts.TotalSeconds);
-                Console.WriteLine("*********************************");
-                Console.WriteLine("Assembly completed successfully.");
+                ProgramCounter += size;
+                LogicalPC += size;
             }
-        }
 
-        /// <summary>
-        /// Sends the assembled source to listing, either as a list of labels or 
-        /// a full assembly listing, including assembled bytes and disassembly.
-        /// </summary>
-        /// <param name="args">The arguments passed in the command line by the user.</param>
-        private void ToListing()
-        {
-            if (string.IsNullOrEmpty(Options.ListingFile) && string.IsNullOrEmpty(Options.LabelFile))
-                return;
+            if (ignoreEndian == false && BitConverter.IsLittleEndian != IsLittleEndian)
+                bytes = bytes.Reverse();
 
-            string listing;
-
-            if (!string.IsNullOrEmpty(Options.ListingFile))
+            if (Transforms.Count > 0)
             {
-                listing = GetListing();
-                using (StreamWriter writer = new StreamWriter(Options.ListingFile))
+                var transformed = bytes.ToList();
+                for (int i = 0; i < size; i++)
                 {
-                    string exec = Path.GetFileName(System.Reflection.Assembly.GetEntryAssembly().Location);
-                    string argstring = string.Join(" ", Options.Arguments);
-                    string bannerstring = BannerText.Split(new char[] { '\n', '\r' }).First();
-                    writer.WriteLine(";; {0}", bannerstring);
-                    writer.WriteLine(";; {0} {1}", exec, argstring);
-                    writer.WriteLine(";; {0:f}\n", DateTime.Now);
-                    writer.WriteLine(";; Input files:\n");
-
-                    FileRegistry.ToList().ForEach(f => writer.WriteLine(";; {0}", f));
-
-                    writer.WriteLine();
-                    writer.Write(listing);
+                    foreach (var t in Transforms)
+                        transformed[i] = t(transformed[i]);
                 }
-            }
-            if (!string.IsNullOrEmpty(Options.LabelFile))
-            {
-                listing = GetLabels();
-                using (StreamWriter writer = new StreamWriter(Options.LabelFile, false))
-                {
-                    writer.WriteLine(";; Input files:\n");
-
-                    FileRegistry.ToList().ForEach(f => writer.WriteLine(";; {0}", f));
-                    writer.WriteLine();
-                    writer.WriteLine(listing);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Used by the ToListing method to get a listing of all defined labels.
-        /// </summary>
-        /// <returns>A string containing all label definitions.</returns>
-        private string GetLabels()
-        {
-            StringBuilder listing = new StringBuilder();
-            Labels.ToList().ForEach(delegate(KeyValuePair<string, string> label)
-            {
-                var labelname = Regex.Replace(label.Key, @"(?<=^|\.)[0-9]+(?=\.|$)", "{anonymous}");
-                var maxlen = labelname.Length > 30 ? 30 : labelname.Length;
-                if (maxlen < 0) maxlen++;
-                labelname = labelname.Substring(labelname.Length - maxlen, maxlen);
-                var val = Convert.ToInt64(label.Value);
-                var size = val.Size() * 2;
-                listing.AppendFormat("{0,-30} = ${1,-4:x" + size.ToString() + "} ({2})",
-                    labelname,
-                    val,
-                    label.Value)
-                    .AppendLine();
-            });
-            return listing.ToString();
-        }
-
-        /// <summary>
-        /// Used by the ToListing method to get the full listing.</summary>
-        /// <returns>Returns a listing string to save to disk.</returns>
-        private string GetListing()
-        {
-            StringBuilder listing = new StringBuilder();
-
-            foreach (SourceLine line in ProcessedLines)
-            {
-                if (line.Instruction.Equals(".end", Options.StringComparison))
-                    break;
-
-                Disassembler.DisassembleLine(line, listing);
-            }
-            if (listing.ToString().EndsWith(Environment.NewLine))
-                return listing.ToString().Substring(0, listing.Length - Environment.NewLine.Length);
-
-            return listing.ToString();
-        }
-
-        /// <summary>
-        /// Saves the output to disk.
-        /// </summary>
-        private void SaveOutput()
-        {
-            if (!Options.GenerateOutput)
-                return;
-
-            var outputfile = Options.OutputFile;
-            if (string.IsNullOrEmpty(Options.OutputFile))
-                outputfile = "a.out";
-
-            using (BinaryWriter writer = new BinaryWriter(new FileStream(outputfile, FileMode.Create, FileAccess.Write)))
-            {
-                if (HeaderOutputAction != null)
-                    HeaderOutputAction(this, writer);
-
-                writer.Write(Output.GetCompilation().ToArray());
-
-                if (FooterOutputAction != null)
-                    FooterOutputAction(this, writer);
-            }
-        }
-
-        public void Assemble()
-        {
-            if (Options.InputFiles.Count == 0)
-                return;
-
-            if (Options.PrintVersion)
-                Console.WriteLine(VerboseBannerText);
-
-            if (Options.Quiet)
-                Console.SetOut(TextWriter.Null);
-
-            if (Options.PrintVersion == false)
-                Console.WriteLine(BannerText);
-
-            DateTime asmTime = DateTime.Now;
-
-            var source = Preprocess();
-
-            if (Log.HasErrors == false)
-            {
-                FirstPass(source);
-
-                SecondPass();
-
-                if (Log.HasErrors == false)
-                {
-                    SaveOutput();
-
-                    ToListing();
-                }
-            }
-            PrintStatus(asmTime);
-        }
-
-        public string GetScopedLabelValue(string label, SourceLine line)
-        {
-            label = GetNearestScope(label, line.Scope);
-            if (Labels.ContainsKey(label))
-                return _evaluator.Eval(Labels[label]).ToString();
-            return string.Empty;
-        }
-
-        /// <summary>
-        /// Used by the expression evaluator to get the actual value of the symbol.
-        /// </summary>
-        /// <param name="symbol">The symbol to look up.</param>
-        /// <returns>The underlying value of the symbol.</returns>
-        private string GetLabelValue(string symbol)
-        {
-            string value;
-            
-            value = GetScopedLabelValue(symbol, _currentLine);
-            if (string.IsNullOrEmpty(value))
-            {
-                if (_passes > 0)
-                {
-                    Log.LogEntry(_currentLine, ErrorStrings.LabelNotDefined, symbol);
-                    return string.Empty;
-                }
-                return ExpressionEvaluator.EVAL_FAIL;
+                Bytes.AddRange(transformed.GetRange(0, size));
             }
             else
             {
-                return value;
+                Bytes.AddRange(bytes.ToList().GetRange(0, size));
             }
         }
 
         /// <summary>
-        /// Gets the actual address of an anonymous symbol.
+        /// Add a range of bytes to the compilation.
         /// </summary>
-        /// <param name="fromLine">The SourceLine containing the anonymous symbol.</param>
-        /// <param name="operand">The operand.</param>
-        /// <returns>Returns the anonymous symbol address.</returns>
-        private int GetAnonymousAddress(SourceLine fromLine, string operand)
+        /// <param name="bytes">The collection of bytes to add</param>
+        /// <param name="size">The number of bytes in the collection to add</param>
+        /// <param name="ignoreEndian">Ignore the endianness when adding to the compilation</param>
+        public void AddBytes(IEnumerable<byte> bytes, int size, bool ignoreEndian)
         {
-            int count = operand.Length - 1;
-            IOrderedEnumerable<int> idList;
-            if (operand.First() == '-')
-            {
-                idList = AnonMinus.Where(i => i < fromLine.Id).OrderByDescending(i => i);
-            }
-            else
-            {
-                idList = AnonPlus.Where(i => i > fromLine.Id).OrderBy(i => i);
-            }
-            int id = 0;
-            string scope = fromLine.Scope; 
+            AddBytes(bytes, size, ignoreEndian, true);
+        }
 
-            while (id != -1)
-            {
-                id = idList.Count() > count ? idList.ElementAt(count) : -1;
+        /// <summary>
+        /// Add a range of bytes to the compilation.
+        /// </summary>
+        /// <param name="bytes">The collection of bytes to add</param>
+        /// <param name="ignoreEndian">Ignore the endianness when adding to the compilation</param>
+        public void AddBytes(IEnumerable<byte> bytes, bool ignoreEndian)
+        {
+            AddBytes(bytes, bytes.Count(), ignoreEndian);
+        }
 
-                var lines = from line in ProcessedLines
-                            where line.Id == id && line.Scope == scope
-                            select line;
-                if (lines.Count() == 0)
-                {
-                    if (string.IsNullOrEmpty(scope) == false)
-                    {
-                        var splitscope = scope.Split('.').ToList();
-                        splitscope.RemoveAt(splitscope.Count - 1);
-                        scope = string.Join(".", splitscope);
-                    }
-                    else
-                    {
-                        scope = fromLine.Scope;
-                        count++;
-                    }
-                }
+        /// <summary>
+        /// Add a range of bytes to the compilation.
+        /// </summary>
+        /// <param name="bytes">The collection of bytes to add</param>
+        /// <param name="size">The number of bytes in the collection to add</param>
+        public void AddBytes(IEnumerable<byte> bytes, int size)
+        {
+            AddBytes(bytes, size, true);
+        }
+
+        /// <summary>
+        /// Add a range of bytes to the compilation.
+        /// </summary>
+        /// <param name="Bytes">The collection of bytes to add</param>
+        public void AddBytes(IEnumerable<byte> bytes)
+        {
+            AddBytes(bytes, true);
+        }
+
+        /// <summary>
+        /// Get the compilation bytes
+        /// </summary>
+        /// <returns>The bytes of the compilation.</returns>
+        public System.Collections.ObjectModel.ReadOnlyCollection<byte> GetCompilation()
+        {
+            return Bytes.AsReadOnly();
+        }
+
+        /// <summary>
+        /// Get the relative offset between two addresses. Useful for calculating short jumps.
+        /// </summary>
+        /// <param name="address1">Current address</param>
+        /// <param name="address2">Destination address</param>
+        /// <returns>Returns the relative offset between the two addresses</returns>
+        public int GetRelativeOffset(int address1, int address2)
+        {
+            address2 = address2 & MaxAddress;
+            int offset = address1 - address2;
+            if (Math.Abs(offset) > (MaxAddress / 2))
+            {
+                if (offset < 0)
+                    offset = Math.Abs(offset) - (MaxAddress + 1);
                 else
-                {
-                    return lines.First().PC;
-                }
+                    offset = MaxAddress + 1 - offset;
+
+                if (address1 > address2)
+                    offset = -offset;
             }
-            return id;
+            return offset;
         }
+
         #endregion
 
         #region Properties
 
-        public AsmCommandLineOptions Options { get; private set; }
-
-        public Compilation Output {  get; private set; }
-
-        public ErrorLog Log { get; private set; }
-
-        public IDictionary<string, string> Labels {  get; private set; }
-
-        public IEvaluator Evaluator { get { return _evaluator; } }
+        /// <summary>
+        /// Gets the program start addressed based on the value of the Program Counter
+        /// when compilation first occurred.
+        /// </summary>
+        public int ProgramStart { get; private set; }
 
         /// <summary>
-        /// Gets or sets the disassembler. The default disassembler is the DotNetAsm.Disassembler.
+        /// Gets the program end address, which is the address of the final assembled byte
+        /// from the program start.
         /// </summary>
-        public ILineDisassembler Disassembler { get; set; }
-
-        public Action<IAssemblyController, BinaryWriter> HeaderOutputAction { get; set; }
-
-        public Action<IAssemblyController, BinaryWriter> FooterOutputAction { get; set; }
-
-        public string BannerText { get; set; }
-
-        public string VerboseBannerText { get; set; }
-
-        private HashSet<string> FileRegistry { get; set; }
+        public int ProgramEnd 
+        {
+            get
+            {
+                return ProgramStart + (Bytes.Count - 1);
+            }
+        }
 
         /// <summary>
-        /// Gets the command-line arguments passed by the end-user and parses into 
-        /// strongly-typed options.
+        /// Gets or sets a the collections of functions that apply transforms to the bytes before
+        /// they are added to the compilation. The transform functions are called from last to
+        /// first in the order they are pushed onto the transform stack.
         /// </summary>
-        private List<SourceLine> ProcessedLines { get; set; }
+        public Stack<Func<byte, byte>> Transforms { get; set; }
 
         /// <summary>
-        /// Gets or sets the list of unique IDs for SourceLines whose labels
-        /// are forward-reference anonymous symbols.
+        /// Gets or sets the maximum address allowed for the Program Counter until
+        /// it overflows.
         /// </summary>
-        private HashSet<int> AnonPlus { get; set; }
+        public int MaxAddress { get; set; }
 
         /// <summary>
-        /// Gets or sets the list of unique IDs for SourceLines whose labels
-        /// are backward-reference anonymous symbols.
+        /// Gets or sets the byte buffer of the compilation
         /// </summary>
-        private HashSet<int> AnonMinus { get; set; }
+        List<byte> Bytes { get; set; }
+
+        /// <summary>
+        /// Gets the status of the compilation, if it is currently compiling
+        /// </summary>
+        bool CompilingHasStarted { get { return Bytes.Count > 0; } }
+
+        /// <summary>
+        /// Gets the actual Program Counter
+        /// </summary>
+        public int ProgramCounter
+        {
+            get { return pc_; }
+            private set
+            {
+                if (value < 0 || value < pc_)
+                    throw new InvalidPCAssignmentException(value);
+                pc_ = value & MaxAddress;
+            }
+        }
+
+        /// <summary>
+        /// Gets the endianness of the compilation
+        /// </summary>
+        public bool IsLittleEndian { get; private set; }
+
+        /// <summary>
+        /// Gets a flag that indicates if a PC overflow has occurred. This flag will 
+        /// only be cleared with a call to the Reset method.
+        /// </summary>
+        public bool PCOverflow { get { return overflow_; } }
+
+        /// <summary>
+        /// Gets or sets the logical Program Counter
+        /// </summary>
+        int LogicalPC
+        {
+            get { return log_pc_; }
+            set
+            {
+                if (value < 0 || value < log_pc_)
+                    throw new InvalidPCAssignmentException(value);
+                if (!overflow_)
+                    overflow_ = value > MaxAddress;
+                log_pc_ = value & MaxAddress;
+            }
+        }
 
         #endregion
     }
