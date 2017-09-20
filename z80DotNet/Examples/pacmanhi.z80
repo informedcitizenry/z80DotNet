@@ -27,48 +27,6 @@
             
             SCORETABLE_SIZ  = defaulthi_end - defaulthi
             
-    ;; uninitialized variables
-            * = $4f00
-            
-            scores     
-firstscore  .block
-rank        .lint ?
-score       .lint ?,?
-name        .lint ?
-            .endblock
-secondscore .block
-rank        .lint ?
-score       .lint ?,?
-name        .lint ?
-            .endblock
-thirdscore  .block
-rank        .lint ?
-score       .lint ?,?
-name        .lint ?
-            .endblock
-fourthscore .block
-rank        .lint ?
-score       .lint ?,?
-name        .lint ?
-            .endblock
-lastscore   .block
-rank        .lint ?
-score       .lint ?,?
-name        .lint ?
-            .endblock
- 
-remaintick  .byte ?
-currplayr   .byte ?
-currscor    .word ?
-currinit    .word ?
-score_ptr   .word ?
-row_ptr     .word ?
-currhighix  .byte ?
-inputlock   .byte ?
-levelstate  .byte ?
-highscore   .long ?
-initflag    .byte ?
-            
     ;; patch $0401 from ld a,($4e6e) to freeplystrt
     ;; patch $06be from la a,($4e04) to call checkreg
     ;; patch $0936 & $0955 from rst $28/.db $1c,$05 to call reghiscor
@@ -104,6 +62,8 @@ initflag    .byte ?
             ldir                ; copy default scores to scores
             ld hl,$7650         ; high score
             ld (highscore),hl   ; save in the saved high score
+            ld  a,1
+            ld  (initflag),a    ; set the init flag
 sethiscor:
             ld  hl,highscore    ; restore high score
             ld  de,HIGH_SCORE   ; high score variable destination
@@ -200,53 +160,45 @@ sethigh:    call times12
             ld (ix+1),0         ; level vars
             ld a,($4e13)        ; get current level in a
             inc a               ; a = a + 1
-            and a               ; clear carry
 sub100:
             ld b,a              ; save in b
-            sbc a,$64           ; subtract 100
+            sub 100             ; subtract 100
             jr c,tens           ; less than 100 get tens
-            inc (ix+0)        ; increment
+            inc (ix+0)          ; increment
             jr sub100           ; and go back
 tens:
             ld a,b              ; get b back in a
-            and a
 sub10:
             ld b,a
-            sbc a,$0a
+            sub 10
             jr c,remain
             inc (ix+1)
             jr sub10
 remain:
             ld a,b              ; get a back from b
             ld (ix+2),a         ; store last digit 
-            ld a,(ix+1)         ; is second digit of level zero?
+            ld a,(ix+0)         ; is highest digit of level zero?
             and a
-            jr nz,chk100        ; no check highest
-            ld (ix+1),'@'       ; blank out zero
-chk100: 
-            ld a,(ix+0)         ; is highest level digit zero?
+            jr nz,setscor       ; no then set score, else...
+            ld (ix+0),'@'       ; blank out zero
+            ld a,(ix+1)         ; is second digit zero?
             and a
             jr nz,setscor       ; no set score
-            ld (ix+0),'@'       ; else blank out
+            ld (ix+1),'@'       ; else blank out
 setscor:
-            ld iy,(currscor)    ; iy = player score in vram
-            ld a,(iy+0)         ; get lowest digit of player
-            ld (ix+8),a         ; into score entry
-            ld a,(iy-1)
-            ld (ix+7),a
-            ld a,(iy-2)
-            ld (ix+6),a
-            ld a,(iy-3)
-            ld (ix+5),a
-            ld a,(iy-4)
-            ld (ix+4),a
-            ld a,(iy-5)
-            ld (ix+3),a
-            ld  a,'A'
-            ld (ix+9),a         ; rub out initials
+            ld bc,8             ; advance ix 8 places to highest digit of score
+            add ix,bc           
+            push ix
+            pop de              ; transfer to DE
+            ld hl,(currscor)    ; hl = player score in vram
+            dec bc
+            dec bc              ; copy 6 bytes
+            lddr
+            ld  a,'A'           ; initialize the name
+            ld (ix+1),a         ; first initial is 'A'
             dec a
-            ld (ix+10),a
-            ld (ix+11),a
+            ld (ix+2),a         ; rub out the other two
+            ld (ix+3),a
             call setlevel       ; set the current level         
                                 ; at this state of the game)
             ld a,($4e09)        ; get current player
@@ -772,4 +724,43 @@ nameregistered:
             
             .fill $8800-*,$ff
 
-                 
+    ;; uninitialized variables
+            
+            scores     
+firstscore  .block
+rank        .lint ?
+score       .lint ?,?
+name        .lint ?
+            .endblock
+secondscore .block
+rank        .lint ?
+score       .lint ?,?
+name        .lint ?
+            .endblock
+thirdscore  .block
+rank        .lint ?
+score       .lint ?,?
+name        .lint ?
+            .endblock
+fourthscore .block
+rank        .lint ?
+score       .lint ?,?
+name        .lint ?
+            .endblock
+lastscore   .block
+rank        .lint ?
+score       .lint ?,?
+name        .lint ?
+            .endblock
+ 
+remaintick  .byte ?
+currplayr   .byte ?
+currscor    .word ?
+currinit    .word ?
+score_ptr   .word ?
+row_ptr     .word ?
+currhighix  .byte ?
+inputlock   .byte ?
+levelstate  .byte ?
+highscore   .long ?
+initflag    .byte ?
