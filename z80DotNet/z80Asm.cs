@@ -2079,102 +2079,98 @@ namespace z80DotNet
             }
             OperandFormat fmt = null;
             Opcode opc = null;
-            try
+            var result = GetFormatAndOpcode(line);
+            fmt = result.Item1;
+            opc = result.Item2;
+
+            if (fmt == null)
             {
-                var result = GetFormatAndOpcode(line);
-                fmt = result.Item1;
-                opc = result.Item2;
-                
-                if (fmt == null)
+                Controller.Log.LogEntry(line, ErrorStrings.BadExpression, line.Operand);
+                return;
+            }
+            if (opc == null)
+            {
+                Controller.Log.LogEntry(line, ErrorStrings.UnknownInstruction, line.Instruction);
+                return;
+            }
+            fmt.FormatString = opc.DisasmFormat;
+            long eval = long.MinValue, eval2 = long.MinValue;
+            long evalAbs = long.MinValue;
+
+            if (string.IsNullOrEmpty(fmt.Expression1) == false)
+            {
+                if (Regex.IsMatch(fmt.FormatString, @"\(i(x|y)\+\${0:x2}\)"))
                 {
-                    Controller.Log.LogEntry(line, ErrorStrings.BadExpression, line.Operand);
-                    return;
-                }
-                if (opc == null)
-                {
-                    Controller.Log.LogEntry(line, ErrorStrings.UnknownInstruction, line.Instruction);
-                    return;
-                }
-                fmt.FormatString = opc.DisasmFormat;
-                long eval = long.MinValue, eval2 = long.MinValue;
-                long evalAbs = long.MinValue;
-                
-                if (string.IsNullOrEmpty(fmt.Expression1) == false)
-                {
-                    if (Regex.IsMatch(fmt.FormatString, @"\(i(x|y)\+\${0:x2}\)"))
+                    eval = Controller.Evaluator.Eval(fmt.Expression1, sbyte.MinValue, sbyte.MaxValue);
+                    if (eval < 0)
                     {
-                        eval = Controller.Evaluator.Eval(fmt.Expression1, sbyte.MinValue, sbyte.MaxValue);
-                        if (eval < 0)
-                        {
-                            fmt.FormatString = fmt.FormatString.Replace("+", "-");
-                            evalAbs = Math.Abs(eval);
-                            eval &= 0xFF;
-                        }
-                        else
-                        {
-                            evalAbs = eval;
-                        }
+                        fmt.FormatString = fmt.FormatString.Replace("+", "-");
+                        evalAbs = Math.Abs(eval);
+                        eval &= 0xFF;
                     }
-                    else if (fmt.FormatString.Contains("${0:x4}"))
+                    else
                     {
-                        evalAbs = Controller.Evaluator.Eval(fmt.Expression1, short.MinValue, ushort.MaxValue);
-                        evalAbs &= 0xFFFF;
-                        if (Reserved.IsOneOf("Relatives", line.Instruction.ToLower()))
+                        evalAbs = eval;
+                    }
+                }
+                else if (fmt.FormatString.Contains("${0:x4}"))
+                {
+                    evalAbs = Controller.Evaluator.Eval(fmt.Expression1, short.MinValue, ushort.MaxValue);
+                    evalAbs &= 0xFFFF;
+                    if (Reserved.IsOneOf("Relatives", line.Instruction.ToLower()))
+                    {
+                        int pcOffs = Controller.Output.GetPC() + opc.Size;
+                        try
                         {
-                            int pcOffs = Controller.Output.GetPC() + opc.Size;
                             eval = Convert.ToSByte(Controller.Output.GetRelativeOffset((int)evalAbs, pcOffs));
                         }
-                        else
+                        catch
                         {
-                            eval = evalAbs;
+                            throw new OverflowException(eval.ToString());
                         }
                     }
                     else
                     {
-                        eval = Controller.Evaluator.Eval(fmt.Expression1, sbyte.MinValue, byte.MaxValue);
-                        eval &= 0xFF;
-                        evalAbs = eval;
+                        eval = evalAbs;
                     }
-                }
-
-                if (string.IsNullOrEmpty(fmt.Expression2) == false)
-                {
-                    eval2 = (byte)Controller.Evaluator.Eval(fmt.Expression2, sbyte.MinValue, byte.MaxValue);
-                    eval2 &= 0xFF;
-                }
-
-                if (eval2 != long.MinValue)
-                    line.Disassembly = string.Format(fmt.FormatString, evalAbs, eval2);
-                else
-                    line.Disassembly = string.Format(fmt.FormatString, evalAbs);
-                int opcode = opc.Index & 0xFFFF;
-                if (opcode == 0xCBDD || opcode == 0xCBFD) // bit/res/set <BIT>,(ix+<OFFS),<REG>
-                {
-                    opcode = opcode | ((int)eval << 16) | ((opc.Index & 0xFF0000) << 8);
-                }
-                else if (opcode == 0x36DD || opcode == 0x36FD) // ld (ix+<OFFS),<BYTE>
-                {
-                    opcode = opcode | ((int)eval << 16) | ((int)eval2 << 24);
                 }
                 else
                 {
-                    opcode = opc.Index;  
-                    if (eval != long.MinValue)
-                    {
-                        var opcsize = ((long)opc.Index).Size();
-                        opcode |= ((int)eval << (opcsize * 8));
-                    }
+                    eval = Controller.Evaluator.Eval(fmt.Expression1, sbyte.MinValue, byte.MaxValue);
+                    eval &= 0xFF;
+                    evalAbs = eval;
                 }
-                Controller.Output.Add(opcode, opc.Size);
             }
-            catch(ExpressionEvaluator.ExpressionException expr)
+
+            if (string.IsNullOrEmpty(fmt.Expression2) == false)
             {
-                Controller.Log.LogEntry(line, ErrorStrings.BadExpression, expr.Message);
+                eval2 = (byte)Controller.Evaluator.Eval(fmt.Expression2, sbyte.MinValue, byte.MaxValue);
+                eval2 &= 0xFF;
             }
-            catch(OverflowException overflowEx)
+
+            if (eval2 != long.MinValue)
+                line.Disassembly = string.Format(fmt.FormatString, evalAbs, eval2);
+            else
+                line.Disassembly = string.Format(fmt.FormatString, evalAbs);
+            int opcode = opc.Index & 0xFFFF;
+            if (opcode == 0xCBDD || opcode == 0xCBFD) // bit/res/set <BIT>,(ix+<OFFS),<REG>
             {
-                Controller.Log.LogEntry(line, ErrorStrings.IllegalQuantity, overflowEx.Message); ;
+                opcode = opcode | ((int)eval << 16) | ((opc.Index & 0xFF0000) << 8);
             }
+            else if (opcode == 0x36DD || opcode == 0x36FD) // ld (ix+<OFFS),<BYTE>
+            {
+                opcode = opcode | ((int)eval << 16) | ((int)eval2 << 24);
+            }
+            else
+            {
+                opcode = opc.Index;
+                if (eval != long.MinValue)
+                {
+                    var opcsize = ((long)opc.Index).Size();
+                    opcode |= ((int)eval << (opcsize * 8));
+                }
+            }
+            Controller.Output.Add(opcode, opc.Size);
         }
 
         public int GetInstructionSize(SourceLine line)
