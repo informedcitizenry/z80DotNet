@@ -62,8 +62,6 @@
             ldir                ; copy default scores to scores
             ld hl,$7650         ; high score
             ld (highscore),hl   ; save in the saved high score
-            ld  a,1
-            ld  (initflag),a    ; set the init flag
 sethiscor:
             ld  hl,highscore    ; restore high score
             ld  de,HIGH_SCORE   ; high score variable destination
