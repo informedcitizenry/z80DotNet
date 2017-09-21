@@ -23,9 +23,9 @@ You can specify as many source files as assembly input as needed. For instance, 
 
 Integral constants can be expressed as decimal, hexadecimal, and binary. Decimal numbers are written as is, while hex numbers are prefixed with a `$` and binary numbers are prefixed with a `%`. Constant characters are enclosed in single-quotes:
 ```
-            65490 = 65490
-            $ffd2 = 65490
-%1111111111010010 = 65490
+            32767 = 32767
+            $7fff = 32767
+%0111111111111111 = 65490
               'E' = 69
 ```
 Negative numbers are assembled according to two's complement rules, with the highest bits set. Binary strings can alternatively be expressed as `.` for `0` and `#` for `1`, which is helpful for laying out pixel data:
