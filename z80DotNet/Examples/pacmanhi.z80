@@ -21,7 +21,9 @@
             PEACH       = 14
             WHITE       = 15
             BLUE        = 16
-
+            
+            COLUMN_OFFS = 32
+            ROW_1_VRAM  = $4368
             P1_SCR_VRAM = $43f7
             HIGH_SCORE  = $4e88
             
@@ -149,7 +151,7 @@ regplayer:
             ld hl,fourthscore.name+2        
             ;; last byte of lowest score => de
             ld de,lastscore.name+2
-            lddr                ; (de--) = (hl--) bc times
+            lddr                ; block move down to make room for new high
             ld a,(currhighix)
 sethigh:    call times12
             ld ix,scores
@@ -211,71 +213,6 @@ drawhigh:
             .word $2400         ; or set entire screen to spaces
             .word printhis      ; or print the high score table
             .word printhisr     ; print high score table for registration
-
-printhis:   
-            call $2400          ; clear screen
-            ld  hl,scores
-            ld  de,rows
-            ld  (score_ptr),hl
-            ld  (row_ptr),de
-            ld  hl,tableheader
-            call $2c62          ; print the table header
-            ld  c,5
-printhiloop:     
-            ld  iy,(row_ptr)
-            ld  e,(iy+0)        ; read (iy) -> de
-            ld  d,(iy+1)
-            push de
-            pop ix              ; move to ix
-            ld  a,(iy+2)
-            ld  (ix+0),a        ; first draw the rank numbers
-            ld  a,(iy+3)
-            ld  (ix-$20),a
-            ld  a,(iy+4)
-            ld  (ix-$40),a
-            ld  iy,(score_ptr)
-            ld  de,-192         ; offset to next data column
-            add ix,de           ; now ix is start of current level
-            ld  a,(iy+0)
-            ld  (ix+0),a
-            ld  a,(iy+1)
-            ld  (ix-$20),a
-            ld  a,(iy+2)
-            ld  (ix-$40),a
-            add ix,de
-            ld  a,(iy+8)        ; score highest digit
-            ld  (ix+$20),a
-            ld  a,(iy+7)
-            ld  (ix+$00),a
-            ld  a,(iy+6)
-            ld  (ix-$20),a
-            ld  a,(iy+5)
-            ld  (ix-$40),a
-            ld  a,(iy+4)
-            ld  (ix-$60),a
-            ld  a,(iy+3)
-            ld  (ix-$80),a
-            add ix,de
-            ld  a,(iy+9)        ; first initial
-            ld  (ix-$60),a
-            ld  a,(iy+10)
-            ld  (ix-$80),a
-            ld  de,-160         ; offset to final initial
-            add ix,de
-            ld  a,(iy+11)
-            ld  (ix+0),a        ; last initial
-            dec c
-            jr  z,done
-            ld  de,12
-            ld  hl,(score_ptr)
-            add hl,de           ; hl := scores
-            ld  (score_ptr),hl
-            ld  hl,(row_ptr)
-            ld  de,5
-            add hl,de
-            ld (row_ptr),hl
-            jp  printhiloop
-done:       ret 
             
 printhisr:
             call printhis
@@ -362,6 +299,62 @@ colorscren:
             jp c,$24df
             ld a,CYAN
             jp $24e1
+            
+printhis:   
+            call $2400          ; clear screen
+            ld  hl,scores
+            ld  (score_ptr),hl
+            ld  hl,tableheader
+            call $2c62          ; print the table header
+            
+            ld  a,5
+            ld  (rowcount),a
+            ld  hl,rows
+            ld  (row_ptr),hl
+            ld  hl,ROW_1_VRAM
+printhiloop:     
+            push hl
+            ld de,(row_ptr)
+            ld  b,3
+            scf                 ; set carry hl = hl - column
+            call printcol
+            ld (row_ptr),de
+            ld  de,(score_ptr)
+            ld  bc,-96
+            add hl,bc
+            ld  b,3             ; print level
+            scf                 ; set carry, hl = hl - column
+            call printcol
+            ld  bc,-224
+            add hl,bc
+            ld  b,6             ; print score
+            and a               ; clear carry, hl = hl + column 
+            call printcol
+            ld  bc,-352
+            add hl,bc
+            ld  b,3             ; print name
+            scf                 ; set carry, hl = hl - column
+            call printcol
+            ld (score_ptr),de
+            ld  hl,rowcount
+            dec (hl)            ; decrement row count
+            pop hl              ; restore row start
+            ret z               ; done ?
+            inc hl
+            inc hl              ; next row
+            jr printhiloop
+
+printcol    push bc             ; save b
+            ld  bc,COLUMN_OFFS  ; get column offset
+            jr  nc,doprint      ; carry flag not set?
+            ld  bc,-COLUMN_OFFS ; -column offset
+doprint     ld  a,(de)          ; transfer column source
+            ld  (hl),a          ; to screen destination
+            add hl,bc           ; next column
+            inc de              ; next source data
+            pop bc              ; restore b
+            djnz printcol       ; next b
+            ret
                        
 reginit:
             rst $28
@@ -425,19 +418,17 @@ checkflash:
             jr z,doflash        ; yes do color score black
             ld c,WHITE          ; else color score white
 doflash:
-            ld ix,$4608         ; highest digit of highest score in color ram
+            ld ix,$4608-$20     ; 2nd digit of highest score in color ram
             ld a,(currhighix)   ; get current high index
             sla a               ; a = a * 2
             add a,ixl           ; 
-            ld ixl,a            ; HL = HL + a * 2
-            ld (ix+$00),c       ; switch color for each digit
-            ld (ix-$20),c       
+            ld ixl,a            ; ix = ix + a * 2
+            ld (ix+$20),c       ; switch color for each digit, highest first
+            ld (ix+$00),c       
+            ld (ix-$20),c
             ld (ix-$40),c
             ld (ix-$60),c
             ld (ix-$80),c
-            ld de,-$a0
-            add ix,de
-            ld (ix+$00),c
             ld de,$5000         ; else DE = IN0
             ld a,($4e72)        ; upright or cocktail
             ld c,a              ; save in C
@@ -672,15 +663,10 @@ defaulthi:
 defaulthi_end
 
 rows:       
-            .word $4368
             .string "1ST"
-            .word $436a
             .string "2ND"
-            .word $436c
             .string "3RD"
-            .word $436e
             .string "4TH"
-            .word $4370
             .string "5TH"
             
     ;; format of text strings used in $2c65...
@@ -752,6 +738,7 @@ name        .lint ?
             .endblock
  
 remaintick  .byte ?
+rowcount    .byte ?
 currplayr   .byte ?
 currscor    .word ?
 currinit    .word ?
