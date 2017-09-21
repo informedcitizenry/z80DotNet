@@ -1232,7 +1232,7 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 <tr><td><b>Definition</b></td><td>Assign a global label a value. Note that within the source the label cannot be redefined again. The value can be any expression z80DotNet can evaluate at assembly time. If no value is given the default value is 1.</td></tr>
 <tr><td><b>Parameter</b></td><td><code>&lt;label&gt;=&lt;value&gt;</code></td></tr>
 <tr><td><b>Example</b></td><td>
-<pre>/z80DotNet -D chrout=$ffd2 myasm.asm -o myoutput</pre>
+<pre>/z80DotNet -D IN0=$5000 myasm.asm -o myoutput</pre>
 </td></tr>
 </table>
 <table>
