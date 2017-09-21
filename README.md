@@ -590,11 +590,10 @@ expressed bytes will be outputted until the point the program counter reaches it
 -       ld  a,(hl)          ; next char
         rrca                ; shift right
         ld  (de),a          ; save in buffer
-        jr  c,done          ; carry set on shift? done
+        ret c               ; carry set on shift? done
         inc hl              ; else next char
         inc de              ; and buff
         jr  -               ; get next 
-done    ret
 message .lsstring "HELLO"   
 </pre>
 </td></tr>
@@ -613,12 +612,11 @@ message .lsstring "HELLO"
         and a,%01111111     ; turn off high bit...
         ld  (de),a          ; and print 
         rlc b               ; high bit into carry flag
-        jr  c,done          ; if set we printed last char
+        ret c               ; if set we printed last char
         inc hl              ; else increment pointers
         inc de
         jr -                ; get next
-done    ret
-message .nstring "hello"    
+message .nstring "HELLO"    
 </pre>
 </td></tr>
 </table>
