@@ -434,21 +434,20 @@ doflash:
             ld c,a              ; save in C
             ld a,(currplayr)    ; get current player
             and c               ; is current player player 1 or upright?
-            jr z,inputloop      ; yes, get player input
+            jr z,+              ; yes, get player input
             ld de,$5040         ; DE = IN1            
-inputloop:
-            ld hl,(currinit)    ; current initial screen RAM offset
-            ld a,(de)           ; get joystick
++           ld a,(de)           ; get joystick
             ld b,a              ; save in b
             cpl                 ; invert bits (low = input pressed)
             and %00001111       ; check only lowest 4 bits
             jr nz,checklock     ; if joy input check lock
             ld (inputlock),a    ; else reset input lock
             ret
-checklock:
-            ld a,(inputlock)    ; is input lock set?
+checklock   ld a,(inputlock)    ; is input lock set?
             and a               ; 
             ret nz              ; if set return
+            ld hl,(currinit)    ; current initial screen RAM offset
+            ld a,(de)
             ld a,b              ; else get original input back
             bit 0,a             ; joystick up
             jp z,initup         ; advance initial
@@ -456,7 +455,7 @@ checklock:
             jp z,clearini       ; backtrack initial
             bit 3,a             ; joystick down
             jr z,initdown       ; clear initial
-            
+           
     ;; joystick right pressed select initial
             push hl
             ld bc,$0400         ; bc = offset to color
