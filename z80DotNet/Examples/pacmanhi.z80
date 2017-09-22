@@ -9,6 +9,27 @@
 ;; functionality (e.g., non-volatile RAM or volatile RAM with battery 
 ;; backup) as well as running the attract/demo screen in free play mode.
 ;;
+;; The software assumes the following memory map:
+;;
+;; ROM - $8000-$87ff (2KB eprom)
+;; RAM - $8800-$887f (128KB)
+;;
+;; In addition, the original game ROMS will need to be patched as follows:
+;;
+;; pacman.6e
+;; ---------
+;; patch 0401:0402 to c3 73 81
+;; patch 06be:06c0 to c3 48 81
+;; patch 0936:0938 to cd 43 80
+;; patch 0955:0957 to cd 43 80
+;; patch 0973:0975 to cd 5f 81
+;;
+;; pacman.6h
+;; ---------
+;; patch 23ee:23f2 to c3 1f 81 00 00
+;; patch 24d7:24da to c3 ac 81 02
+;; patch 2ae2:2ae4 to cd 00 80
+;;
 ;;-----------------------------------------------------------------------
 
     ;; color constants
@@ -30,15 +51,19 @@
             
             SCORETABLE_SIZ  = defaulthi_end - defaulthi
             
-    ;; patch $0401 from ld a,($4e6e) to freeplystrt
-    ;; patch $06be from la a,($4e04) to call checkreg
-    ;; patch $0936 & $0955 from rst $28/.db $1c,$05 to call reghiscor
-    ;; patch $0973 from ld ($4e02),a to call starthigh
-    ;; patch $23ee from rst $20/$f3,$23/$00/$24 to call drawhigh/nop/nop
-    ;; patch $24d7 from ld e,b/ld a,b/cp $02 to jp colorscren/.db $02
-    ;; patch $2ae2 from call $2c5e to call $8000
-    
-    
+            * = $0000   
+            jp freeplystrt
+            jp checkreg
+            call reghiscor
+            call starthigh
+            jp drawhigh
+            jp colorscren
+            call $8000
+            
+            
+            
+            
+  
             * = $8000
             
             ld  a,($4e00)
