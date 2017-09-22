@@ -51,19 +51,6 @@
             
             SCORETABLE_SIZ  = defaulthi_end - defaulthi
             
-            * = $0000   
-            jp freeplystrt
-            jp checkreg
-            call reghiscor
-            call starthigh
-            jp drawhigh
-            jp colorscren
-            call $8000
-            
-            
-            
-            
-  
             * = $8000
             
             ld  a,($4e00)
