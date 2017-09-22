@@ -23,6 +23,7 @@
             BLUE        = 16
             
             COLUMN_OFFS = 32
+            CRAM_OFFS   = $0400
             ROW_1_VRAM  = $4368
             P1_SCR_VRAM = $43f7
             HIGH_SCORE  = $4e88
@@ -67,7 +68,7 @@
 sethiscor:
             ld  hl,highscore    ; restore high score
             ld  de,HIGH_SCORE   ; high score variable destination
-            ld  bc,$0003        ; 3 bytes
+            ld  bc,3            ; 3 bytes
             ldir                ; copy
             dec de              ; de = high score MSB
             ld  hl,$43f2        ; hl = high score screen RAM highest dig
@@ -87,7 +88,7 @@ clrhiloop:
             
 reghiscor:
             ld a,($4e00)
-            cp $01              ; is a in attract mode?
+            cp 1                ; is a in attract mode?
             jr z,finished       ; yes exit
             ld hl,P1_SCR_VRAM+5 ; player one highest digit
             ld a,($4e09)        ; get current player
@@ -95,20 +96,20 @@ reghiscor:
             jr z,+              ; yes skip ahead
             ld l,$e9            ; else player two highest digit
 +           ld (currscor),hl    ; save in player score
-            ld c,$00            ; for c = 0 to 4
+            ld c,0              ; for c = 0 to 4
          ;; highest digit of highest score
             ld iy,firstscore.score+5 
 nextscor:
             push iy             ; 
             pop hl              ; next score entry
             ld de,(currscor)    ; get current player score             
-            ld b,$06            ; for b = 1 to 6
+            ld b,6              ; for b = 1 to 6
 nextdigit:
             ld a,(hl)           ; compare highest digits
-            and $0f             ; only get low nybble (blank space = 0)
+            and %00001111       ; only get low nybble (blank space = 0)
             ld ixl,a            ; save in ixl
             ld a,(de)           ; get comparison
-            and $0f             ; only get low nybble
+            and %00001111       ; only get low nybble
             cp ixl              ; 
             jr c,playrless      ; player's score less, next score
             jr nz,regplayer     ; player's score greater, register
@@ -120,7 +121,7 @@ nextdigit:
 playrless:
             inc c
             ld a,c              ; c -> a
-            cp $05              ; A == 5?
+            cp 5                ; A == 5?
             jr z,finished       ; looked at all score, player did not
                                 ; get a high score
             ld  de,secondscore.score-firstscore.score
@@ -203,7 +204,7 @@ setscor:
                                 ; at this state of the game)
             ld a,($4e09)        ; get current player
             ld (currplayr),a    ; save current player
-            ld a,$3c
+            ld a,60
             ld (remaintick),a   ; set remaining ticks to 60
             jp finished         ; and go back to normal festivities
                         
@@ -223,7 +224,7 @@ printhisr:
             ld hl,timeremain    ; HL = address of timeremain
             call $2c62          ; print "TIME REMAINING..."
             ld hl,(currinit)    
-            ld de,$0400
+            ld de,CRAM_OFFS
             add hl,de           ; hl = color ram of initial
             ld a,YELLOW         ; 
             ld (hl),a           ; set initial color to yellow
@@ -267,7 +268,7 @@ freeplystrt:
             ld ($4e03),a        ; set "ready for play" to 1
             call $062c          ; else check if start button(s) pressed
             ld a,($4e03)
-            cp $02              ; is a == 2? (start button pressed?)
+            cp 2                ; is a == 2? (start button pressed?)
             jr nz,freerunatr    ; no process free play attract
             ld ($4e00),a        ; else set to ready for play state
             xor a
@@ -320,17 +321,17 @@ printhiloop:
             call printcol
             ld (row_ptr),de
             ld  de,(score_ptr)
-            ld  bc,-96
+            ld  bc,-COLUMN_OFFS*3
             add hl,bc
             ld  b,3             ; print level
             scf                 ; set carry, hl = hl - column
             call printcol
-            ld  bc,-224
+            ld  bc,-COLUMN_OFFS*7
             add hl,bc
             ld  b,6             ; print score
             and a               ; clear carry, hl = hl + column 
             call printcol
-            ld  bc,-352
+            ld  bc,-COLUMN_OFFS*11
             add hl,bc
             ld  b,3             ; print name
             scf                 ; set carry, hl = hl - column
@@ -418,17 +419,19 @@ checkflash:
             jr z,doflash        ; yes do color score black
             ld c,WHITE          ; else color score white
 doflash:
-            ld ix,$4608-$20     ; 2nd digit of highest score in color ram
+            ;; 2nd digit of highest score in color ram
+            ld ix,$4608-COLUMN_OFFS     
             ld a,(currhighix)   ; get current high index
             sla a               ; a = a * 2
             add a,ixl           ; 
             ld ixl,a            ; ix = ix + a * 2
-            ld (ix+$20),c       ; switch color for each digit, highest first
-            ld (ix+$00),c       
-            ld (ix-$20),c
-            ld (ix-$40),c
-            ld (ix-$60),c
-            ld (ix-$80),c
+            ;; switch color for each digit, highest first
+            ld (ix+COLUMN_OFFS*1),c       
+            ld (ix+COLUMN_OFFS*0),c       
+            ld (ix-COLUMN_OFFS*1),c
+            ld (ix-COLUMN_OFFS*2),c
+            ld (ix-COLUMN_OFFS*3),c
+            ld (ix-COLUMN_OFFS*4),c
             ld de,$5000         ; else DE = IN0
             ld a,($4e72)        ; upright or cocktail
             ld c,a              ; save in C
@@ -458,15 +461,15 @@ checklock   ld a,(inputlock)    ; is input lock set?
            
     ;; joystick right pressed select initial
             push hl
-            ld bc,$0400         ; bc = offset to color
+            ld bc,CRAM_OFFS     ; bc = offset to color
             add hl,bc           ; add to current initial
             ld a,WHITE
             ld (hl),a           ; set to white
             pop hl              ; get original back
-            ld de,-32           ; advance to next initial
+            ld de,-COLUMN_OFFS  ; advance to next initial
             add hl,de           ; add offset to next char
             ld a,l              ; get LSB in a
-            cp $80              ; are we one column past 3rd initial
+            cp COLUMN_OFFS*4    ; are we one column past 3rd initial
             jr c,setfinish      ; yes, finish and return
 setinit:    
             ld a,'A'
@@ -484,7 +487,7 @@ setinlock:
 setfinish:
             ;; clear instruction/time remaining messages
             ld a,'@'            ; blank space
-            ld de,$0020         ; column offset
+            ld de,COLUMN_OFFS   ; column offset
             ld ix,$4055         ; last/first column of first rows
             ld c,4              ; for c = 1 to 4
 rubrow:     
@@ -548,10 +551,10 @@ clearini:
             ld a,'@'            ; clear the initial
             ld e,l              ; save l in e
             ld (hl),a         
-            ld bc,32            ; move initial back one column
+            ld bc,COLUMN_OFFS   ; move initial back one column
             add hl,bc
             ld a,l
-            ld bc,$0400         ; now set BC to color offset
+            ld bc,CRAM_OFFS     ; now set BC to color offset
             cp $d0
             jp c,setinitclr     ; don't go back too far!
             ld l,e              ; else restore original LSB
@@ -570,11 +573,11 @@ regfinish:
             call times12        ; now get offset to the name
             ld iy,firstscore.name
             add iy,bc
-            ld a,(ix+0)
+            ld a,(ix+COLUMN_OFFS*0)
             ld (iy+0),a
-            ld a,(ix-$20)
+            ld a,(ix-COLUMN_OFFS*1)
             ld (iy+1),a
-            ld a,(ix-$40)
+            ld a,(ix-COLUMN_OFFS*2)
             ld (iy+2),a
             ld a,(levelstate)   ; get the level state
             inc a               ; increment it
@@ -627,7 +630,7 @@ setlevel:
             ld (hl),a           ; will be either $25 or $26 based on
                                 ; whether is 6 or 5
             ld a,b              ; get original level back
-            and $fe             ; make it either 4 or 6
+            and %11111110       ; make it either 4 or 6
             ld (levelstate),a   ; and save for later to
             ret
             
