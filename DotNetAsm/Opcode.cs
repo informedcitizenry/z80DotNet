@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------------
+﻿//-----------------------------------------------------------------------------
 // Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -333,7 +333,7 @@ namespace DotNetAsm
                 }
                 if (_treatParenEnclosureAsExpr && fmt.Expression1.StartsWith("(") && fmt.Expression1.EndsWith(")"))
                 {
-                    if (ExpressionEvaluator.FirstParenGroup(fmt.Expression1).Equals(fmt.Expression1))
+                    if (fmt.Expression1.Equals(fmt.Expression1.FirstParenEnclosure()))
                         exp1Format = "(" + _exp1Format + ")";
                 }
                 fmt.FormatString = string.Format(_format,
