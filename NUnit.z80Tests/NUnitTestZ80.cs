@@ -1,4 +1,4 @@
-﻿using DotNetAsm;
+using DotNetAsm;
 using z80DotNet;
 using NUnit.Framework;
 using System;
@@ -19,7 +19,7 @@ namespace NUnit.z80Tests
 
             Log = new ErrorLog();
 
-            Evaluator = new ExpressionEvaluator(true);
+            Evaluator = new ExpressionEvaluator(@"\$([a-fA-F0-9]+)", true);
 
             Labels = new Dictionary<string, string>();
 
