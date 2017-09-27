@@ -1384,6 +1384,8 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 
 `End of file reached without block closure` - A block directive has no corresponding closure.
 
+`error: invalid option` - An invalid option was passed to the command-line.
+
 `error: option requires a value` -  An option was passed in the command-line that expected an argument that was not supplied.
 
 `File previously included. Possible circular reference?` - An input file was given in the command-line or a directive was issued to include a source file that was previously include.
