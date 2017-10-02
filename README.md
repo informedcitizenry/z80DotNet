@@ -661,7 +661,7 @@ message .nstring "HELLO"
 <table>
 <tr><td><b>Name</b></td><td><code>.binclude</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Include a source file and enclose the expanded source into a scoped block. The specified file is z80DotNet-compatible source. If no name is given in front of the directive then all symbols inside the included source will be inaccessible.</td></tr>
+<tr><td><b>Definition</b></td><td>Include a source file and enclose the expanded source into a scoped block. The specified file is z80DotNet-compatible source. If no name is given in front of the directive then all symbols inside the included source will be inaccessible. Note that to prevent infinite recursion, a source file can only be included once in the entire source, including from other included files.</td></tr>
 <tr><td><b>Arguments</b></td><td><code>filename</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
@@ -814,7 +814,7 @@ start       ; same as start .equ *
         <li><code>.endif</code>                   - End of condition block
     </ul>
 </td></tr>
-<tr><td><b>Arguments</b></td><td><code>Conditional Expression</code></td></tr>
+<tr><td><b>Arguments</b></td><td><code>condition</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
         * = $0400
@@ -833,7 +833,7 @@ start       ; same as start .equ *
 <table>
 <tr><td><b>Name</b></td><td><code>.include</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Include a source file into the assembly. The specified file is z80DotNet-compatible source.</td></tr>
+<tr><td><b>Definition</b></td><td>Include a source file into the assembly. The specified file is z80DotNet-compatible source. Note that to prevent infinite recursion, a source file can only be included once in the entire source, including from other included files.</td></tr>
 <tr><td><b>Arguments</b></td><td><code>filename</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
