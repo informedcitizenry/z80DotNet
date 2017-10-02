@@ -1,4 +1,4 @@
-using DotNetAsm;
+﻿using DotNetAsm;
 using z80DotNet;
 using NUnit.Framework;
 using System;
@@ -19,7 +19,7 @@ namespace NUnit.z80Tests
 
             Log = new ErrorLog();
 
-            Evaluator = new ExpressionEvaluator(@"\$([a-fA-F0-9]+)", true);
+            Evaluator = new ExpressionEvaluator(@"\$([a-fA-F0-9]+)");
 
             Labels = new Dictionary<string, string>();
 
@@ -34,7 +34,7 @@ namespace NUnit.z80Tests
 
         public void AddSymbol(string symbol)
         {
-            
+
         }
 
         public void Assemble()
@@ -87,7 +87,7 @@ namespace NUnit.z80Tests
 
         public Compilation Output { get; private set; }
 
-        public ErrorLog Log { get; private set; } 
+        public ErrorLog Log { get; private set; }
 
         public IDictionary<string, string> Labels { get; private set; }
 
@@ -206,7 +206,7 @@ namespace NUnit.z80Tests
             Assert.AreEqual(2, size);
 
             line.Instruction = "ex";
-            line.Operand = "af ,af`";
+            line.Operand = "af ,af'";
             size = _asm.GetInstructionSize(line);
             Assert.AreEqual(1, size);
 
@@ -377,10 +377,23 @@ namespace NUnit.z80Tests
         {
             SourceLine line = new SourceLine();
             line.SourceString = "ld a,$1000";
-            line.Parse(r => _asm.AssemblesInstruction(r), s => true);
+            line.Parse(r => _asm.AssemblesInstruction(r));
 
             Assert.AreEqual(line.Instruction, "ld");
             Assert.AreEqual(line.Operand, "a,$1000");
+        }
+
+        [Test]
+        public void TestZ80UPPERCASE()
+        {
+            SourceLine line = new SourceLine();
+            line.Instruction = "HALT";
+            line.Operand = string.Empty;
+            TestInstruction(line, 0x0001, new byte[] { 0x76 }, "halt");
+
+            line.Instruction = "LD";
+            line.Operand = "A,(IX+$00)";
+            TestInstruction(line, 0x0003, new byte[] { 0xdd, 0x7e, 0x00 }, "ld a,(ix+$00)");
         }
 
         [Test]
@@ -952,7 +965,7 @@ namespace NUnit.z80Tests
             TestInstruction(line, 0x0002, new byte[] { 0xfd, 0x6c }, "ld iyl,iyh");
 
             line.Operand = "iyl,iyl";
-            TestInstruction(line, 0x0002, new byte[] { 0xfd, 0x6d }, "ld iyl,iyl");            
+            TestInstruction(line, 0x0002, new byte[] { 0xfd, 0x6d }, "ld iyl,iyl");
 
             line.Operand = "l,(iy+$12)";
             TestInstruction(line, 0x0003, new byte[] { 0xfd, 0x6e, 0x12 }, "ld l,(iy+$12)");
@@ -2224,8 +2237,8 @@ namespace NUnit.z80Tests
         {
             SourceLine line = new SourceLine();
             line.Instruction = "ex";
-            line.Operand = "af,af`";
-            TestInstruction(line, 0x0001, new byte[] { 0x08 }, "ex af,af`");
+            line.Operand = "af,af'";
+            TestInstruction(line, 0x0001, new byte[] { 0x08 }, "ex af,af'");
 
             line.Operand = "(sp),hl";
             TestInstruction(line, 0x0001, new byte[] { 0xe3 }, "ex (sp),hl");
@@ -4372,7 +4385,7 @@ namespace NUnit.z80Tests
 
             line.Operand = "(ix+129),a";
             Assert.Throws<OverflowException>(() => TestForFailure(line));
-            
+
             line.Operand = "(ix-129),b";
             Assert.Throws<OverflowException>(() => TestForFailure(line));
 

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace NUnit.z80Tests
@@ -23,7 +24,7 @@ namespace NUnit.z80Tests
                                           1,
                                           3,
                                           2,
-                                          4, false);
+                                          4, RegexOptions.IgnoreCase);
 
             OperandFormat fmt = builder.GetFormat("( hl ) , $00");
 
@@ -39,7 +40,7 @@ namespace NUnit.z80Tests
                                                 1,
                                                 3,
                                                 2,
-                                                5, false);
+                                                5, RegexOptions.IgnoreCase);
             fmt = builder.GetFormat("(ix+$30),a");
             Assert.IsNotNull(fmt);
             Assert.AreEqual("(ix+${0:x2}),a", fmt.FormatString);
@@ -50,7 +51,7 @@ namespace NUnit.z80Tests
             Assert.AreEqual("(ix+${0:x2})", fmt.FormatString);
             Assert.AreEqual("$50", fmt.Expression1);
 
-            builder = new FormatBuilder(@"^(([a-ehl])\s*,\s*)?\(\s*(bc|de|hl|ix|iy)\s*\)$()", "{0}", string.Empty, string.Empty, 0, 2, 4, 4, false);
+            builder = new FormatBuilder(@"^(([a-ehl])\s*,\s*)?\(\s*(bc|de|hl|ix|iy)\s*\)$()", "{0}", string.Empty, string.Empty, 0, 2, 4, 4, RegexOptions.IgnoreCase);
 
             fmt = builder.GetFormat("(hl)");
             Assert.IsNotNull(fmt);
@@ -64,7 +65,7 @@ namespace NUnit.z80Tests
             Assert.IsTrue(string.IsNullOrEmpty(fmt.Expression1));
             Assert.IsTrue(string.IsNullOrEmpty(fmt.Expression2));
 
-            builder = new FormatBuilder(@"^(bc|de|hl|ix|iy|sp)\s*,\s*(.+)$()", "{0},{2}", "${0:x4}", string.Empty, 1, 3, 2, 3, false, true);
+            builder = new FormatBuilder(@"^(bc|de|hl|ix|iy|sp)\s*,\s*(.+)$()", "{0},{2}", "${0:x4}", string.Empty, 1, 3, 2, 3, RegexOptions.IgnoreCase, true);
             
             fmt = builder.GetFormat("hl,$0000");
             Assert.IsNotNull(fmt);
@@ -78,7 +79,7 @@ namespace NUnit.z80Tests
             Assert.AreEqual("( $0000 )", fmt.Expression1);
             Assert.IsTrue(string.IsNullOrEmpty(fmt.Expression2));
 
-            builder = new FormatBuilder(@"^(.+)\s*,\s*y$()", "{2},y", "${0:x4}", string.Empty, 2, 2, 1, 2, false, true);
+            builder = new FormatBuilder(@"^(.+)\s*,\s*y$()", "{2},y", "${0:x4}", string.Empty, 2, 2, 1, 2, RegexOptions.IgnoreCase, true);
 
             fmt = builder.GetFormat("$0000 , y");
             Assert.IsNotNull(fmt);
@@ -98,7 +99,7 @@ namespace NUnit.z80Tests
         {
             TestController controller = new TestController(null);
 
-            FormatBuilder builder = new FormatBuilder(@"^\(\s*(c)\s*\)\s*,\s*(.+)$()", "({0}),{3}", string.Empty, "{0}", 1, 3, 3, 2, controller.Options.CaseSensitive, controller.Evaluator);
+            FormatBuilder builder = new FormatBuilder(@"^\(\s*(c)\s*\)\s*,\s*(.+)$()", "({0}),{3}", string.Empty, "{0}", 1, 3, 3, 2, controller.Options.RegexOption, controller.Evaluator);
 
             OperandFormat fmt = builder.GetFormat("(c),0");
             Assert.IsNotNull(fmt);
@@ -112,7 +113,7 @@ namespace NUnit.z80Tests
             Assert.IsTrue(string.IsNullOrEmpty(fmt.Expression1));
             Assert.IsTrue(string.IsNullOrEmpty(fmt.Expression2));
 
-            builder = new FormatBuilder(@"^(.+)\s*,\s*\(\s*i(x|y)\s*((\+|-).+)\)(\s*,\s*[a-ehl])?$()", "{3},(i{0}+{2}){1}", "${0:x2}", "{0}", 2, 5, 3, 1, controller.Options.CaseSensitive, controller.Evaluator);
+            builder = new FormatBuilder(@"^(.+)\s*,\s*\(\s*i(x|y)\s*((\+|-).+)\)(\s*,\s*[a-ehl])?$()", "{3},(i{0}+{2}){1}", "${0:x2}", "{0}", 2, 5, 3, 1, controller.Options.RegexOption, controller.Evaluator);
 
             fmt = builder.GetFormat("0,(ix+$30),a");
             Assert.IsNotNull(fmt);
@@ -120,7 +121,7 @@ namespace NUnit.z80Tests
             Assert.AreEqual("+$30", fmt.Expression1);
             Assert.IsTrue(string.IsNullOrEmpty(fmt.Expression2));
 
-            builder = new FormatBuilder(@"^\(\s*i(x|y)\s*\+(.+)\)\s*,\s*(.+)$()", "(i{0}+{2}),{3}", "${0:x2}", "${1:x2}", 1, 4, 2, 3, controller.Options.CaseSensitive);
+            builder = new FormatBuilder(@"^\(\s*i(x|y)\s*\+(.+)\)\s*,\s*(.+)$()", "(i{0}+{2}),{3}", "${0:x2}", "${1:x2}", 1, 4, 2, 3, controller.Options.RegexOption);
 
             fmt = builder.GetFormat("(ix+$00),$ff");
             Assert.IsNotNull(fmt);
