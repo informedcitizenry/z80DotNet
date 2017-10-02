@@ -98,7 +98,7 @@ namespace DotNetAsm
         {
             var csvs = line.CommaSeparateOperand();
             int size = 0;
-            foreach(string s in csvs)
+            foreach (string s in csvs)
             {
                 if (s.EnclosedInQuotes())
                 {

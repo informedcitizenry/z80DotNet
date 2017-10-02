@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------------
+﻿//-----------------------------------------------------------------------------
 // Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -52,7 +52,7 @@ namespace DotNetAsm
         private ExpressionEvaluator _evaluator;
 
         private SourceLine _currentLine;
-        
+
         private int _passes;
 
         private Regex _specialLabels;
@@ -66,7 +66,7 @@ namespace DotNetAsm
         /// assembly process.
         /// </summary>
         /// <param name="args">The array of System.String args passed by the commandline.</param>
-        public AssemblyController(string[] args) 
+        public AssemblyController(string[] args)
             : base()
         {
             Reserved.DefineType("Directives", new string[]
@@ -108,10 +108,14 @@ namespace DotNetAsm
 
             _assemblers = new List<ILineAssembler>();
 
-            _evaluator = new ExpressionEvaluator(@"\$([a-fA-F0-9]+)", !Options.CaseSensitive);
+            _evaluator = new ExpressionEvaluator(@"\$([a-fA-F0-9]+)");
+
+            if (!Options.CaseSensitive)
+                _evaluator.DefineSymbolLookup(@"[a-zA-Z][a-zA-Z0-9]*\(", (fnc) => fnc.ToLower());
             _evaluator.DefineSymbolLookup(@"(?>_?[a-zA-Z][a-zA-Z0-9_.]*)(?!\()", GetLabelValue);
             _evaluator.DefineSymbolLookup(@"^\++$|^-+$|\(\++\)|\(-+\)", ConvertAnonymous);
             _evaluator.DefineSymbolLookup(@"(?<![a-zA-Z0-9_.)])\*(?![a-zA-Z0-9_.(])", (str) => Output.GetPC().ToString());
+            
             _evaluator.AllowAlternateBinString = true;
 
             _conditionAssembler = new ConditionAssembler(this);
@@ -145,15 +149,16 @@ namespace DotNetAsm
         }
 
         /// <summary>
-        /// Determines whether the token is a reserved keyword, such as an instruction
-        /// or assembler directive.
+        /// Checks if a given token is actually an instruction or directive, either
+        /// for the DotNetAsm.AssemblyController or any line assemblers.
         /// </summary>
-        /// <param name="token">The token to test.</param>
-        /// <returns>True, if the token is a reserved word, otherwise false.</returns>
-        protected override bool IsReserved(string token)
+        /// <param name="token">The token to check</param>
+        /// <returns>True, if the token is an instruction or directive</returns>
+        private bool IsInstruction(string token)
         {
-            bool reserved = Reserved.IsReserved(token) || 
-                _conditionAssembler.AssemblesInstruction(token);
+            bool reserved = Reserved.IsOneOf("Directives", token) ||
+                            Reserved.IsOneOf("Blocks", token) ||
+                            _conditionAssembler.AssemblesInstruction(token);
 
             if (!reserved)
             {
@@ -167,6 +172,17 @@ namespace DotNetAsm
                 }
             }
             return reserved;
+        }
+
+        /// <summary>
+        /// Determines whether the token is a reserved keyword, such as an instruction
+        /// or assembler directive, or a user-defined reserved word.
+        /// </summary>
+        /// <param name="token">The token to test.</param>
+        /// <returns>True, if the token is a reserved word, otherwise false.</returns>
+        protected override bool IsReserved(string token)
+        {
+            return IsInstruction(token) || Reserved.IsReserved(token);
         }
 
 
@@ -215,7 +231,7 @@ namespace DotNetAsm
             source.AddRange(ProcessDefinedLabels());
 
             Preprocessor processor = new Preprocessor(this,
-                                                      IsReserved,
+                                                      IsInstruction,
                                                       s => IsSymbolName(s.TrimEnd(':'), true, false));
             processor.FileRegistry = FileRegistry;
             foreach (var file in Options.InputFiles)
@@ -231,9 +247,10 @@ namespace DotNetAsm
             }
 
             if (Log.HasErrors == false)
-               return processor.ExpandMacros(source);
+                return processor.ExpandMacros(source);
             return null;
         }
+
 
         /// <summary>
         /// Add labels defined with command-line -D option
@@ -297,13 +314,13 @@ namespace DotNetAsm
             _passes = 0;
 
             Stack<string> scope = new Stack<string>();
-            
+
             int anon = 0;
             int id = 0;
 
             RepetitionHandler handler = new RepetitionHandler(this);
 
-            foreach(SourceLine line in source)
+            foreach (SourceLine line in source)
             {
                 try
                 {
@@ -468,7 +485,7 @@ namespace DotNetAsm
                 Output.Reset();
                 int anon = 0;
 
-                foreach(SourceLine line in assembleLines)
+                foreach (SourceLine line in assembleLines)
                 {
                     try
                     {
@@ -531,7 +548,13 @@ namespace DotNetAsm
                 return;
             }
 
-            foreach(var asm in _assemblers)
+            if (IsInstruction(line.Instruction) == false)
+            {
+                Log.LogEntry(line, ErrorStrings.UnknownInstruction, line.Instruction);
+                return;
+            }
+
+            foreach (var asm in _assemblers)
             {
                 if (asm.AssemblesInstruction(line.Instruction))
                 {
@@ -540,8 +563,6 @@ namespace DotNetAsm
                     return;
                 }
             }
-            if (Reserved.IsReserved(line.Instruction) == false)
-                Log.LogEntry(line, ErrorStrings.UnknownInstruction, line.Instruction);
         }
 
         /// <summary>
@@ -551,7 +572,7 @@ namespace DotNetAsm
         private void GetAssemblyBytes(SourceLine line)
         {
             line.Assembly.Clear();
-            int range = Output.GetPC() - line.PC; 
+            int range = Output.GetPC() - line.PC;
             var robytes = Output.GetCompilation().ToList();
             int logicalsize = Output.ProgramCounter - Output.ProgramStart;
             if (robytes.Count - range < 0)
@@ -621,7 +642,7 @@ namespace DotNetAsm
         /// <returns>The size in bytes of the instruction, including opcode and operand</returns>
         private int GetInstructionSize(SourceLine line)
         {
-            foreach(var asm in _assemblers)
+            foreach (var asm in _assemblers)
             {
                 if (asm.AssemblesInstruction(line.Instruction))
                     return asm.GetInstructionSize(line);
@@ -680,6 +701,7 @@ namespace DotNetAsm
                 }
                 else
                 {
+                    line.Label = line.Label.TrimEnd(':');
                     if (IsSymbolName(line.Label, true, false) == false)
                     {
                         Log.LogEntry(line, ErrorStrings.LabelNotValid, line.Label);
@@ -738,7 +760,7 @@ namespace DotNetAsm
                 return;
             }
             string instruction = Options.CaseSensitive ? line.Instruction : line.Instruction.ToLower();
-            
+
             switch (instruction)
             {
                 case ".relocate":
@@ -819,7 +841,7 @@ namespace DotNetAsm
             {
                 TimeSpan ts = DateTime.Now.Subtract(asmTime);
 
-                Console.WriteLine("{0} bytes, {1} sec.", 
+                Console.WriteLine("{0} bytes, {1} sec.",
                     Output.GetCompilation().Count,
                     ts.TotalSeconds);
                 Console.WriteLine("*********************************");
@@ -990,7 +1012,7 @@ namespace DotNetAsm
         private string GetLabelValue(string symbol)
         {
             string value;
-            
+
             value = GetScopedLabelValue(symbol, _currentLine);
             if (string.IsNullOrEmpty(value))
             {
@@ -1026,7 +1048,7 @@ namespace DotNetAsm
                 idList = AnonPlus.Where(i => i > fromLine.Id).OrderBy(i => i);
             }
             int id = 0;
-            string scope = fromLine.Scope; 
+            string scope = fromLine.Scope;
 
             while (id != -1)
             {
@@ -1062,11 +1084,11 @@ namespace DotNetAsm
 
         public AsmCommandLineOptions Options { get; private set; }
 
-        public Compilation Output {  get; private set; }
+        public Compilation Output { get; private set; }
 
         public ErrorLog Log { get; private set; }
 
-        public IDictionary<string, string> Labels {  get; private set; }
+        public IDictionary<string, string> Labels { get; private set; }
 
         public IEvaluator Evaluator { get { return _evaluator; } }
 

@@ -105,10 +105,8 @@ namespace DotNetAsm
         /// </summary>
         /// <param name="hexPattern">The default hexadecimal pattern used to identify hexadecimal
         /// strings in an expression</param>
-        /// <param name="ignoreCase">Ignore the case of symbols, such as variables and function calls.</param>
-        public ExpressionEvaluator(string hexPattern, bool ignoreCase)
+        public ExpressionEvaluator(string hexPattern)
         {
-            IgnoreCase = ignoreCase;
             _symbolLookups = new Dictionary<string, Tuple<Func<string, string>, Regex>>();
             _expCache = new Dictionary<string, string>();
             _rng = new Random();
@@ -152,29 +150,8 @@ namespace DotNetAsm
         /// <summary>
         /// Constructs an instance of the ExpressionEvaluator class.
         /// </summary>
-        /// <param name="hexPattern">The default hexadecimal pattern used to identify hexadecimal
-        /// strings in an expression</param>
-        public ExpressionEvaluator(string hexPattern)
-            : this(hexPattern, false)
-        {
-
-        }
-
-        /// <summary>
-        /// Constructs an instance of the ExpressionEvaluator class.
-        /// </summary>
-        /// <param name="ignoreCase">Ignore the case of symbols, such as variables and function calls.</param>
-        public ExpressionEvaluator(bool ignoreCase)
-            : this(@"0x([a-fA-F0-9]+)", ignoreCase)
-        {
-            
-        }
-
-        /// <summary>
-        /// Constructs an instance of the ExpressionEvaluator class.
-        /// </summary>
         public ExpressionEvaluator()
-            : this(false)
+            : this(@"0x([a-fA-F0-9]+)")
         {
 
         }
@@ -382,15 +359,14 @@ namespace DotNetAsm
         private string PreEvaluate(string expression)
         {
             var char_pattern = @"(?<![a-zA-Z0-9_)])'(.)'(?![a-zA-Z0-9_(])";
-            var func_pattern = @"([a-zA-Z][a-zA-Z0-9]*)\((.*?)\)";
             var altbin_pattern = @"%([\.#]+)";
-            
+
             if (!_expCache.ContainsKey(expression))
             {
                 string key = expression;
 
                 // convert hex e.g. $FFD2
-                foreach(var hex in _hexRegexes)
+                foreach (var hex in _hexRegexes)
                 {
                     expression = hex.Replace(expression,
                         m => Convert.ToInt64(m.Groups[1].Value, 16).ToString());
@@ -412,7 +388,7 @@ namespace DotNetAsm
                         m => Convert.ToInt32(m.Groups[1].Value, 2).ToString());
 
                 // convert unary bitwise complement
-                expression = Regex.Replace(expression, @"(?<![a-zA-Z0-9_)<>])~(\(.+\)|[a-zA-Z0-9_.]+)", ConvertCompl);    
+                expression = Regex.Replace(expression, @"(?<![a-zA-Z0-9_)<>])~(\(.+\)|[a-zA-Z0-9_.]+)", ConvertCompl);
 
                 // convert log10(x) to log(x,10)
                 expression = Regex.Replace(expression, @"log10(\(.+\))", m =>
@@ -426,17 +402,11 @@ namespace DotNetAsm
                     first_paren = first_paren.TrimEnd(')') + ",10)";
                     return string.Format("log{0}{1}", first_paren, post);
 
-                }, IgnoreCase ? RegexOptions.IgnoreCase : RegexOptions.None);
+                }, RegexOptions.IgnoreCase);
 
                 // convert LSB/MSB/bankbyte to (x % 256), x/256, or x/65536 respectively
                 if (_unaryRegex.IsMatch(expression))
                     expression = _unaryRegex.Replace(expression, ConvertUnary);
-
-                // convert functions (but not their arguments) to lowercase if we
-                // are ignoring case
-                if (IgnoreCase && Regex.IsMatch(expression, func_pattern))
-                    expression = Regex.Replace(expression, func_pattern, m =>
-                        m.Groups[1].Value.ToLower() + "(" + m.Groups[2].Value + ")");
 
                 _expCache.Add(key, expression);
             }
@@ -464,6 +434,10 @@ namespace DotNetAsm
             if (Regex.IsMatch(expression, @"[\[{};\]]") || Regex.IsMatch(expression, @"^%|%$"))
                 throw new ExpressionException(expression);
 
+            // no parantheses only expressions allowed
+            if (Regex.IsMatch(expression, @"\(+\)+"))
+                throw new ExpressionException(expression);
+
             // massage bit shift and pow operators
             return Regex.Replace(
                     Regex.Replace(
@@ -476,7 +450,7 @@ namespace DotNetAsm
         private string ReplaceSymbols(string expression)
         {
             // convert client-defined symbols into values
-            foreach(var lookup in _symbolLookups)
+            foreach (var lookup in _symbolLookups)
             {
                 var f = lookup.Value.Item1;
                 Regex r = lookup.Value.Item2;
@@ -521,7 +495,7 @@ namespace DotNetAsm
         {
             Tuple<Func<string, string>, Regex> val =
                 new Tuple<Func<string, string>, Regex>(lookupfunc,
-                    new Regex(regex, RegexOptions.Compiled | (IgnoreCase ? RegexOptions.IgnoreCase : RegexOptions.None)));
+                    new Regex(regex, RegexOptions.Compiled));
             if (_symbolLookups.ContainsKey(regex))
                 _symbolLookups[regex] = val;
             else
@@ -531,11 +505,6 @@ namespace DotNetAsm
         #endregion
 
         #region Properties
-
-        /// <summary>
-        /// Ignore case of symbols, such as variables and function calls.
-        /// </summary>
-        public bool IgnoreCase { get; set; }
 
         /// <summary>
         /// Allow alternate binary string format ('.' for '0' and '#' for '1'). 

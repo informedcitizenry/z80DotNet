@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------------
+﻿//-----------------------------------------------------------------------------
 // Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -34,9 +34,9 @@ namespace DotNetAsm
     public class PseudoAssembler : StringAssemblerBase, ILineAssembler
     {
         #region Members
-        
+
         private HashSet<BinaryFile> _includedBinaries;
-        
+
         #endregion
 
         #region Constructors
@@ -71,7 +71,7 @@ namespace DotNetAsm
             var csv = line.CommaSeparateOperand();
 
             int alignval = (int)Controller.Evaluator.Eval(csv.First(), ushort.MinValue, ushort.MaxValue);
-            
+
             if (csv.Count > 1 && csv.Last().Equals("?") == false)
             {
                 if (csv.Count > 2)
@@ -199,13 +199,12 @@ namespace DotNetAsm
         {
             if (Controller.Output.PCOverflow)
             {
-                Controller.Log.LogEntry(line, 
-                                        ErrorStrings.PCOverflow, 
+                Controller.Log.LogEntry(line,
+                                        ErrorStrings.PCOverflow,
                                         Controller.Output.GetPC().ToString());
                 return;
             }
-            string instruction = Controller.Options.CaseSensitive ? line.Instruction : line.Instruction.ToLower();
-            switch (instruction)
+            switch (line.Instruction.ToLower())
             {
                 case ".addr":
                 case ".word":
@@ -266,8 +265,7 @@ namespace DotNetAsm
                 Controller.Log.LogEntry(line, ErrorStrings.TooFewArguments, line.Instruction);
                 return 0;
             }
-            string instruction = Controller.Options.CaseSensitive ? line.Instruction : line.Instruction.ToLower();
-            switch (instruction)
+            switch (line.Instruction.ToLower())
             {
                 case ".align":
                     {

@@ -67,11 +67,19 @@ namespace DotNetAsm
 
         #region Methods
 
+        private void UpdateDoNotAsm(SourceLine line)
+        {
+                 if (line.Instruction.EndsWith("if",     Controller.Options.StringComparison))
+                _doNotAsm = !Controller.Evaluator.EvalCondition(line.Operand);
+            else if (line.Instruction.EndsWith("ifdef",  Controller.Options.StringComparison))
+                _doNotAsm = !Controller.Labels.ContainsKey(line.Operand);
+            else if (line.Instruction.EndsWith("ifndef", Controller.Options.StringComparison))
+                _doNotAsm = Controller.Labels.ContainsKey(line.Operand);
+        }
+
         public void AssembleLine(SourceLine line)
         {
-            string instruction = Controller.Options.CaseSensitive ? line.Instruction : line.Instruction.ToLower();
-
-            if (Reserved.IsReserved(instruction) == false)
+            if (Reserved.IsReserved(line.Instruction) == false)
             {
                 line.DoNotAssemble = _doNotAsm;
                 return;
@@ -81,22 +89,27 @@ namespace DotNetAsm
 
             string lastcond = _condStack.Count > 0 ? _condStack.Peek() : string.Empty;
 
-            if (instruction.StartsWith(".if"))
+            if (line.Instruction.StartsWith(".if", Controller.Options.StringComparison))
             {
                 _resultStack.Push(!_doNotAsm);
-                _condStack.Push(instruction);
+                _condStack.Push(line.Instruction);
             }
-            else if (instruction.Equals(".else"))
+            else if (line.Instruction.Equals(".else", Controller.Options.StringComparison))
             {
+                if (string.IsNullOrEmpty(line.Operand) == false)
+                {
+                    Controller.Log.LogEntry(line, ErrorStrings.TooManyArguments, line.Instruction);
+                    return;
+                }
                 _condStack.Pop();
-                _condStack.Push(instruction);
+                _condStack.Push(line.Instruction);
             }
-            else if (instruction.Equals(".endif"))
+            else if (line.Instruction.Equals(".endif", Controller.Options.StringComparison))
             {
                 // .endif
                 if (_condStack.Count == 0)
                 {
-                    Controller.Log.LogEntry(line, ErrorStrings.ClosureDoesNotCloseBlock, instruction);
+                    Controller.Log.LogEntry(line, ErrorStrings.ClosureDoesNotCloseBlock, line.Instruction);
                     return;
                 }
                 _condStack.Pop();
@@ -104,7 +117,7 @@ namespace DotNetAsm
             if (_condStack.Count > _condLevel && _doNotAsm)
                 return;
 
-            if (instruction.Equals(".endif"))
+            if (line.Instruction.Equals(".endif", Controller.Options.StringComparison))
             {
                 _resultStack.Pop();
                 _condLevel = _condStack.Count;
@@ -112,20 +125,17 @@ namespace DotNetAsm
             }
             else
             {
-                if (instruction.StartsWith(".if"))
+                if (line.Instruction.StartsWith(".if", Controller.Options.StringComparison))
                 {
                     _condLevel = _condStack.Count;
 
-                    if (instruction.Equals(".if"))
-                        _doNotAsm = !Controller.Evaluator.EvalCondition(line.Operand);
-                    else if (instruction.Equals(".ifdef"))
-                        _doNotAsm = !Controller.Labels.ContainsKey(line.Operand);
-                    else
-                        _doNotAsm = Controller.Labels.ContainsKey(line.Operand);
+                    UpdateDoNotAsm(line);
                 }
                 else
                 {
-                    if (string.IsNullOrEmpty(lastcond) || (!instruction.Equals(".endif") && lastcond.Equals(".else")))
+                    if (string.IsNullOrEmpty(lastcond) || 
+                        (!line.Instruction.Equals(".endif", Controller.Options.StringComparison) && 
+                        lastcond.Equals(".else", Controller.Options.StringComparison)))
                     {
                         Controller.Log.LogEntry(line, ErrorStrings.None);
                         return;
@@ -133,16 +143,9 @@ namespace DotNetAsm
 
                     _doNotAsm = _resultStack.Peek();    // this can seem confusing but in this case
                                                         // not assembling correlates directly to the last result
-                         if (_doNotAsm)
-                        return;
-                    else if (instruction.Equals(".elifdef"))
-                        _doNotAsm = !Controller.Labels.ContainsKey(line.Operand);
-                    else if (instruction.Equals(".elifndef"))
-                         _doNotAsm = Controller.Labels.ContainsKey(line.Operand);
-                    else if (instruction.Equals(".elif"))
-                         _doNotAsm = !Controller.Evaluator.EvalCondition(line.Operand);
+                     if (_doNotAsm) return;
+                     UpdateDoNotAsm(line);
                 }
-                
                 _resultStack.Pop(); // in the if ... elif ... else... block change the result
                 _resultStack.Push(!_doNotAsm);
             }

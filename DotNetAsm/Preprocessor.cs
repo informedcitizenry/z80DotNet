@@ -358,7 +358,7 @@ namespace DotNetAsm
                 {
                     if (line.Operand.Equals(root.Peek().TrimStart('.')))
                     {
-                        line.DoNotAssemble = true; 
+                        line.DoNotAssemble = true;
                         root.Pop();
                     }
                     else
@@ -379,7 +379,7 @@ namespace DotNetAsm
             }
         }
 
- 
+
         /// <summary>
         /// Expand all macro invocations in the source listing.
         /// </summary>
@@ -455,12 +455,8 @@ namespace DotNetAsm
                                 delegate(string token)
                                 {
                                     return ReservedFunc(token) || Reserved.IsReserved(token) ||
-                                        Regex.IsMatch(token, @"\.[a-zA-Z][a-zA-Z0-9]*") ||
+                                        Regex.IsMatch(token, @"^\.[a-zA-Z][a-zA-Z0-9]*$") ||
                                         token == "=";
-                                },
-                                delegate(string token)
-                                {
-                                    return SymbolNameFunc(token);
                                 });
                             sourcelines.Add(line);
                         }

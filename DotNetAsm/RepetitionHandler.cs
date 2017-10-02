@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------------
+﻿//-----------------------------------------------------------------------------
 // Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace DotNetAsm
 {
@@ -118,7 +119,7 @@ namespace DotNetAsm
         public RepetitionHandler(IAssemblyController controller) :
             base(controller)
         {
-            _currBlock = 
+            _currBlock =
             _rootBlock = new RepetitionBlock();
             _levels = 0;
             _processedLines = new List<SourceLine>();
@@ -146,7 +147,7 @@ namespace DotNetAsm
                     Controller.Log.LogEntry(line, ErrorStrings.None);
                     return;
                 }
-                
+
                 if (_levels > 0)
                 {
                     RepetitionBlock block = new RepetitionBlock();
@@ -202,7 +203,7 @@ namespace DotNetAsm
         {
             for (int i = 0; i < repeat; i++)
             {
-                foreach(var entry in block.Entries)
+                foreach (var entry in block.Entries)
                 {
                     if (entry.LinkedBlock != null)
                     {
@@ -262,7 +263,7 @@ namespace DotNetAsm
         /// <summary>
         /// Gets the read-only processed blocks of repeated lines.
         /// </summary>
-        public System.Collections.ObjectModel.ReadOnlyCollection<SourceLine> ProcessedLines
+        public ReadOnlyCollection<SourceLine> ProcessedLines
         {
             get
             {
