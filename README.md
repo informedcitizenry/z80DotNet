@@ -814,7 +814,7 @@ start       ; same as start .equ *
         <li><code>.endif</code>                   - End of condition block
     </ul>
 </td></tr>
-<tr><td><b>Arguments</b></td><td><code>condition</code></td></tr>
+<tr><td><b>Arguments</b></td><td><code>condition</code>/<code>symbol</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
         * = $0400
