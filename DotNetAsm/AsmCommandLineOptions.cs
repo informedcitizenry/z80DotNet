@@ -127,7 +127,7 @@ namespace DotNetAsm
         /// <summary>
         /// Gets the target architecture information.
         /// </summary>
-        public string Architecture { get { return _arch; } }
+        public string Architecture { get { return _arch; } set { _arch = value; } }
 
         /// <summary>
         /// Gets the value determining whether output file should be generated, 

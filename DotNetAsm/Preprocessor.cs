@@ -78,7 +78,7 @@ namespace DotNetAsm
         /// block closures.</param>
         /// <param name="includeInSource">Include the processed block in the final source.</param>
         /// <returns>Returns a SourceLine list of processed blocks.</returns>
-        private List<SourceLine> ProcessBlocks(IEnumerable<SourceLine> listing,
+        private IEnumerable<SourceLine> ProcessBlocks(IEnumerable<SourceLine> listing,
             List<SourceLine> lines,
             string openBlock,
             string closeBlock,
@@ -200,10 +200,8 @@ namespace DotNetAsm
         /// <returns></returns>
         public IEnumerable<SourceLine> Preprocess(IEnumerable<SourceLine> sourcelines)
         {
-            sourcelines = ProcessBlocks(sourcelines, sourcelines.ToList(), ".comment", ".endcomment", ProcessCommentBlocks, true);
-
             // we can't do this check until all commenting has been processed
-            CheckQuotes(sourcelines);
+            CheckQuotes(ProcessBlocks(sourcelines, sourcelines.ToList(), ".comment", ".endcomment", ProcessCommentBlocks, true));
 
             sourcelines = ProcessBlocks(sourcelines, sourcelines.ToList(), ".segment", ".endsegment", DefineSegments, false);
             sourcelines = ProcessBlocks(sourcelines, sourcelines.ToList(), ".macro", ".endmacro", DefineMacro, false);
@@ -266,13 +264,13 @@ namespace DotNetAsm
                         continue;
                     }
 
-                    openblock.Instruction = ".block";
+                    openblock.Instruction = AssemblyController.OPEN_SCOPE;
                     processedLines.Add(openblock);
                     var inclistings = ConvertToSource(line.Operand.Trim('"'));
 
                     processedLines.AddRange(inclistings);
                     processedLines.Add(new SourceLine());
-                    processedLines.Last().Instruction = ".endblock";
+                    processedLines.Last().Instruction = AssemblyController.CLOSE_SCOPE;
                 }
                 else
                 {

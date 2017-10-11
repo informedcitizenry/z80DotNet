@@ -55,6 +55,7 @@ namespace DotNetAsm
             try
             {
                 string filename = Filename.Trim('"');
+
                 using (BinaryReader reader = new BinaryReader(File.OpenRead(filename)))
                 {
                     long length = reader.BaseStream.Length;

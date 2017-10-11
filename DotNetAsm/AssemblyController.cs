@@ -47,15 +47,20 @@ namespace DotNetAsm
 
         #region Members
 
-        private List<ILineAssembler> _assemblers;
+        private Stack<ILineAssembler> _assemblers;
         private ConditionAssembler _conditionAssembler;
-        private ExpressionEvaluator _evaluator;
 
+
+        private List<SourceLine> _processedLines;
         private SourceLine _currentLine;
 
         private int _passes;
 
         private Regex _specialLabels;
+
+        private HashSet<string> _fileRegistry;
+
+        private HashSet<int> _anonPlus, _anonMinus;
 
         #endregion
 
@@ -91,10 +96,10 @@ namespace DotNetAsm
 
             Log = new ErrorLog();
             Options = new AsmCommandLineOptions();
-            FileRegistry = new HashSet<string>();
-            AnonPlus = new HashSet<int>();
-            AnonMinus = new HashSet<int>();
-            ProcessedLines = new List<SourceLine>();
+            _fileRegistry = new HashSet<string>();
+            _anonPlus = new HashSet<int>();
+            _anonMinus = new HashSet<int>();
+            _processedLines = new List<SourceLine>();
 
             Disassembler = new Disassembler(this);
 
@@ -106,22 +111,28 @@ namespace DotNetAsm
 
             _specialLabels = new Regex(@"^\*|\+|-$", RegexOptions.Compiled);
 
-            _assemblers = new List<ILineAssembler>();
+            _assemblers = new Stack<ILineAssembler>();
 
-            _evaluator = new ExpressionEvaluator(@"\$([a-fA-F0-9]+)");
+            Encoding = new AsmEncoding(Options.CaseSensitive);
 
+            Evaluator = new Evaluator(@"\$([a-fA-F0-9]+)");
+
+            Evaluator.DefineSymbolLookup(@"(?<=\B)'(.)'(?=\B)", GetCharValue);
             if (!Options.CaseSensitive)
-                _evaluator.DefineSymbolLookup(@"[a-zA-Z][a-zA-Z0-9]*\(", (fnc) => fnc.ToLower());
-            _evaluator.DefineSymbolLookup(@"(?>_?[a-zA-Z][a-zA-Z0-9_.]*)(?!\()", GetLabelValue);
-            _evaluator.DefineSymbolLookup(@"^\++$|^-+$|\(\++\)|\(-+\)", ConvertAnonymous);
-            _evaluator.DefineSymbolLookup(@"(?<![a-zA-Z0-9_.)])\*(?![a-zA-Z0-9_.(])", (str) => Output.GetPC().ToString());
-            
-            _evaluator.AllowAlternateBinString = true;
-
+                Evaluator.DefineSymbolLookup(@"[a-zA-Z][a-zA-Z0-9]*\(", (fnc) => fnc.ToLower());
+            Evaluator.DefineSymbolLookup(@"(?>_?[a-zA-Z][a-zA-Z0-9_.]*)(?!\()", GetLabelValue);
+            Evaluator.DefineSymbolLookup(@"^\++$|^-+$|\(\++\)|\(-+\)", ConvertAnonymous);
+            Evaluator.DefineSymbolLookup(@"(?<![a-zA-Z0-9_.)])\*(?![a-zA-Z0-9_.(])", (str) => Output.LogicalPC.ToString());
+           
             _conditionAssembler = new ConditionAssembler(this);
 
-            _assemblers.Add(new PseudoAssembler(this));
-            _assemblers.Add(new MiscAssembler(this));
+            _assemblers.Push(new PseudoAssembler(this));
+            _assemblers.Push(new MiscAssembler(this));
+        }
+
+        private string GetCharValue(string chr)
+        {
+            return Encoding.GetTranslation(chr.Trim('\'').First()).ToString();
         }
 
         #endregion
@@ -233,7 +244,7 @@ namespace DotNetAsm
             Preprocessor processor = new Preprocessor(this,
                                                       IsInstruction,
                                                       s => IsSymbolName(s.TrimEnd(':'), true, false));
-            processor.FileRegistry = FileRegistry;
+            processor.FileRegistry = _fileRegistry;
             foreach (var file in Options.InputFiles)
             {
                 if (processor.FileRegistry.Add(file) == false)
@@ -247,7 +258,14 @@ namespace DotNetAsm
             }
 
             if (Log.HasErrors == false)
-                return processor.ExpandMacros(source);
+            {
+                var processed = processor.ExpandMacros(source);
+
+                processed.ForEach(line => 
+                    line.Operand = Regex.Replace(line.Operand, @"\s?\*\s?", "*"));
+
+                return processed;
+            }
             return null;
         }
 
@@ -327,7 +345,7 @@ namespace DotNetAsm
                     if (line.DoNotAssemble)
                     {
                         if (line.IsComment)
-                            ProcessedLines.Add(line);
+                            _processedLines.Add(line);
                         continue;
                     }
                     _currentLine = line;
@@ -360,7 +378,7 @@ namespace DotNetAsm
                         FirstPassLine(line, scope, ref anon);
                     }
                 }
-                catch (ExpressionEvaluator.ExpressionException exprEx)
+                catch (ExpressionException exprEx)
                 {
                     Log.LogEntry(line, ErrorStrings.BadExpression, exprEx.Message);
                 }
@@ -371,7 +389,7 @@ namespace DotNetAsm
             }
             if (scope.Count > 0 || handler.IsProcessing || _conditionAssembler.InConditionBlock)
             {
-                Log.LogEntry(ProcessedLines.Last(), ErrorStrings.MissingClosure);
+                Log.LogEntry(_processedLines.Last(), ErrorStrings.MissingClosure);
             }
         }
 
@@ -388,7 +406,7 @@ namespace DotNetAsm
             {
                 UpdatePC(line);
 
-                line.PC = Output.GetPC();
+                line.PC = Output.LogicalPC;
 
                 DefineLabel(line, scope, ref anon);
 
@@ -409,7 +427,7 @@ namespace DotNetAsm
             finally
             {
                 // always add
-                ProcessedLines.Add(line);
+                _processedLines.Add(line);
             }
 
         }
@@ -455,10 +473,10 @@ namespace DotNetAsm
                         anon++;
                     }
                     label = GetNearestScope(label, line.Scope);
-                    Labels[label] = Output.GetPC().ToString();
+                    Labels[label] = Output.LogicalPC.ToString();
                 }
-                passNeeded = line.PC != Output.GetPC();
-                line.PC = Output.GetPC();
+                passNeeded = line.PC != Output.LogicalPC;
+                line.PC = Output.LogicalPC;
                 if (finalPass)
                     AssembleLine(line);
                 else
@@ -477,7 +495,7 @@ namespace DotNetAsm
             bool finalPass = false;
             _passes++;
 
-            var assembleLines = ProcessedLines.Where(l => l.DoNotAssemble == false);
+            var assembleLines = _processedLines.Where(l => l.DoNotAssemble == false);
 
             while (_passes <= MAX_PASSES && Log.HasErrors == false)
             {
@@ -499,7 +517,7 @@ namespace DotNetAsm
                             passNeeded = needpass;
 
                     }
-                    catch (ExpressionEvaluator.ExpressionException exprEx)
+                    catch (ExpressionException exprEx)
                     {
                         Log.LogEntry(line, ErrorStrings.BadExpression, exprEx.Message);
                     }
@@ -531,7 +549,7 @@ namespace DotNetAsm
 
         public void AddAssembler(ILineAssembler lineAssembler)
         {
-            _assemblers.Add(lineAssembler);
+            _assemblers.Push(lineAssembler);
         }
 
         public void AddSymbol(string symbol)
@@ -559,38 +577,11 @@ namespace DotNetAsm
                 if (asm.AssemblesInstruction(line.Instruction))
                 {
                     asm.AssembleLine(line);
-                    GetAssemblyBytes(line);
                     return;
                 }
             }
         }
-
-        /// <summary>
-        /// Copy the output bytes to the DotNetAsm.SourceLine assembly.
-        /// </summary>
-        /// <param name="line">The DotNetAsm.SourceLine to copy bytes to.</param>
-        private void GetAssemblyBytes(SourceLine line)
-        {
-            line.Assembly.Clear();
-            int range = Output.GetPC() - line.PC;
-            var robytes = Output.GetCompilation().ToList();
-            int logicalsize = Output.ProgramCounter - Output.ProgramStart;
-            if (robytes.Count - range < 0)
-            {
-                if (robytes.Count == 0)
-                    return;
-                range = robytes.Count;
-            }
-            else if (logicalsize > robytes.Count)
-            {
-                if (logicalsize > robytes.Count + range)
-                    return;
-                range = range - (logicalsize - robytes.Count);
-            }
-            if (range > 0)
-                line.Assembly.AddRange(robytes.GetRange(robytes.Count - range, range));
-        }
-
+ 
         /// <summary>
         /// Gets all subscopes from the current parent scope.
         /// </summary>
@@ -676,7 +667,7 @@ namespace DotNetAsm
                     }
                     else
                     {
-                        line.PC = Output.GetPC();
+                        line.PC = Output.LogicalPC;
                     }
                     if (line.Instruction.Equals(".block", Options.StringComparison))
                     {
@@ -693,9 +684,9 @@ namespace DotNetAsm
                     if (line.Label.Equals("+") || line.Label.Equals("-"))
                     {
                         if (line.Label == "+")
-                            AnonPlus.Add(line.Id);
+                            _anonPlus.Add(line.Id);
                         else
-                            AnonMinus.Add(line.Id);
+                            _anonMinus.Add(line.Id);
 
                     }
                 }
@@ -874,7 +865,7 @@ namespace DotNetAsm
                     writer.WriteLine(";; {0:f}\n", DateTime.Now);
                     writer.WriteLine(";; Input files:\n");
 
-                    FileRegistry.ToList().ForEach(f => writer.WriteLine(";; {0}", f));
+                    _fileRegistry.ToList().ForEach(f => writer.WriteLine(";; {0}", f));
 
                     writer.WriteLine();
                     writer.Write(listing);
@@ -887,7 +878,7 @@ namespace DotNetAsm
                 {
                     writer.WriteLine(";; Input files:\n");
 
-                    FileRegistry.ToList().ForEach(f => writer.WriteLine(";; {0}", f));
+                    _fileRegistry.ToList().ForEach(f => writer.WriteLine(";; {0}", f));
                     writer.WriteLine();
                     writer.WriteLine(listing);
                 }
@@ -925,7 +916,7 @@ namespace DotNetAsm
         {
             StringBuilder listing = new StringBuilder();
 
-            foreach (SourceLine line in ProcessedLines)
+            foreach (SourceLine line in _processedLines)
             {
                 if (line.Instruction.Equals(".end", Options.StringComparison))
                     break;
@@ -1000,7 +991,7 @@ namespace DotNetAsm
         {
             label = GetNearestScope(label, line.Scope);
             if (Labels.ContainsKey(label))
-                return _evaluator.Eval(Labels[label]).ToString();
+                return Evaluator.Eval(Labels[label]).ToString();
             return string.Empty;
         }
 
@@ -1017,11 +1008,8 @@ namespace DotNetAsm
             if (string.IsNullOrEmpty(value))
             {
                 if (_passes > 0)
-                {
                     Log.LogEntry(_currentLine, ErrorStrings.LabelNotDefined, symbol);
-                    return string.Empty;
-                }
-                return ExpressionEvaluator.EVAL_FAIL;
+                return "0";
             }
             else
             {
@@ -1041,11 +1029,11 @@ namespace DotNetAsm
             IOrderedEnumerable<int> idList;
             if (operand.First() == '-')
             {
-                idList = AnonMinus.Where(i => i < fromLine.Id).OrderByDescending(i => i);
+                idList = _anonMinus.Where(i => i < fromLine.Id).OrderByDescending(i => i);
             }
             else
             {
-                idList = AnonPlus.Where(i => i > fromLine.Id).OrderBy(i => i);
+                idList = _anonPlus.Where(i => i > fromLine.Id).OrderBy(i => i);
             }
             int id = 0;
             string scope = fromLine.Scope;
@@ -1054,7 +1042,7 @@ namespace DotNetAsm
             {
                 id = idList.Count() > count ? idList.ElementAt(count) : -1;
 
-                var lines = from line in ProcessedLines
+                var lines = from line in _processedLines
                             where line.Id == id && line.Scope == scope
                             select line;
                 if (lines.Count() == 0)
@@ -1086,11 +1074,13 @@ namespace DotNetAsm
 
         public Compilation Output { get; private set; }
 
+        public AsmEncoding Encoding { get; private set; }
+
         public ErrorLog Log { get; private set; }
 
         public IDictionary<string, string> Labels { get; private set; }
 
-        public IEvaluator Evaluator { get { return _evaluator; } }
+        public IEvaluator Evaluator { get; private set; }
 
         /// <summary>
         /// Gets or sets the disassembler. The default disassembler is the DotNetAsm.Disassembler.
@@ -1104,26 +1094,6 @@ namespace DotNetAsm
         public string BannerText { get; set; }
 
         public string VerboseBannerText { get; set; }
-
-        private HashSet<string> FileRegistry { get; set; }
-
-        /// <summary>
-        /// Gets the command-line arguments passed by the end-user and parses into 
-        /// strongly-typed options.
-        /// </summary>
-        private List<SourceLine> ProcessedLines { get; set; }
-
-        /// <summary>
-        /// Gets or sets the list of unique IDs for SourceLines whose labels
-        /// are forward-reference anonymous symbols.
-        /// </summary>
-        private HashSet<int> AnonPlus { get; set; }
-
-        /// <summary>
-        /// Gets or sets the list of unique IDs for SourceLines whose labels
-        /// are backward-reference anonymous symbols.
-        /// </summary>
-        private HashSet<int> AnonMinus { get; set; }
 
         #endregion
     }

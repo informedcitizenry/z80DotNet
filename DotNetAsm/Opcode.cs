@@ -375,6 +375,8 @@ namespace DotNetAsm
 
         #endregion
 
+        #region Methods
+
         /// <summary>
         /// Evaluates an operand expression and returns a DotNetAsm.OperandFormat
         /// with captured subexpressions.
@@ -416,6 +418,6 @@ namespace DotNetAsm
         {
             return _regex.ToString();
         }
+        #endregion
     }
-
 }
