@@ -84,7 +84,7 @@ namespace z80DotNet
                 // a,(iy+$20)
                 new FormatBuilder(@"^([a-ehl])\s*,\s*\(\s*i(x|y)\s*((\+|-).+)\)$()","{0},(i{1}+{2})","${0:x2}",string.Empty,1,2,3,5,Controller.Options.RegexOption),
                 // 0,(ix+$30)[,a]
-                new FormatBuilder(@"^(.+)\s*,\s*\(\s*i(x|y)\s*((\+|-).+)\)(\s*,\s*[a-ehl])?$()","{3},(i{0}+{2}){1}","${0:x2}","{0}",2,5,3,1,Controller.Options.RegexOption, Controller.Evaluator),
+                new FormatBuilder(@"^([^\s]+)\s*,\s*\(\s*i(x|y)\s*((\+|-).+)\)(\s*,\s*[a-ehl])?$()","{3},(i{0}+{2}){1}","${0:x2}","{0}",2,5,3,1,Controller.Options.RegexOption, Controller.Evaluator),
                 // ($0000),a
                 new FormatBuilder(@"^(\(.+\))\s*,\s*([a-ehl])$()", "{2},{0}", "${0:x4}", string.Empty,2,3,1,3,Controller.Options.RegexOption, true),
                 // nz,$0000
@@ -102,9 +102,9 @@ namespace z80DotNet
                 // (ix+$00),$00
                 new FormatBuilder(@"^\(\s*i(x|y)\s*((\+|-).+)\)\s*,\s*(.+)$()", "(i{0}+{2}),{3}", "${0:x2}", "${1:x2}", 1, 5, 2, 4, Controller.Options.RegexOption),
                 // 0,a / 0,(hl)
-                new FormatBuilder(@"^(.+)\s*,\s*(([a-ehl])|\(hl\))$()", "{3},{0}", string.Empty, "{0}", 2, 4, 4, 1, Controller.Options.RegexOption, Controller.Evaluator),
+                new FormatBuilder(@"^([^\s]+)\s*,\s*(([a-ehl])|\(hl\))$()", "{3},{0}", string.Empty, "{0}", 2, 4, 4, 1, Controller.Options.RegexOption, Controller.Evaluator),
                 // (c),0
-                new FormatBuilder(@"^\(\s*(c)\s*\)\s*,\s*(.+)$()", "({0}),{3}", string.Empty, "{0}", 1, 3, 3, 2, Controller.Options.RegexOption, Controller.Evaluator),
+                new FormatBuilder(@"^\(\s*(c)\s*\)\s*,\s*([^\s]+)$()", "({0}),{3}", string.Empty, "{0}", 1, 3, 3, 2, Controller.Options.RegexOption, Controller.Evaluator),
                 // expression
                 new FormatBuilder(@"^.+$()", "{2}", "${0:x4}", string.Empty, 1,1,0,1, Controller.Options.RegexOption, true)
             };
@@ -247,7 +247,7 @@ namespace z80DotNet
             {
                 Controller.Log.LogEntry(line,
                                         ErrorStrings.PCOverflow,
-                                        Controller.Output.GetPC().ToString());
+                                        Controller.Output.LogicalPC.ToString());
                 return;
             }
             OperandFormat fmt = null;
@@ -274,6 +274,9 @@ namespace z80DotNet
             {
                 if (Regex.IsMatch(fmt.FormatString, @"\(i(x|y)\+\${0:x2}\)"))
                 {
+                    fmt.Expression1 = Regex.Replace(fmt.Expression1, @"(\+|-)\s+"
+                        , m => m.Groups[1].Value).Trim();
+                      
                     eval = Controller.Evaluator.Eval(fmt.Expression1, sbyte.MinValue, sbyte.MaxValue);
                     if (eval < 0)
                     {
@@ -292,7 +295,7 @@ namespace z80DotNet
                     evalAbs &= 0xFFFF;
                     if (Reserved.IsOneOf("Relatives", line.Instruction))
                     {
-                        int pcOffs = Controller.Output.GetPC() + opc.Size;
+                        int pcOffs = Controller.Output.LogicalPC + opc.Size;
                         try
                         {
                             eval = Convert.ToSByte(Controller.Output.GetRelativeOffset((int)evalAbs, pcOffs));
@@ -343,7 +346,7 @@ namespace z80DotNet
                     opcode |= ((int)eval << (opcsize * 8));
                 }
             }
-            Controller.Output.Add(opcode, opc.Size);
+            line.Assembly = Controller.Output.Add(opcode, opc.Size);
         }
 
         public int GetInstructionSize(SourceLine line)

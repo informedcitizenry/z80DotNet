@@ -19,7 +19,14 @@ namespace NUnit.z80Tests
 
             Log = new ErrorLog();
 
-            Evaluator = new ExpressionEvaluator(@"\$([a-fA-F0-9]+)");
+            Encoding = new AsmEncoding(false);
+
+            Evaluator = new Evaluator(@"\$([a-fA-F0-9]+)");
+
+            Evaluator.DefineSymbolLookup("'.'", s => Convert.ToInt32(s.Trim('\'').First()).ToString());
+
+            // to help throw errors 
+            Evaluator.DefineSymbolLookup(@"[a-ehilr]", s => string.Empty);
 
             Labels = new Dictionary<string, string>();
 
@@ -93,6 +100,8 @@ namespace NUnit.z80Tests
 
         public IEvaluator Evaluator { get; private set; }
 
+        public AsmEncoding Encoding { get; private set; }
+
         public string BannerText
         {
             get
@@ -136,7 +145,7 @@ namespace NUnit.z80Tests
             if (positive)
             {
                 Assert.IsFalse(_controller.Log.HasErrors);
-                Assert.AreEqual(pc, _controller.Output.GetPC());
+                Assert.AreEqual(pc, _controller.Output.LogicalPC);
                 Assert.IsTrue(_controller.Output.GetCompilation().SequenceEqual(expected));
                 Assert.AreEqual(disasm, line.Disassembly);
                 Assert.AreEqual(expected.Count(), _asm.GetInstructionSize(line));
@@ -145,13 +154,25 @@ namespace NUnit.z80Tests
             {
                 Assert.IsTrue(_controller.Log.HasErrors);
             }
-            _controller.Output.Reset();
-            _controller.Log.ClearErrors();
+            ResetController();
         }
 
         private void TestForFailure(SourceLine line)
         {
             TestInstruction(line, 0, null, string.Empty, false);
+        }
+
+        private void TestForFailure<Texc>(SourceLine line) where Texc : System.Exception
+        {
+            try { Assert.Throws<Texc>(() => TestForFailure(line)); }
+            catch { }
+            finally { ResetController(); }
+        }
+
+        private void ResetController()
+        {
+            _controller.Output.Reset();
+            _controller.Log.ClearErrors();
         }
 
         [Test]
@@ -771,13 +792,11 @@ namespace NUnit.z80Tests
             TestInstruction(line, 0x0002, new byte[] { 0xdd, 0x63 }, "ld ixh,e");
 
             line.Operand = "ixh,h";
-            Assert.Throws<ExpressionEvaluator.ExpressionException>(() => TestForFailure(line));
-            //TestInstruction(line, 0x0002, new byte[] { 0xdd, 0x64 }, "ld ixh,h");
-
+            TestForFailure<ExpressionException>(line);
+            
             line.Operand = "ixh,l";
-            Assert.Throws<ExpressionEvaluator.ExpressionException>(() => TestForFailure(line));
-            //TestInstruction(line, 0x0002, new byte[] { 0xdd, 0x65 }, "ld ixh,l");
-
+            TestForFailure<ExpressionException>(line);
+            
             line.Operand = "ixh,ixh";
             TestInstruction(line, 0x0002, new byte[] { 0xdd, 0x64 }, "ld ixh,ixh");
 
@@ -803,13 +822,11 @@ namespace NUnit.z80Tests
             TestInstruction(line, 0x0002, new byte[] { 0xdd, 0x6b }, "ld ixl,e");
 
             line.Operand = "ixl,h";
-            Assert.Throws<ExpressionEvaluator.ExpressionException>(() => TestForFailure(line));
-            //TestInstruction(line, 0x0002, new byte[] { 0xdd, 0x6c }, "ld ixl,h");
-
+            TestForFailure<ExpressionException>(line);
+            
             line.Operand = "ixl,l";
-            Assert.Throws<ExpressionEvaluator.ExpressionException>(() => TestForFailure(line));
-            //TestInstruction(line, 0x0002, new byte[] { 0xdd, 0x6d }, "ld ixl,l");
-
+            TestForFailure<ExpressionException>(line);
+            
             line.Operand = "ixl,ixh";
             TestInstruction(line, 0x0002, new byte[] { 0xdd, 0x6c }, "ld ixl,ixh");
 
@@ -922,13 +939,12 @@ namespace NUnit.z80Tests
             TestInstruction(line, 0x0002, new byte[] { 0xfd, 0x63 }, "ld iyh,e");
 
             line.Operand = "iyh,h";
-            Assert.Throws<ExpressionEvaluator.ExpressionException>(() => TestForFailure(line));
+            TestForFailure<ExpressionException>(line);
             //TestInstruction(line, 0x0002, new byte[] { 0xfd, 0x64 }, "ld iyh,h");
 
             line.Operand = "iyh,l";
-            Assert.Throws<ExpressionEvaluator.ExpressionException>(() => TestForFailure(line));
-            //TestInstruction(line, 0x0002, new byte[] { 0xfd, 0x65 }, "ld iyh,l");
-
+            TestForFailure<ExpressionException>(line);
+            
             line.Operand = "iyh,iyh";
             TestInstruction(line, 0x0002, new byte[] { 0xfd, 0x64 }, "ld iyh,iyh");
 
@@ -954,11 +970,11 @@ namespace NUnit.z80Tests
             TestInstruction(line, 0x0002, new byte[] { 0xfd, 0x6b }, "ld iyl,e");
 
             line.Operand = "iyl,h";
-            Assert.Throws<ExpressionEvaluator.ExpressionException>(() => TestForFailure(line));
+            TestForFailure<ExpressionException>(line);
             //TestInstruction(line, 0x0002, new byte[] { 0xfd, 0x6c }, "ld iyl,h");
 
             line.Operand = "iyl,l";
-            Assert.Throws<ExpressionEvaluator.ExpressionException>(() => TestForFailure(line));
+            TestForFailure<ExpressionException>(line);
             //TestInstruction(line, 0x0002, new byte[] { 0xfd, 0x6d }, "ld iyl,l");
 
             line.Operand = "iyl,iyh";
@@ -4384,19 +4400,19 @@ namespace NUnit.z80Tests
             TestForFailure(line);
 
             line.Operand = "(ix+129),a";
-            Assert.Throws<OverflowException>(() => TestForFailure(line));
+            TestForFailure<OverflowException>(line);
 
             line.Operand = "(ix-129),b";
-            Assert.Throws<OverflowException>(() => TestForFailure(line));
+            TestForFailure<OverflowException>(line);
 
             line.Operand = "(ix+127),-2";
             TestInstruction(line, 0x0004, new byte[] { 0xdd, 0x36, 0x7f, 0xfe }, "ld (ix+$7f),$fe");
 
             line.Operand = "($10000),a";
-            Assert.Throws<OverflowException>(() => TestForFailure(line));
+            TestForFailure<OverflowException>(line);
 
             line.Operand = "a,-129";
-            Assert.Throws<OverflowException>(() => TestForFailure(line));
+            TestForFailure<OverflowException>(line);
         }
     }
 }

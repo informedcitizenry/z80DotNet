@@ -1,4 +1,5 @@
 # z80DotNet, A Simple .Net-Based Z80 Cross-Assembler
+### Version 1.3
 
 ## Introduction
 
@@ -7,7 +8,6 @@ The z80DotNet Macro Assembler is a simple cross-assembler targeting the Zilog Z8
 ## Legal
 
 * z80DotNet (c) 2017 informedcitizenry
-* Mathos Parser, a [math expression parser](https://mathosparser.codeplex.com/) (c) 2012 Artem Los
 * System.CommandLine, a [command-line argument parser](https://github.com/dotnet/corefxlab/tree/master/src/System.CommandLine) (c) Microsoft Corporation
 
 See LICENSE and LICENSE_third_party for licensing information.
@@ -86,8 +86,7 @@ In addition, certain assembler directives expect conditional expressions. Compou
 <tr><td>!</td><td>Logical NOT</td></tr>
 </table>
 
-## Comments
-
+### Comments
 Comments can be added to source code in one of two ways, as single-line trailing source code, or as a block. Single-line comments start with a semi-colon. Any text written after the semi-colon is ignored, unless it is being expressed as a string or constant character.
 ```
     xor a       ; .a := 0 = color black
@@ -106,8 +105,7 @@ Block comments span multiple lines, enclosed in `.comment` and `.endcomment` dir
 
     .endcomment
 ```
-## Labels and Symbols
-
+### Labels and Symbols
 When writing assembly, hand-coding branches, addresses and constants can be time-consuming and lead to errors. Labels take care of this work for you! There is no restriction on name size, but all labels must begin with an underscore or letter, and can only contain underscores, letters, and digits, and they cannot be re-assigned:
 ```
             yellow   =   6
@@ -182,7 +180,6 @@ As you can see, anonymous labels, though convenient, would hinder readability if
                 ld  a,(-)           ; best to put anonymous label reference inside paranetheses.
 ```
 ## Non-code (data) assembly
-
 In addition to 6502 assembly, data can also be assembled. Expressions evaluate internally as 64-bit signed integers, but **must** fit to match the expected operand size; if the value given in the expression exceeds the data size, this will cause an illegal quantity error. The following pseudo-ops are available:
 
 <table>
@@ -222,7 +219,8 @@ Note that if uninitialized data is defined, but thereafter initialized data is d
 highscore   .dword ?    ; uninitialized highscore variables
             xor a,a     ; The output is now 6 bytes in size 
 ``` 
-In addition to integral values, z80DotNet can handle text strings. All strings are enclosed in double-quotes. Escapes are not recognized, so embedded quotes must be "broken out":
+### Text processing and encoding
+In addition to integral values, z80DotNet can assembles text strings. All strings are enclosed in double-quotes. Escapes are not recognized, so embedded quotes must be "broken out":
 ```
 "He said, ",'"',"How are you?",'"'
 ```
@@ -232,20 +230,63 @@ Strings can be assembled in a few different ways, according to the needs of the 
 <tr><th>Directive</th><th>Meaning</th></tr>
 <tr><td><code>.string</code></td><td>A standard string literal</td></tr>
 <tr><td><code>.cstring</code></td><td>A C-style null-terminated string</td></tr>
-<tr><td><code>.lsstring</code></td><td>An ASCII string left-shifted with the low bit set on its final byte</td></tr>
+<tr><td><code>.lsstring</code></td><td>A string left-shifted with the low bit set on its final byte</td></tr>
 <tr><td><code>.nstring</code></td><td>A string with the negative (high) bit set on its final byte</td></tr>
 <tr><td><code>.pstring</code></td><td>A Pascal-style string, its size in the first byte</td></tr>
 </table>
 
 Since `.pstring` strings use a single byte to denote size, no string can be greater than 255 bytes. Since `.nstring` and `.lsstring` make use of the high and low bits, bytes must not be greater in value than 127, nor less than 0. 
 
-A special function called `str()` will convert an integral value to its ASCII equivalent in bytes:
+A special function called `str()` will convert an integral value to its equivalent in bytes:
 ```
-start       = $4000
+start       = $c000
 
-startstr    .string str(start) ; assembles as $31,$36,$33,$38,$34
-                               ; literally the digits "1","6","3","8","4"
+startstr    .string str(start) ; assembles as $34,$39,$31,$35,$32
+                               ; literally the digits "4","9","1","5","2"
 ```      
+Assembly source text is assumed to be UTF-8, and by default, the output is also encoded as UTF-8. The output encoding can be changed. The `.encoding` directive selects an encoding, either one pre-defined or custom. The encoding name follows the same rules as labels. The default encoding is `none`.
+
+Encodings can be modified using the `.map` and `.unmap` directives. After selecting an encoding, you can map a codepoint to an output byte as follows:
+
+```
+            ;; select encoding
+            .encoding myencoding
+            
+            ;; map A to output 0
+            .map "A", 0
+            
+            .string "ABC" 
+            ;; > 00 42 43
+            
+            ;; char literals are also affected
+            ld  a,'A'    ;; 3e 00
+```
+
+These directives do not affect the `none` encoding, which cannot be changed.
+
+Entire character sets can also be mapped, with the translation code treated as the first codepoint in the output range. The start and endpoints in the character set to be remapped can either be expressed as a two-character string literal or as expressions. 
+
+```
+        ;; output lower-case UTF-8 chars as uppercase UTF-8
+        .map "az", "A"
+        
+        ;; output UTF-8 digits as actual integral values
+        .map "0","9", 0
+        
+        ;; alternatively:
+        .map 48, 48+9, 0
+        
+```
+
+*CAUTION:* Operand expressions containing a mapped character literal may produce unexpected results:
+
+```
+        .map 'A', 'a' 
+        
+        .map 'a', 'A' ;; this is now the same as .map 'a', 'a'
+```
+
+Instead express character literals as one-character strings in double-quotes. 
 
 ## Addressing model
 
@@ -659,6 +700,22 @@ message .nstring "HELLO"
 </table>
 <p align="center"><b>Assembler directives</b></p>
 <table>
+<tr><td><b>Name</b></td><td><code>.assert</code></td></tr>
+<tr><td><b>Alias</b></td><td>None</td></tr>
+<tr><td><b>Definition</b></td><td>Asserts the truth of a given expression. If the assertion fails, an error is logged. A custom error can be optionally be specified.</td></tr>
+<tr><td><b>Arguments</b></td><td><code>condition[, error]</code></td></tr>
+<tr><td><b>Example</b></td><td>
+<pre>
+        * = $8000
+        nop
+        .assert 5 == 6              ; standard assertion error thrown
+        .assert * < $8001, "Uh oh!" ; if program counter
+                                    ; is not less than 32769,
+                                    ; raise a custom error
+</pre>
+</td></tr>
+</table>
+<table>
 <tr><td><b>Name</b></td><td><code>.binclude</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
 <tr><td><b>Definition</b></td><td>Include a source file and enclose the expanded source into a scoped block. The specified file is z80DotNet-compatible source. If no name is given in front of the directive then all symbols inside the included source will be inaccessible. Note that to prevent infinite recursion, a source file can only be included once in the entire source, including from other included files.</td></tr>
@@ -743,6 +800,19 @@ done    ret
     ;; if program counter
     ;; is greater than 20481,
     ;; raise a custom warning
+</pre>
+</td></tr>
+</table>
+<table>
+<tr><td><b>Name</b></td><td><code>.encoding</code></td></tr>
+<tr><td><b>Alias</b></td><td>None</td></tr>
+<tr><td><b>Definition</b></td><td>Select the text encoding for assembly output. The default is <code>none</code>, which is UTF-8 output and will not be affected by <code>.map</code> and <code>.unmap</code> directives.
+</td></tr>
+<tr><td><b>Arguments</b></td><td><code>encoding</code></td></tr>
+<tr><td><b>Example</b></td><td>
+<pre>
+      .encoding lowercase
+      .string "hello"       ; >> 45 48 4c 4c 4f
 </pre>
 </td></tr>
 </table>
@@ -887,6 +957,24 @@ print       .macro  value = 13, printsub = $15ef
 </td></tr>
 </table>
 <table>
+<tr><td><b>Name</b></td><td><code>.map</code></td></tr>
+<tr><td><b>Alias</b></td><td>None</td></tr>
+<tr><td><b>Definition</b></td><td>Maps a character or range of characters to a custom codepoint in the selected encoding. Note: <code>none</code> is default and will not be affected by <code>.map</code> and <code>.unmap</code> directives. It is recommended to represent individual char literals as strings.
+</td></tr>
+<tr><td><b>Arguments</b></td><td><code>start[, end]</code>,<code>codepoint</code>/<br>
+<code>"&lt;start&gt;&lt;end&gt;"</code>,<code>codepoint</code></td></tr>
+<tr><td><b>Example</b></td><td>
+<pre>
+      .encoding myencoding
+      .map "A", "a"
+      .map "π", $5e
+      .byte 'A', 'π' ;; >> 61 5e
+      .map "09", $00
+      .string "2017" ;; >> 02 00 01 07
+</pre>
+</td></tr>
+</table>
+<table>
 <tr><td><b>Name</b></td><td><code>.relocate</code>/<code>.endrelocate</code></td></tr>
 <tr><td><b>Alias</b></td><td><code>.pseudopc</code>/<code>.realpc</code></td></tr>
 <tr><td><b>Definition</b></td><td>Sets the logical program counter to the specified address with the offset of the assembled output not changing. Useful for programs that relocate parts of themselves to different memory spaces.</td></tr>
@@ -996,6 +1084,37 @@ glyph             ;12345678
             .code
             * = $6000
             .data
+</pre>
+</td></tr>
+</table>
+<table>
+<tr><td><b>Name</b></td><td><code>.target</code></td></tr>
+<tr><td><b>Alias</b></td><td>None</td></tr>
+<tr><td><b>Definition</b></td><td>Set the target architecture for the assembly output. See the <code>--arch</code> option in the command-line notes below for the available architectures.</td></tr>
+<tr><td><b>Arguments</b></td><td><code>architecture</code></td></tr>
+<tr><td><b>Example</b></td><td>
+<pre>
+      .target "zx"
+      ;; the output binary will have a ZX Spectrum tape header
+      ...
+</pre>
+</td></tr>
+</table>
+<table>
+<tr><td><b>Name</b></td><td><code>.unmap</code></td></tr>
+<tr><td><b>Alias</b></td><td>None</td></tr>
+<tr><td><b>Definition</b></td><td>Unmaps a custom codepoint for a character or range of characters in the selected encoding and reverts to UTF-8 encoding for output. Note: <code>none</code> is default and will not be affected by <code>.map</code> and <code>.unmap</code> directives. It is recommended to represent individual char literals as strings.
+</td></tr>
+<tr><td><b>Arguments</b></td><td><code>start[, end]</code>/<br>
+<code>"&lt;start&gt;&lt;end&gt;"</code></td></tr>
+<tr><td><b>Example</b></td><td>
+<pre>
+      .encoding myencoding
+      .unmap "A"
+      .unmap "π"        ;; revert to UTF-8 encoding
+      .byte 'A', 'π'    ;; >> 41 cf 80
+      .unmap "09"
+      .string "2017"    ;; >> 32 30 31 37
 </pre>
 </td></tr>
 </table>
@@ -1366,7 +1485,9 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 
 ### Error messages
 
-`Attempted to divide by zero..` - The expression attempted a division by zero.
+`Assertion Failed` - An assertion failed due to the condition evaluating as false.
+
+`Attempted to divide by zero.` - The expression attempted a division by zero.
 
 `Cannot resolve anonymous label` - The assembler cannot find the reference to the anonymous label.
 
@@ -1376,13 +1497,11 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 
 `Closure does not close a segment` - A segment closure is present but no segment definition.
 
-`Constant expression in LValue` - Expression attempting to assign a value to a constant.
-
 `Could not process binary file` - The binary file could not be opened or processed.
 
 `Directive takes no arguments` - An argument is present for a pseudo-op or directive that takes no arguments.
 
-`End of file reached without block closure` - A block directive has no corresponding closure.
+`Encoding is not a name or option` - The encoding selected is not a valid name.
 
 `error: invalid option` - An invalid option was passed to the command-line.
 
@@ -1414,8 +1533,6 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 
 `Missing closure for segment` - A segment does not have a closure.
 
-`Most significant bit should not be set` - A pseudo-op cannot set the most-significant bit because it is already set.
-
 `Program Counter overflow` - The program counter overflowed passed the allowable limit.
 
 `Pstring size too large` - The P-String size is more than the maximum 255 bytes.
@@ -1427,6 +1544,8 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 `Redefinition of macro` - An attempt was made to redefine a macro.
 
 `Symbol is not a valid label name` - The label name had one or more invalid characters.
+
+`Symbol not found` - The expression referenced a symbol that was not defined.
 
 `Too few arguments for directive` - The assembler directive expected more arguments than were provided.
 
