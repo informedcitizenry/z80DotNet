@@ -246,7 +246,7 @@ startstr    .string str(start) ; assembles as $34,$39,$31,$35,$32
 ```      
 Assembly source text is assumed to be UTF-8, and by default, the output is also encoded as UTF-8. The output encoding can be changed. The `.encoding` directive selects an encoding, either one pre-defined or custom. The encoding name follows the same rules as labels. The default encoding is `none`.
 
-Encodings can be modified using the `.map` and `.unmap` directives. After selecting an encoding, you can map a codepoint to an output byte as follows:
+Encodings can be modified using the `.map` and `.unmap` directives. After selecting an encoding, you can map a UTF-8 character to an output code unit as follows:
 
 ```
             ;; select encoding
@@ -264,7 +264,7 @@ Encodings can be modified using the `.map` and `.unmap` directives. After select
 
 These directives do not affect the `none` encoding, which cannot be changed.
 
-Entire character sets can also be mapped, with the translation code treated as the first codepoint in the output range. The start and endpoints in the character set to be remapped can either be expressed as a two-character string literal or as expressions. 
+Entire character sets can also be mapped, with the translation code treated as the first code unit in the output range. The start and endpoints in the character set to be remapped can either be expressed as a two-character string literal or as expressions. 
 
 ```
         ;; output lower-case UTF-8 chars as uppercase UTF-8
@@ -957,10 +957,10 @@ print       .macro  value = 13, printsub = $15ef
 <table>
 <tr><td><b>Name</b></td><td><code>.map</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Maps a character or range of characters to a custom codepoint in the selected encoding. Note: <code>none</code> is default and will not be affected by <code>.map</code> and <code>.unmap</code> directives. It is recommended to represent individual char literals as strings.
+<tr><td><b>Definition</b></td><td>Maps a character or range of characters to a custom code unit in the selected encoding. Note: <code>none</code> is default and will not be affected by <code>.map</code> and <code>.unmap</code> directives. It is recommended to represent individual char literals as strings.
 </td></tr>
-<tr><td><b>Arguments</b></td><td><code>start[, end]</code>,<code>codepoint</code>/<br>
-<code>"&lt;start&gt;&lt;end&gt;"</code>,<code>codepoint</code></td></tr>
+<tr><td><b>Arguments</b></td><td><code>start[, end]</code>,<code>code unit</code>/<br>
+<code>"&lt;start&gt;&lt;end&gt;"</code>,<code>code unit</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
       .encoding myencoding
@@ -1101,7 +1101,7 @@ glyph             ;12345678
 <table>
 <tr><td><b>Name</b></td><td><code>.unmap</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Unmaps a custom codepoint for a character or range of characters in the selected encoding and reverts to UTF-8 encoding for output. Note: <code>none</code> is default and will not be affected by <code>.map</code> and <code>.unmap</code> directives. It is recommended to represent individual char literals as strings.
+<tr><td><b>Definition</b></td><td>Unmaps a custom code unit for a character or range of characters in the selected encoding and reverts to UTF-8 encoding for output. Note: <code>none</code> is default and will not be affected by <code>.map</code> and <code>.unmap</code> directives. It is recommended to represent individual char literals as strings.
 </td></tr>
 <tr><td><b>Arguments</b></td><td><code>start[, end]</code>/<br>
 <code>"&lt;start&gt;&lt;end&gt;"</code></td></tr>
