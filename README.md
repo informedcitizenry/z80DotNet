@@ -220,7 +220,7 @@ highscore   .dword ?    ; uninitialized highscore variables
             xor a,a     ; The output is now 6 bytes in size 
 ``` 
 ### Text processing and encoding
-In addition to integral values, z80DotNet can assembles text strings. All strings are enclosed in double-quotes. Escapes are not recognized, so embedded quotes must be "broken out":
+In addition to integral values, z80DotNet can assemble text. Text strings are enclosed in double quotes, character literals in single quotes. Escapes are not recognized, so embedded quotation marks must be "broken out" as separate operands:
 ```
 "He said, ",'"',"How are you?",'"'
 ```
@@ -244,9 +244,9 @@ start       = $c000
 startstr    .string str(start) ; assembles as $34,$39,$31,$35,$32
                                ; literally the digits "4","9","1","5","2"
 ```      
-Assembly source text is assumed to be UTF-8, and by default, the output is also encoded as UTF-8. The output encoding can be changed. The `.encoding` directive selects an encoding, either one pre-defined or custom. The encoding name follows the same rules as labels. The default encoding is `none`.
+Assembly source text is assumed to be UTF-8, and by default the output is also encoded as UTF-8. The output encoding can be changed. Use the `.encoding` directive to select an encoding, either one pre-defined or custom. The encoding name follows the same rules as labels. The default encoding is `none`.
 
-Encodings can be modified using the `.map` and `.unmap` directives. After selecting an encoding, you can map a UTF-8 character to an output codepoint as follows:
+Text encodings are modified using the `.map` and `.unmap` directives. After selecting an encoding, you can map a UTF-8 character to a custom code point (Unicode character) as follows:
 
 ```
             ;; select encoding
@@ -262,9 +262,9 @@ Encodings can be modified using the `.map` and `.unmap` directives. After select
             ld  a,'A'    ;; 3e 00
 ```
 
-These directives do not affect the `none` encoding, which cannot be changed.
+These directives do not have any effect if no (`none`) encoding is selected.
 
-Entire character sets can also be mapped, with the translation code treated as the first codepoint in the output range. The start and endpoints in the character set to be remapped can either be expressed as a two-character string literal or as expressions. 
+Entire character sets can also be mapped, with the re-mapped code point treated as the first in the output range. The start and endpoints in the character set to be re-mapped can either be expressed as a two-character string literal or as expressions. 
 
 ```
         ;; output lower-case UTF-8 chars as uppercase UTF-8
@@ -278,7 +278,7 @@ Entire character sets can also be mapped, with the translation code treated as t
         
 ```
 
-*CAUTION:* Operand expressions containing a mapped character literal may produce unexpected results:
+*CAUTION:* Operand expressions containing a character literal mapped to a custom code point will translate the character literal accordingly. This may produce unexpected results:
 
 ```
         .map 'A', 'a' 
@@ -286,7 +286,7 @@ Entire character sets can also be mapped, with the translation code treated as t
         .map 'a', 'A' ;; this is now the same as .map 'a', 'a'
 ```
 
-Instead express character literals as one-character strings in double-quotes. 
+Instead express character literals as one-character strings in double-quotes, since those are still encoded as Unicode characters. 
 
 ## Addressing model
 
@@ -804,7 +804,7 @@ done    ret
 <table>
 <tr><td><b>Name</b></td><td><code>.encoding</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Select the text encoding for assembly output. The default is <code>none</code>, which is UTF-8 output and will not be affected by <code>.map</code> and <code>.unmap</code> directives.
+<tr><td><b>Definition</b></td><td>Select the text encoding for assembly output. The default is <code>none</code>, which is will not be affected by <code>.map</code> and <code>.unmap</code> directives.
 </td></tr>
 <tr><td><b>Arguments</b></td><td><code>encoding</code></td></tr>
 <tr><td><b>Example</b></td><td>
@@ -957,7 +957,7 @@ print       .macro  value = 13, printsub = $15ef
 <table>
 <tr><td><b>Name</b></td><td><code>.map</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Maps a character or range of characters to a custom codepoint in the selected encoding. Note: <code>none</code> is default and will not be affected by <code>.map</code> and <code>.unmap</code> directives. It is recommended to represent individual char literals as strings.
+<tr><td><b>Definition</b></td><td>Maps a character or range of characters to a custom code point in the selected encoding. Note: <code>none</code> is default and will not be affected by <code>.map</code> and <code>.unmap</code> directives. It is recommended to represent individual char literals as strings.
 </td></tr>
 <tr><td><b>Arguments</b></td><td><code>start[, end]</code>,<code>codepoint</code>/<br>
 <code>"&lt;start&gt;&lt;end&gt;"</code>,<code>codepoint</code></td></tr>
@@ -1093,7 +1093,7 @@ glyph             ;12345678
 <tr><td><b>Example</b></td><td>
 <pre>
       .target "zx"
-      ;; the output binary will have a ZX Spectrum tape header
+      ;; the output binary will have a ZX Spectrum header
       ...
 </pre>
 </td></tr>
@@ -1101,7 +1101,7 @@ glyph             ;12345678
 <table>
 <tr><td><b>Name</b></td><td><code>.unmap</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Unmaps a custom codepoint for a character or range of characters in the selected encoding and reverts to default UTF-8 encoding for output. Note: <code>none</code> is default and will not be affected by <code>.map</code> and <code>.unmap</code> directives. It is recommended to represent individual char literals as strings.
+<tr><td><b>Definition</b></td><td>Unmaps a custom code point for a character or range of characters in the selected encoding and reverts to Unicode. Note: <code>none</code> is default and will not be affected by <code>.map</code> and <code>.unmap</code> directives. It is recommended to represent individual char literals as strings.
 </td></tr>
 <tr><td><b>Arguments</b></td><td><code>start[, end]</code>/<br>
 <code>"&lt;start&gt;&lt;end&gt;"</code></td></tr>
