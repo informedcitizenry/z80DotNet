@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -46,8 +46,8 @@ namespace DotNetAsm
                 });
             Reserved.DefineType("Directives", new string[]
                 {
-                    ".elif", ".else", ".endif", ".eor", ".error", ".cerror", ".if", ".ifdef", 
-                    ".cwarn", ".relocate", ".pseudopc", ".realpc", ".endrelocate", ".warn"
+                    ".elif", ".else", ".endif", ".eor", ".error", ".errorif", ".if", ".ifdef", 
+                    ".warnif", ".relocate", ".pseudopc", ".realpc", ".endrelocate", ".warn"
                 });
         }
 

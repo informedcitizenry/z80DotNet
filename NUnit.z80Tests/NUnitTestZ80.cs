@@ -92,6 +92,11 @@ namespace NUnit.z80Tests
             }
         }
 
+        public bool IsInstruction(string token)
+        {
+            throw new NotImplementedException();
+        }
+
         public Compilation Output { get; private set; }
 
         public ErrorLog Log { get; private set; }

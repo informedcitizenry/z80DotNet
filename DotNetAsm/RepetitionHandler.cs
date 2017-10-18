@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,7 +29,7 @@ namespace DotNetAsm
     /// <summary>
     /// Handles repetitions in assembly source.
     /// </summary>
-    public class RepetitionHandler : AssemblerBase
+    public class RepetitionHandler : AssemblerBase, IBlockHandler
     {
         #region Private Classes
 
@@ -250,25 +250,21 @@ namespace DotNetAsm
                    token.Equals(".endrepeat", Controller.Options.StringComparison);
         }
 
-        #endregion
-
-        #region Properties
-
         /// <summary>
         /// Gets the flag that determines if the DotNetAsm.RepetitionHandler is currently in
         /// processing mode.
         /// </summary>
-        public bool IsProcessing { get { return _levels > 0; } }
+        public bool IsProcessing()
+        {
+            return _levels > 0;  
+        }
 
         /// <summary>
         /// Gets the read-only processed blocks of repeated lines.
         /// </summary>
-        public ReadOnlyCollection<SourceLine> ProcessedLines
+        public IEnumerable<SourceLine> GetProcessedLines()
         {
-            get
-            {
-                return _processedLines.AsReadOnly();
-            }
+            return _processedLines;
         }
 
         #endregion

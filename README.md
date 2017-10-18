@@ -1,32 +1,26 @@
 # z80DotNet, A Simple .Net-Based Z80 Cross-Assembler
-### Version 1.3
-
+### Version 1.4
 ## Introduction
 
 The z80DotNet Macro Assembler is a simple cross-assembler targeting the Zilog Z80 and compatible CPU. It is written for .Net (Version 4.5.1) and supports all of the published (legal) instructions of the Z80 processor, as well as most of the unpublished (illegal) operations. Like the MOS 6502, the Z80 was a popular choice for video game system and microcomputer manufacturers in the 1970s and mid-1980s. For more information, see [wiki entry](https://en.wikipedia.org/wiki/Zilog_Z80) or [Z80 resource page](http://www.z80.info/) to learn more about this microprocessor.
 
 ## Legal
-
 * z80DotNet (c) 2017 informedcitizenry
+* Mathos Parser, a [math expression parser](https://mathosparser.codeplex.com/) (c) 2012 Artem Los
 * System.CommandLine, a [command-line argument parser](https://github.com/dotnet/corefxlab/tree/master/src/System.CommandLine) (c) Microsoft Corporation
 
 See LICENSE and LICENSE_third_party for licensing information.
-
 ## Overview
-
 The z80DotNet assembler is simple to use. Invoke it from a command line with the assembly source and (optionally) the output filename in the parameters. For instance, a `/z80DotNet myprg.asm` command will output assembly listing in `myprgm.asm` to binary output. To specify output file name use the `-o <file>` or `--output=<file>` option, otherwise the default output filename will be `a.out`.
 
 You can specify as many source files as assembly input as needed. For instance, `/z80DotNet mylib.asm myprg.asm` will assemble both the `mylib.asm` and `myprgm.asm` files sequentially to output. Be aware that if both files define the same symbol an assembler error will result.
-
 ## General Features
-### Mathematical and Numerical Expressions
-
-Integral constants can be expressed as decimal, hexadecimal, and binary. Decimal numbers are written as is, while hex numbers are prefixed with a `$` and binary numbers are prefixed with a `%`. Constant characters are enclosed in single-quotes:
+### Numeric constants
+Integral constants can be expressed as decimal, hexadecimal, and binary. Decimal numbers are written as is, while hex numbers are prefixed with a `$` and binary numbers are prefixed with a `%`.
 ```
-            32767 = 32767
-            $7fff = 32767
-%0111111111111111 = 32767
-              'E' = 69
+            65490 = 65490
+            $ffd2 = 65490
+%1111111111010010 = 65490
 ```
 Negative numbers are assembled according to two's complement rules, with the highest bits set. Binary strings can alternatively be expressed as `.` for `0` and `#` for `1`, which is helpful for laying out pixel data:
 ```
@@ -38,84 +32,18 @@ Negative numbers are assembled according to two's complement rules, with the hig
                 .byte %...###..
                 .byte %...###..
                 .byte %.#######
-```                            
-Operands can also be mathematical expressions, even referencing labels. Math expressions can be nested in paranetheses, except in some limited cases (i.e., indirect addressing commands). Several operations are available.
-### Binary Operations
-<table>
-<tr><th>Operator</th><th>Meaning</th></tr>
-<tr><td>+</td><td>Add</td></tr>
-<tr><td>-</td><td>Subtract</td></tr>
-<tr><td>*</td><td>Multiply</td></tr>
-<tr><td>/</td><td>Divide</td></tr>
-<tr><td>%</td><td>Modulo (remainder)</td></tr>
-<tr><td>**</td><td>Raise to the power of</td></tr>
-<tr><td>&amp;</td><td>Bitwise AND</td></tr>
-<tr><td>|</td><td>Bitwise OR</td></tr>
-<tr><td>^</td><td>Bitwise XOR</td></tr>
-<tr><td>&lt;&lt;</td><td>Bitwise left shift</td></tr>
-<tr><td>&gt;&gt;</td><td>Bitwise right shift</td></tr>
-</table>
-
-### Unary Operations
-<table>
-<tr><th>Operator</th><th>Meaning</th></tr>
-<tr><td>~</td><td>Bitwise complementary</td></tr>
-<tr><td>&lt;</td><td>Least significant byte</td></tr>
-<tr><td>&gt;</td><td>Most significant (second) byte</td></tr>
-<tr><td>^</td><td>Bankbyte (third byte)</td></tr>
-</table>
-
-There are several math functions that can also be called as part of the expressions. 
-```
-    ld  a,sqrt(25)
-```
-See the section below on functions for a full list of available functions.
-
-In addition, certain assembler directives expect conditional expressions. Compound conditions are allowed. C-style operators are used:
-
-<table>
-<tr><th>Operator</th><th>Meaning</th></tr>
-<tr><td>&lt;</td><td>Less than</td></tr>
-<tr><td>&lt;=</td><td>Less than or equal to</td></tr>
-<tr><td>==</td><td>Equal to</td></tr>
-<tr><td>&gt;=</td><td>Greater than or equal to</td></tr>
-<tr><td>&gt;</td><td>Greater than</td></tr>
-<tr><td>!=</td><td>Not equal to</td></tr>
-<tr><td>&amp;&amp;</td><td>Logical AND</td></tr>
-<tr><td>||</td><td>Logical OR</td></tr>
-<tr><td>!</td><td>Logical NOT</td></tr>
-</table>
-
-### Comments
-Comments can be added to source code in one of two ways, as single-line trailing source code, or as a block. Single-line comments start with a semi-colon. Any text written after the semi-colon is ignored, unless it is being expressed as a string or constant character.
-```
-    xor a       ; .a := 0 = color black
-    call $229b  ; set border color to accumulator
-    ld  a,';'   ; the first semi-colon is assembled
-    rst $10   
-```
-Block comments span multiple lines, enclosed in `.comment` and `.endcomment` directives. These are useful when you want to exclude unwanted code:
-```
-    .comment
-    
-    this will set the cpu on fire do not assemble!
-    
-    sll (hl)
-    out (c),b
-
-    .endcomment
-```
-### Labels and Symbols
+```                
+## Labels and Symbols
 When writing assembly, hand-coding branches, addresses and constants can be time-consuming and lead to errors. Labels take care of this work for you! There is no restriction on name size, but all labels must begin with an underscore or letter, and can only contain underscores, letters, and digits, and they cannot be re-assigned:
 ```
             yellow   =   6
-    
+
             ld  a,yellow     ; load yellow into acc.
             jr  nz,setborder ; now set the border color
             ...
 setborder:  call $229b       ; poke border color with acc.
 ```
-Trailing colons for jump instructions are optional. 
+Trailing colons for jump instructions are optional.
 
 Using the `.block`/`.endblock` directives, labels can be placed in scope blocks to avoid the problem of label reduplication:
 ```
@@ -138,7 +66,7 @@ key_in      = $10a8
 wait_key    = $15d4
 
             .endblock
-            
+
             call speccy.key_in  ; call the subroutine whose label        
                                 ; is defined in the speccy block
 ```
@@ -152,13 +80,12 @@ inc32       inc bc
             inc de
 done        ret
             .endblock
-            
+
             call inc32  ; will produce an assembler error
 ```
 Anonymous labels allow one to do away with the need to think of unique label names altogether. There are two types of anonymous labels: forward and backward. Forward anonymous labels are declared with a `+`, while backward anonymous labels are declared using a `-`. They are forward or backward to the current assembly line and are referenced in the operand with one or more `+` or `-` symbols:
 ```
 -               ld  a,(ix+$00)
-		and a
                 jr  nz,+            ; jump to first forward anonymous from here
                 ld  a,' '
 +               rst $10
@@ -179,30 +106,48 @@ As you can see, anonymous labels, though convenient, would hinder readability if
 -               .byte $01, $02, $03
                 ld  a,(-)           ; best to put anonymous label reference inside paranetheses.
 ```
+### Comments
+Adding comments to source promotes readability, particularly in assembly. Comments can be added to source code in one of two ways, as single-line trailing source code, or as a block. Single-line comments start with a semi-colon. Any text written after the semi-colon is ignored, unless it is being expressed as a string or constant character.
+```
+    lda #0      ; 0 = color black
+    sta $d020   ; set border color to accumulator
+    lda #';'    ; the first semi-colon is a char literal so will be assembled
+    jsr $ffd2   
+```
+Block comments span multiple lines, enclosed in `.comment` and `.endcomment` directives. These are useful when you want to exclude unwanted code:
+```
+    .comment
+
+    this will set the cpu on fire do not assemble!
+
+    lda #$ff
+    sta $5231
+
+    .endcomment
+```
 ## Non-code (data) assembly
-In addition to 6502 assembly, data can also be assembled. Expressions evaluate internally as 64-bit signed integers, but **must** fit to match the expected operand size; if the value given in the expression exceeds the data size, this will cause an illegal quantity error. The following pseudo-ops are available:
+In addition to z80 assembly, data can also be assembled. Expressions evaluate internally as 64-bit signed integers, but **must** fit to match the expected operand size; if the value given in the expression exceeds the data size, this will cause an illegal quantity error. The following pseudo-ops are available:
 
-<table>
-<tr><th>Directive</th><th>Size</th></tr>
-<tr><td><code>.byte</code></td><td>One byte unsigned</td></tr>
-<tr><td><code>.char</code></td><td>One byte signed</td></tr>
-<tr><td><code>.addr</code></td><td>Two byte address</td></tr>
-<tr><td><code>.sint</code></td><td>Two bytes signed</td></tr>
-<tr><td><code>.word</code></td><td>Two bytes unsigned</td></tr>
-<tr><td><code>.lint</code></td><td>Three bytes signed</td></tr>
-<tr><td><code>.long</code></td><td>Three bytes unsigned</td></tr>
-<tr><td><code>.dint</code></td><td>Four bytes signed</td></tr>
-<tr><td><code>.dword</code></td><td>Four bytes unsigned</td></tr>
-<tr><td><code>.align</code></td><td>Zero or more bytes</td></tr>
-<tr><td><code>.fill</code></td><td>One or bytes</td></tr>
-</table>
+| Directive | Size                      |
+| --------- | ------------------------- |
+| `.byte`   | One byte unsigned         |
+| `.sbyte`  | One byte signed           |
+| `.addr`   | Two byte address          |
+| `.sint`   | Two bytes signed          |
+| `.word`   | Two bytes unsigned        |
+| `.rta`    | Two byte return address   |
+| `.lint`   | Three bytes signed        |
+| `.long`   | Three bytes unsigned      |
+| `.dint`   | Four bytes signed         |
+| `.dword`  | Four bytes unsigned       |
+| `.align`  | Zero or more bytes        |
+| `.fill`   | One or more bytes         |   
 
-Multi-byte directives assemble in little-endian order (the least significant byte first), which conforms to the Z80 architecture. Data is comma-separated, and each element can be a constant or expression:
+Multi-byte directives assemble in little-endian order (the least significant byte first), which conforms to the 6502 architecture. Data is comma-separated, and each value can be a constant or expression:
 ```
 sprite      .byte %......##,%########,%##......
 jump        .word sub1, sub2, sub3, sub4
 ```
-
 For `.fill` and `.align`, the assembler accepts either one or two arguments. The first is the quantity, while the second is the value. If the second is not given then it is assumed to be uninitialized data (see below). For `.fill`, quantity is number of bytes, for `.align` it is the number of bytes by which the program counter can be divided with no remainder:
 ```
 unused      .fill 256,0 ; Assemble 256 bytes with the value 0
@@ -212,30 +157,29 @@ atpage      .align 256  ; The program counter is guaranteed to be at a page boun
 Sometimes it is desirable to direct the assembler to make a label reference an address, but without outputting bytes at that address. For instance, program variables. Use the `?` symbol instead of an expression:
 ```
 highscore   .dword ?    ; set the symbol highscore to the program counter,
-                        ; but do not output any bytes 
+                        ; but do not output any bytes
 ```                             
 Note that if uninitialized data is defined, but thereafter initialized data is defined, the output will fill bytes to the program counter from the occurrence of the uninitialized symbol:
 ```
 highscore   .dword ?    ; uninitialized highscore variables
-            xor a,a     ; The output is now 6 bytes in size 
-``` 
+            xor a,a     ; The output is now 6 bytes in size
+```
 ### Text processing and encoding
-In addition to integral values, z80DotNet can assemble text. Text strings are enclosed in double quotes, character literals in single quotes. Escapes are not recognized, so embedded quotation marks must be "broken out" as separate operands:
+In addition to integral values, 6502.Net can assemble Unicode text. Text strings are enclosed in double quotes, character literals in single quotes. Escaped double quotes are not recognized, so embedded quotation marks must be "broken out" as separate operands:
 ```
 "He said, ",'"',"How are you?",'"'
 ```
-Strings can be assembled in a few different ways, according to the needs of the programmer. 
+Strings can be assembled in a few different ways, according to the needs of the programmer.
 
-<table>
-<tr><th>Directive</th><th>Meaning</th></tr>
-<tr><td><code>.string</code></td><td>A standard string literal</td></tr>
-<tr><td><code>.cstring</code></td><td>A C-style null-terminated string</td></tr>
-<tr><td><code>.lsstring</code></td><td>A string left-shifted with the low bit set on its final byte</td></tr>
-<tr><td><code>.nstring</code></td><td>A string with the negative (high) bit set on its final byte</td></tr>
-<tr><td><code>.pstring</code></td><td>A Pascal-style string, its size in the first byte</td></tr>
-</table>
+| Directive     | Meaning                                                                       |
+| ------------- | ----------------------------------------------------------------------------- |
+| `.string`     | A standard string literal                                                     |
+| `.cstring`    | A C-style null-terminated string                                              |
+| `.lsstring`   | A string with output bytes left-shifted and the low bit set on its final byte |
+| `.nstring`    | A string with the negative (high) bit set on its final byte                   |
+| `.pstring`    | A Pascal-style string, its size in the first byte                             |
 
-Since `.pstring` strings use a single byte to denote size, no string can be greater than 255 bytes. Since `.nstring` and `.lsstring` make use of the high and low bits, bytes must not be greater in value than 127, nor less than 0. 
+Since `.pstring` strings use a single byte to denote size, no string can be greater than 255 bytes. Since `.nstring` and `.lsstring` make use of the high and low bits, bytes must not be greater in value than 127, nor less than 0.
 
 A special function called `str()` will convert an integral value to its equivalent in bytes:
 ```
@@ -244,54 +188,91 @@ start       = $c000
 startstr    .string str(start) ; assembles as $34,$39,$31,$35,$32
                                ; literally the digits "4","9","1","5","2"
 ```      
-Assembly source text is processed as UTF-8, and by default the output is encoded as such. The output encoding can be changed. Use the `.encoding` directive to select an encoding, either one pre-defined or custom. The encoding name follows the same rules as labels. The default encoding is `none`.
+Assembly source text is processed as UTF-8, and by default strings and character literals are encoded as such. You can change how text output with the `.encoding` and `.map` directives. Use `.encoding` to select an encoding. The encoding name follows the same rules as labels.
 
 The default encoding is `none`.
 
-Text encodings are modified using the `.map` and `.unmap` directives. After selecting an encoding, you can map a Unicode character to a custom code point (Unicode character) as follows:
-
+Text encodings are modified using the `.map` and `.unmap` directives. After selecting an encoding, you can map a Unicode character to a custom output code as follows:
 ```
             ;; select encoding
             .encoding myencoding
-            
+
             ;; map A to output 0
             .map "A", 0
-            
-            .string "ABC" 
+
+            .string "ABC"
             ;; > 00 42 43
-            
+
             ;; char literals are also affected
-            ld a,'A'    ;; 3e 00
+            ld  a,'A'    ;; 3e 00
 ```
-
-Note `.map` changes the *code point* of the mapped character, not the encoding (binary output) itself, which is still UTF-8. For one-byte code points, this is an irrelevant distinction, since the encoding and code points match.
-
-Entire character sets can also be mapped, with the re-mapped code point treated as the first in the output range. The start and endpoints in the character set to be re-mapped can either be expressed as a two-character string literal or as expressions. 
-
+The output can be one to four bytes. Entire character sets can also be mapped, with the re-mapped code treated as the first in the output range. The start and endpoints in the character set to be re-mapped can either be expressed as a two-character string literal or as expressions.
 ```
-        ;; output lower-case UTF-8 chars as uppercase UTF-8
+        ;; output lower-case chars as uppercase
         .map "az", "A"
-        
-        ;; output UTF-8 digits as actual integral values
+
+        ;; output digits as actual integral values
         .map "0","9", 0
-        
+
         ;; alternatively:
         .map 48, 48+9, 0
-        
-```
 
-*CAUTION:* Operand expressions containing a character literal mapped to a custom code point will translate the character literal accordingly. This may produce unexpected results:
-
+        ;; escape sequences are acceptable too:
+        .map "\u21d4", $9f
 ```
-        .map 'A', 'a' 
-        
+**Caution:** Operand expressions containing a character literal mapped to a custom code will evaluate the character literal accordingly. This may produce unexpected results:
+```
+        .map 'A', 'a'
+
         .map 'a', 'A' ;; this is now the same as .map 'a', 'a'
 ```
+Instead express character literals as one-character strings in double-quotes, which will evaluate to UTF-8.
+### Mathematical and Conditional Expressions
+All non-string operands are treated as math or conditional expressions. Compound expressions are nested in paranetheses. There are several available operators for both binary and unary expressions.
+#### Binary Operations
+| Operator      | Meaning                        |
+| :-----------: | ------------------------------ |
+| +             | Add                            |
+| -             | Subtract                       |
+| *             | Multiply                       |
+| /             | Divide                         |
+| %             | Modulo (remainder)             |
+| **            | Raise to the power of          |
+| &             | Bitwise AND                    |
+| &#124;        | Bitwise OR                     |
+| ^             | Bitwise XOR                    |
+| <<            | Bitwise left shift             |
+| >>            | Bitwise right shift            |
+| <             | Less than                      |
+| <=            | Less than or equal to          |
+| ==            | Equal to                       |
+| !=            | Not equal to                   |
+| >=            | Greater than or equal to       |
+| >             | Greater than                   |
+| &&            | Logical AND                    |
+| &#124;&#124;  | Logical OR                     |
+#### Unary Operations
+| Operator      | Meaning                        |
+| :-----------: | ------------------------------ |
+| ~             | Bitwise complementary          |
+| <             | Least significant byte         |
+| >             | Most significant (second) byte |
+| ^             | Bank (third) byte              |
+| !             | Logical NOT                    |
+```
+    .addr   HIGHSCORE + 3 * 2 ; the third address from HIGHSCORE
+    .byte   * > $f000         ; if program counter > $f000, assemble as 1
+                              ; else 0
 
-Instead express character literals as one-character strings in double-quotes, since those are still encoded as Unicode characters. 
-
+    ;; bounds check START_ADDR                          
+    .assert START_ADDR >= MIN && START_ADDR <= MAX
+```
+Several built-in math functions that can also be called as part of the expressions.
+```
+    ld  a,sqrt(25)
+```
+See the section below on functions for a full list of available functions.
 ## Addressing model
-
 By default, programs start at address 0, but you can change this by setting the program counter before the first assembled byte. While many Z80 assemblers used `$` to denote the program counter, z80DotNet uses the `*` symbol. The assignment can be either a constant or expression:
 ```
                 * = ZP + 1000       ; program counter now 1000 bytes offset from the value of the constant ZP
@@ -301,12 +282,12 @@ By default, programs start at address 0, but you can change this by setting the 
 As assembly continues, the program counter advances automatically. You can manually move the program counter forward, but keep in mind doing so will create a gap that will be filled if any bytes are added to the assembly from that point forward. For instance:
 ```
                 * = $1000
-                
+
                 xor a
                 call $1234
-                    
+
                 * = $1fff
-                
+
                 rst $38
 ```                
 Will output 4096 bytes, with 4091 zeros.
@@ -314,18 +295,18 @@ Will output 4096 bytes, with 4091 zeros.
 To move the program counter forward for the purposes having the symbols use an address space that code will be relocated to later, you can use the `.relocate` directive:
 ```
                 * = $0200
-                
+
                 newlocation = $a000
-                
+
                 ld  hl,torelocate
                 ld  de,newlocation
                 ld  bc,torelocate_end - torelocate
                 ldir
                 ....
-                    
+
 torelocate:                                 
                 .relocate newlocation   ; no gap created
-              
+
                 call relocatedsub    ; now in the "newlocation" address space
                 ...
 relocatedsub    xor a
@@ -333,21 +314,20 @@ relocatedsub    xor a
 ```                
 To reset the program counter back to its regular position use the `.endrelocate` directive:
 ```
-                call relocate
+                call relocatedsub
                 ...
                 jp  finish
 torelocate:
                 relocate newlocation
-                
+
                 ...
-                
+
                 .endrelocate
 torelocate_end
                 ;; done with movable code, do final cleanup
 finish          ret
 ```
 ## Macros and segments
-
 One of the more powerful features of the z80DotNet cross assembler is the ability to re-use code segments in multiple places in your source. You define a macro or segment once, and then can invoke it multiple times later in your source; the assembler simply expands the definition where it is invoked as if it is part of the source. Macros have the additional benefit of allowing you to pass parameters, so that the final outputted code can be easily modified for different contexts, behaving much like a function call in a high level language. For instance, one of the more common operations in z80DotNet assembly is to do a 16-bit increment. You could use a macro for this purpose like this:
 ```
 inc16   .macro  register
@@ -379,7 +359,7 @@ var1    .word ?
 var2    .word ?
         ...
         .endsegment RAM
-        
+
         .segment code
         di
         xor a
@@ -416,7 +396,7 @@ variables   .byte ?
             .endsegment hivars
             .endsegment code
             .endsegment program
-            
+
             * = $0000
             .code
             * = $4000
@@ -424,6 +404,7 @@ variables   .byte ?
             * = $d000
             .hivars
 ```
+Macros and segments must be defined before they can be invoked.
 ## Conditional Assembly
 
 In cases where you want to control the flow of assembly based on certain conditions (environmental or target architecture), z80DotNet provides certain directives to handle this. Conditions can be nested, but expressions will be evaluated on first pass only.
@@ -436,26 +417,27 @@ In cases where you want to control the flow of assembly based on certain conditi
         nop
         nop
     .endif
+
+    .if * > $7fff   ; is program counter $8000 or more
+        .end        ; terminate assembly
+    .endif          ; end
 ```
-*CAUTION:* Be careful not to use the `.end` directive inside an conditional block, otherwise the `.endif` closure will never be reached, and the assembler will report an error.
-
 ## Repetitions
-
-On occasions where certain instructions will be repeatedly assembled, it is convenient to repeat their output in a loop. For instance, if you want to pad a series of `nop` instructions. The `.repeat` directive does just that. 
+On occasions where certain instructions will be repeatedly assembled, it is convenient to repeat their output in a loop. For instance, if you want to pad a series of `nop` instructions. The `.repeat` directive does just that.
 
 ```
         ;; will assemble $00 ten times
         .repeat 10
         .nop
         .endrepeat
-        
+
 ```
 These repetitions can also be nested, as shown below.
 
 ```
         ;; print each letter of the alphabet 3 times
         * = $1000
-        
+
         ld  a,'A'
         .repeat 26
             .repeat 3
@@ -470,11 +452,8 @@ These repetitions can also be nested, as shown below.
 ```
 ## Reference
 ### Instruction set
-
 z80DotNet supports all legal and (virtual all) illegal instruction types, including the so-called `IXCB` instructions (e.g. `set 0,(ix+$00),b`). Please consult the official [Z80 User Manual](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=0ahUKEwiMg8yJ0aDWAhVCj1QKHeD0CDAQFggoMAA&url=http%3A%2F%2Fwww.zilog.com%2Fmanage_directlink.php%3Ffilepath%3Ddocs%2Fz80%2Fum0080&usg=AFQjCNGtbC4aBHHBIKcxfre8bzI0fxE_Cw) for more information on general Z80 programming.
-
 ### Pseudo-Ops
-
 Following is the detail of each of the z80DotNet pseudo operations, or psuedo-ops. A pseudo-op is similar to a mnemonic in that it tells the assembler to output some number of bytes, but different in that it is not part of the CPU's instruction set. For each pseudo-op description is its name, any aliases, a definition, arguments, and examples of usage. Optional arguments are in square brackets (`[` and `]`).
 
 Note that every argument, unless specified, is a legal mathematical expression, and can include symbols such as labels (anonymous and named) and the program counter. Anonymous labels should be referenced in parantheses, otherwise the expression engine might misinterpret them. If the expression evaluates to a value greater than the maximum value allowed by the pseudo-op, the assembler will issue an illegal quantity error.
@@ -497,7 +476,7 @@ mysub   ld  a,13                ; output newline
 <table>
 <tr><td><b>Name</b></td><td><code>.align</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Set the program counter to a value divisible by the argument. If a second argument is specified, the 
+<tr><td><b>Definition</b></td><td>Set the program counter to a value divisible by the argument. If a second argument is specified, the
 expressed bytes will be outputted until the point the program counter reaches its new value, otherwise is treated as uninitialized memory.</td></tr>
 <tr><td><b>Arguments</b></td><td><code>amount[, fillvalue]</code></td></tr>
 <tr><td><b>Example</b></td><td>
@@ -518,7 +497,7 @@ expressed bytes will be outputted until the point the program counter reaches it
       .binary     "mybin.bin"          ; include all of 'mybin.bin'
       .binary     "routines.bin",19    ; skip program header 'routines.bin'
       .binary     "subroutines.prg",19,1000
-                  ;; skip header, take only 
+                  ;; skip header, take only
                   ;; 1000 bytes thereafter.
 </pre>
 </td></tr></table>
@@ -531,22 +510,11 @@ expressed bytes will be outputted until the point the program counter reaches it
 <pre>
       * = $0400
       .byte $39, $38, $37, $36, $35, $34, $33, $32, $31
-      ;; >0400 39 38 37 36 35 34 33 32 
+      ;; >0400 39 38 37 36 35 34 33 32
       ;; >0408 31
 </pre>
 </td></tr>
 </table>
-<table>
-<tr><td><b>Name</b></td><td><code>.char</code></td></tr>
-<tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Insert an unsigned byte-sized value or values between -128 and 127 into the assembly. Multiple arguments can be passed as needed. If <code>?</code> is passed then the data is uninitialized.</td></tr>
-<tr><td><b>Arguments</b></td><td><code>value[, value[, ...]</code></td></tr>
-<tr><td><b>Example</b></td><td>
-<pre>
-        * = $0400
-        .char 127, -3  ; >0400 7f fd
-</pre>
-</td></tr></table>
 <table>
 <tr><td><b>Name</b></td><td><code>.cstring</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
@@ -564,7 +532,7 @@ expressed bytes will be outputted until the point the program counter reaches it
 <table>
 <tr><td><b>Name</b></td><td><code>.dint</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Insert a signed 32-bit value or values between −2147483648 and 2147483647 into the assembly, little-endian. Multiple arguments can be passed as needed. If <code>?</code> is passed then the data is uninitialized.</td></tr>
+<tr><td><b>Definition</b></td><td>Insert a signed 32-bit value or values between −2147483648 and 2147483647 into the assembly, little-endian Multiple arguments can be passed as needed. If <code>?</code> is passed then the data is uninitialized.</td></tr>
 <tr><td><b>Arguments</b></td><td><code>value[, value[, ...]</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
@@ -592,8 +560,8 @@ expressed bytes will be outputted until the point the program counter reaches it
 <pre>
         .fill   23  ; reserve 23 bytes
         * = $1000
-        .fill 11,$ffd2 ; >1000 d2 ff d2 ff d2 ff d2 ff 
-                       ; >1008 d2 ff d2 
+        .fill 11,$ffd2 ; >1000 d2 ff d2 ff d2 ff d2 ff
+                       ; >1008 d2 ff d2
 </pre>
 </td></tr></table>
 <table>
@@ -604,7 +572,7 @@ expressed bytes will be outputted until the point the program counter reaches it
 <tr><td><b>Example</b></td><td>
 <pre>
         * = $3100
-        .lint   -80000    ; >3100 80 c7 fe 
+        .lint   -80000    ; >3100 80 c7 fe
 </pre>
 </td></tr></table>
 <table>
@@ -621,7 +589,7 @@ expressed bytes will be outputted until the point the program counter reaches it
 <table>
 <tr><td><b>Name</b></td><td><code>.lsstring</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Insert a string into the assembly, each byte shifted to the left, with the lowest bit set on the last byte. See example of how this format can be used. If the highest bit of any output byte is set, the assembler will error. Multiple arguments can be passed, with a null only inserted at the end of the argument list. If <code>?</code> is passed then the data is an uninitialized byte. Enclosed text is assembled as string-literal while expressions are assembled to the minimum number of bytes required for storage, in little-endian byte order.</td></tr>
+<tr><td><b>Definition</b></td><td>Insert a string into the assembly, each byte shifted to the left, with the lowest bit set on the last byte. See example of how this format can be used. If the highest bit in each value is set, the assembler will error. Multiple arguments can be passed, with a null only inserted at the end of the argument list. If <code>?</code> is passed then the data is an uninitialized byte. Enclosed text is assembled as string-literal while expressions are assembled to the minimum number of bytes required for storage, in little-endian byte order.</td></tr>
 <tr><td><b>Arguments</b></td><td><code>value[, value[, ...]</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
@@ -631,10 +599,11 @@ expressed bytes will be outputted until the point the program counter reaches it
 -       ld  a,(hl)          ; next char
         rrca                ; shift right
         ld  (de),a          ; save in buffer
-        ret c               ; carry set on shift? done
+        jr  c,done          ; carry set on shift? done
         inc hl              ; else next char
         inc de              ; and buff
-        jr  -               ; get next 
+        jr  -               ; get next
+done    ret
 message .lsstring "HELLO"   
 </pre>
 </td></tr>
@@ -642,7 +611,7 @@ message .lsstring "HELLO"
 <table>
 <tr><td><b>Name</b></td><td><code>.nstring</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Insert a string into the assembly, the negative (highest) bit set on the last byte. See example of how this format can be used. If the highest bit of the last byte is already set, the assembler will error. Multiple arguments can be passed, with a null only inserted at the end of the argument list. If <code>?</code> is passed then the data is an uninitialized byte. Enclosed text is assembled as string-literal while expressions are assembled to the minimum number of bytes required for storage, in little-endian byte order.</td></tr>
+<tr><td><b>Definition</b></td><td>Insert a string into the assembly, the negative (highest) bit set on the last byte. See example of how this format can be used. If the highest bit on the last byte is already set, the assembler will error. Multiple arguments can be passed, with a null only inserted at the end of the argument list. If <code>?</code> is passed then the data is an uninitialized byte. Enclosed text is assembled as string-literal while expressions are assembled to the minimum number of bytes required for storage, in little-endian byte order.</td></tr>
 <tr><td><b>Arguments</b></td><td><code>value[, value[, ...]</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
@@ -651,13 +620,14 @@ message .lsstring "HELLO"
 -       ld  a,(hl)
         ld  b,a             ; copy to b to test high bit
         and a,%01111111     ; turn off high bit...
-        ld  (de),a          ; and print 
+        ld  (de),a          ; and print
         rlc b               ; high bit into carry flag
-        ret c               ; if set we printed last char
+        jr  c,done          ; if set we printed last char
         inc hl              ; else increment pointers
         inc de
         jr -                ; get next
-message .nstring "HELLO"    
+done    ret
+message .nstring "hello"    
 </pre>
 </td></tr>
 </table>
@@ -674,6 +644,17 @@ message .nstring "HELLO"
 </pre>
 </td></tr>
 </table>
+<table>
+<tr><td><b>Name</b></td><td><code>.sbyte</code></td></tr>
+<tr><td><b>Alias</b></td><td>None</td></tr>
+<tr><td><b>Definition</b></td><td>Insert an unsigned byte-sized value or values between -128 and 127 into the assembly. Multiple arguments can be passed as needed. If <code>?</code> is passed then the data is uninitialized.</td></tr>
+<tr><td><b>Arguments</b></td><td><code>value[, value[, ...]</code></td></tr>
+<tr><td><b>Example</b></td><td>
+<pre>
+        * = $0400
+        .sbyte 127, -3  ; >0400 7f fd
+</pre>
+</td></tr></table>
 <table>
 <tr><td><b>Name</b></td><td><code>.sint</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
@@ -706,24 +687,24 @@ message .nstring "HELLO"
 <tr><td><b>Arguments</b></td><td><code>condition[, error]</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
-        * = $8000
+        * = $0800
         nop
         .assert 5 == 6              ; standard assertion error thrown
-        .assert * < $8001, "Uh oh!" ; custom error output
+        .assert * < $0801, "Uh oh!" ; custom error output
 </pre>
 </td></tr>
 </table>
 <table>
 <tr><td><b>Name</b></td><td><code>.binclude</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Include a source file and enclose the expanded source into a scoped block. The specified file is z80DotNet-compatible source. If no name is given in front of the directive then all symbols inside the included source will be inaccessible. Note that to prevent infinite recursion, a source file can only be included once in the entire source, including from other included files.</td></tr>
+<tr><td><b>Definition</b></td><td>Include a source file and enclose the expanded source into a scoped block. The specified file is z80DotNet-compatible source. If no name is given in front of the directive then all symbols inside the included source will be inaccessible.</td></tr>
 <tr><td><b>Arguments</b></td><td><code>filename</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
 soundlib    .binclude "sound.s"
             call soundlib.play  ; Invoke the
                                 ; play subroutine
-                                ; inside the 
+                                ; inside the
                                 ; sound.s source
             ;; whereas...
             .binclude "sound.s"
@@ -758,21 +739,6 @@ done    ret
 </td></tr>
 </table>
 <table>
-<tr><td><b>Name</b></td><td><code>.cerror</code></td></tr>
-<tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Prints a custom error to the console if the condition is met. Useful for sanity checks and assertions. The error is treated like any assembler error and will cause failure of assembly. The condition is any logical expression.</td></tr>
-<tr><td><b>Arguments</b></td><td><code>condition, error</code></td></tr>
-<tr><td><b>Example</b></td><td>
-<pre>
-        * = $5000
-        nop
-        .cerror * > $5001, "Uh oh!" ; if program counter
-                                    ; is greater than 20481,
-                                    ; raise a custom error
-</pre>
-</td></tr>
-</table>
-<table>
 <tr><td><b>Name</b></td><td><code>.comment</code>/<code>.endcomment</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
 <tr><td><b>Definition</b></td><td>Set a multi-line comment block.</td></tr>
@@ -786,30 +752,27 @@ done    ret
 </td></tr>
 </table>
 <table>
-<tr><td><b>Name</b></td><td><code>.cwarn</code></td></tr>
+<tr><td><b>Name</b></td><td><code>.echo</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Prints a custom warning to the console if the condition is met. The warning is treated like any assembler warning, and if warnings are treated as errors it will cause failure of assembly The condition is any logical expression.</td></tr>
-<tr><td><b>Arguments</b></td><td><code>condition, warning</code></td></tr>
+<tr><td><b>Definition</b></td><td>Send a message to the console output. Note if the assembler
+is in quiet mode, no output will be given.</td></tr>
+<tr><td><b>Arguments</b></td><td>message</td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
-    * = $5000
-    nop
-    .cwarn   * > $5001, "Check bound" 
-    ;; if program counter
-    ;; is greater than 20481,
-    ;; raise a custom warning
+    .echo "hi there!"
+    ;; console will output "hi there!"
 </pre>
 </td></tr>
 </table>
 <table>
 <tr><td><b>Name</b></td><td><code>.encoding</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Select the text encoding for assembly output. The default is <code>none</code>, which is will not be affected by <code>.map</code> and <code>.unmap</code> directives.
+<tr><td><b>Definition</b></td><td>Select the text encoding for assembly output. The default is <code>none</code>, which is not affected by <code>.map</code> and <code>.unmap</code> directives. Note: <code>none</code> is default and will not be affected by <code>.map</code> and <code>.unmap</code> directives.
 </td></tr>
 <tr><td><b>Arguments</b></td><td><code>encoding</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
-      .encoding lowercase
+      .encoding petscii
       .string "hello"       ; >> 45 48 4c 4c 4f
 </pre>
 </td></tr>
@@ -838,7 +801,7 @@ done    ...                 ; assembly will never
 <tr><td><b>Example</b></td><td>
 <pre>
       .eor $ff
-      .byte 0,1,2,3       ; > ff fe fd fc 
+      .byte 0,1,2,3       ; > ff fe fd fc
 </pre>
 </td></tr>
 </table>
@@ -868,6 +831,21 @@ start       ; same as start .equ *
 </td></tr>
 </table>
 <table>
+<tr><td><b>Name</b></td><td><code>.errorif</code></td></tr>
+<tr><td><b>Alias</b></td><td>None</td></tr>
+<tr><td><b>Definition</b></td><td>Prints a custom error to the console if the condition is met. Useful for sanity checks and assertions. The error is treated like any assembler error and will cause failure of assembly. The condition is any logical expression.</td></tr>
+<tr><td><b>Arguments</b></td><td><code>condition, error</code></td></tr>
+<tr><td><b>Example</b></td><td>
+<pre>
+        * = $5000
+        nop
+        .errorif * > $5001, "Uh oh!" ; if program counter
+                                    ; is greater than 20481,
+                                    ; raise a custom error
+</pre>
+</td></tr>
+</table>
+<table>
 <tr><td><b>Name</b></td><td><code>.[el]if[[n]def]</code>/<code>.endif</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
 <tr><td><b>Definition</b></td><td>All source inside condition blocks are assembled if evaluated to true on the first pass. Conditional expressions follow C-style conventions. The following directives are available:
@@ -882,17 +860,20 @@ start       ; same as start .equ *
         <li><code>.endif</code>                   - End of condition block
     </ul>
 </td></tr>
-<tr><td><b>Arguments</b></td><td><code>condition</code>/<code>symbol</code></td></tr>
+<tr><td><b>Arguments</b></td><td><code>Conditional Expression</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
         * = $0400
+
         cycles = 4
+
         .if cycles == 4
             nop
         .elif cycles == 16
             nop
             nop
         .endif
+
         ;; will result as:
         ;;
         ;; nop
@@ -901,7 +882,7 @@ start       ; same as start .equ *
 <table>
 <tr><td><b>Name</b></td><td><code>.include</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Include a source file into the assembly. The specified file is z80DotNet-compatible source. Note that to prevent infinite recursion, a source file can only be included once in the entire source, including from other included files.</td></tr>
+<tr><td><b>Definition</b></td><td>Include a source file into the assembly. The specified file is z80DotNet-compatible source.</td></tr>
 <tr><td><b>Arguments</b></td><td><code>filename</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
@@ -922,7 +903,7 @@ inc16       .macro
             jr  nz,+
             inc \1
             inc (\1)
-&#43;           .endmacro
+&#43;       .endmacro
             .inc16 hl
             ;; expands to =>
             inc (hl)
@@ -931,13 +912,8 @@ inc16       .macro
             inc (hl)
 &#43;         
 print       .macro  value = 13, printsub = $15ef
-            .ifdef BDOS
-                ld  de,\value   ; or ld de,\1
-                ld  c,L_WRITE   ; BDOS function 2
-            .else
-                ld  a,\value    ; or ld a,\1 
-            .endif
-                call \printsub  ; or call \2
+            ld  a,\value    ; or ld a,\1
+            call \printsub  ; or call \2
             ret
             .endmacro
             .print
@@ -945,11 +921,10 @@ print       .macro  value = 13, printsub = $15ef
             ;; ld   a,$0d
             ;; call $15ef
             ;; ret
-            .print 'E',$0005
+            .print 'E',$0010
             ;; expands to =>
-            ;; ld   de,$45
-            ;; ld   c,$02
-            ;; call $0005
+            ;; ld   a,$45
+            ;; call $0010
             ;; ret
 </pre>
 </td></tr>
@@ -957,10 +932,10 @@ print       .macro  value = 13, printsub = $15ef
 <table>
 <tr><td><b>Name</b></td><td><code>.map</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Maps a character or range of characters to a custom code point in the selected encoding. Note: <code>none</code> is default and will not be affected by <code>.map</code> and <code>.unmap</code> directives. It is recommended to represent individual char literals as strings.
+<tr><td><b>Definition</b></td><td>Maps a character or range of characters to custom binary output in the selected encoding. Note: <code>none</code> is not affected by <code>.map</code> and <code>.unmap</code> directives. It is recommended to represent individual char literals as strings.
 </td></tr>
-<tr><td><b>Arguments</b></td><td><code>start[, end]</code>,<code>codepoint</code>/<br>
-<code>"&lt;start&gt;&lt;end&gt;"</code>,<code>codepoint</code></td></tr>
+<tr><td><b>Arguments</b></td><td><code>start[, end]</code>,<code>code</code>/<br>
+<code>"&lt;start&gt;&lt;end&gt;"</code>,<code>code</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
       .encoding myencoding
@@ -980,10 +955,12 @@ print       .macro  value = 13, printsub = $15ef
 <tr><td><b>Example</b></td><td>
 <pre>
             * = $5000
+
 relocated   =   $6000            
+
 start       ld  hl,highcode
             ld  de,relocated
-&#45;           ld  bc,highcode_end-highcode
+-           ld  bc,highcode_end-highcode
             ldir
             jp  relocated
 highcode    
@@ -994,7 +971,7 @@ printloop   ld  a,(hl)
             jr  z,done
             call $15ef
             inc hl
-            jp  printloop
+            jr  printloop
 done        ret
 message     .cstring "HELLO, HIGH CODE!"
             .endrelocate
@@ -1006,14 +983,15 @@ highcode_end
 >5006 01 20 00  ; -           ld  bc,highcode_end-highcode
 >5009 ed b0     ;             ldir
 >500b c3 00 60  ;             jp  relocated
->500e 21 0f 60  ;             ld  hl,message
+>500e 21 0e 60  ;             ld  hl,message
 >5011 7e        ; printloop   ld  a,(hl)
 >5012 a7        ;             and a,a
->5013 28 07     ;             jr  z,done
+>5013 28 06     ;             jr  z,done
 >5015 cd ef 15  ;             call $15ef
 >5018 23        ;             inc hl
->5019 c3 03 60  ;             jp  printloop
+>5019 18 f6     ;             jr  printloop
 >501b c9        ; done        ret
+
 		;; message
 >501c 48 45 4c 4c 4f 2c 20 48    
 >5024 49 47 48 20 43 4f 44 45
@@ -1035,6 +1013,7 @@ highcode_end
         inc a
         .endrepeat
         ret
+
         ;; will assemble as:
         ;;
         ;; xor  a
@@ -1092,16 +1071,30 @@ glyph             ;12345678
 <tr><td><b>Arguments</b></td><td><code>architecture</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
-      .target "zx"
-      ;; the output binary will have a ZX Spectrum header
+      .target "apple2"
+      ;; the output binary will have an Apple DOS header
       ...
+</pre>
+</td></tr>
+</table>
+<table>
+<tr><td><b>Name</b></td><td><code>.typedef</code></td></tr>
+<tr><td><b>Alias</b></td><td>None</td></tr>
+<tr><td><b>Definition</b></td><td>Define an existing Pseudo-Op to a user-defined type. The type name adheres to the same rules as labels and cannot be an existing symbol or instruction.</td></tr>
+<tr><td><b>Arguments</b></td><td><code>type, typename</code></td></tr>
+<tr><td><b>Example</b></td><td>
+<pre>
+            .typedef   .byte, defb
+
+            * = $c000
+            defb 0,1,2,3 ; >c000 00 01 02 03
 </pre>
 </td></tr>
 </table>
 <table>
 <tr><td><b>Name</b></td><td><code>.unmap</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Unmaps a custom code point for a character or range of characters in the selected encoding and reverts to Unicode. Note: <code>none</code> is default and will not be affected by <code>.map</code> and <code>.unmap</code> directives. It is recommended to represent individual char literals as strings.
+<tr><td><b>Definition</b></td><td>Unmaps a custom code for a character or range of characters in the selected encoding and reverts to UTF-8. Note: <code>none</code> is not affected by <code>.map</code> and <code>.unmap</code> directives. It is recommended to represent individual char literals as strings.
 </td></tr>
 <tr><td><b>Arguments</b></td><td><code>start[, end]</code>/<br>
 <code>"&lt;start&gt;&lt;end&gt;"</code></td></tr>
@@ -1125,10 +1118,24 @@ glyph             ;12345678
 <code>.warn "We haven't fixed this yet!" </code>
 </td></tr>
 </table>
-
+<table>
+<tr><td><b>Name</b></td><td><code>.warnif</code></td></tr>
+<tr><td><b>Alias</b></td><td>None</td></tr>
+<tr><td><b>Definition</b></td><td>Prints a custom warning to the console if the condition is met. The warning is treated like any assembler warning, and if warnings are treated as errors it will cause failure of assembly The condition is any logical expression.</td></tr>
+<tr><td><b>Arguments</b></td><td><code>condition, warning</code></td></tr>
+<tr><td><b>Example</b></td><td>
+<pre>
+    * = $5000
+    nop
+    .warnif   * > $5001, "Check bound"
+    ;; if program counter
+    ;; is greater than 20481,
+    ;; raise a custom warning
+</pre>
+</td></tr>
+</table>
 ## Appendix
 ### Built-In functions
-
 <table>
 <tr><td><b>Name</b></td><td><code>abs</code></td></tr>
 <tr><td><b>Definition</b></td><td>The absolute (positive sign) value of the expression.</td></tr>
@@ -1309,14 +1316,7 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 <table>
 <tr><td><b>Option</b></td><td><code>--arch</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Specify the target architecture of the binary output. Five options are available. If architecture not specified, the default is <code>flat</code>. The options:
-    <ul>
-        <li><code>amsdos</code>    - Amstrad CPC AMS-DOS header</li>
-        <li><code>amstap</code>    - Amstrad CPC tape header</li>
-        <li><code>flat</code>      - Flat binary with no header (default)</li>
-        <li><code>msx</code>       - MSX BIN disk header</li>
-        <li><code>zx</code>        - ZX Spectrum header</li>
-    </ul></td></tr>
+<tr><td><b>Definition</b></td><td>Specify the target architecture of the binary output. At this time, only two options are available, <code>flat</code> and <code>zx</code>. Use <code>zx</code> to output binary with a ZX Spectrum TAP header. If architecture not specified, output defaults to <code>flat</code>.</td></tr>
 <tr><td><b>Parameter</b></td><td><code>architecture</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>/z80DotNet myproggie.asm -b --arch=zx myproggie.prg</pre>
@@ -1349,7 +1349,7 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 <tr><td><b>Definition</b></td><td>Assign a global label a value. Note that within the source the label cannot be redefined again. The value can be any expression z80DotNet can evaluate at assembly time. If no value is given the default value is 1.</td></tr>
 <tr><td><b>Parameter</b></td><td><code>&lt;label&gt;=&lt;value&gt;</code></td></tr>
 <tr><td><b>Example</b></td><td>
-<pre>/z80DotNet -D IN0=$5000 myasm.asm -o myoutput</pre>
+<pre>/z80DotNet -D chrout=$ffd2 myasm.asm -o myoutput</pre>
 </td></tr>
 </table>
 <table>
@@ -1487,6 +1487,8 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 
 `Attempted to divide by zero.` - The expression attempted a division by zero.
 
+`Cannot redefine type to <type> because it is already a type` - The type definition is already a type.
+
 `Cannot resolve anonymous label` - The assembler cannot find the reference to the anonymous label.
 
 `Closure does not close a block` - A block closure is present but no block opening.
@@ -1549,11 +1551,15 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 
 `Too many arguments for directive` - More arguments were provided to the directive than expected.
 
+`Type definition for unknown type` - An attempt was made to define an unknown type.
+
+`Type name is a reserved symbol name` - A type definition failed because the definition is a reserved name.
+
 `Unable to find binary file` - A directive was given to include a binary file, but the binary file was not found, either due to filesystem error or file not found.
 
 `Unable to open source file` - A source file could not be opened, either due to filesystem error or file not found.
 
-`Unknown architecture specified` - An invalid or unknown parameter was supplied to the `--arch` option in the command-line. 
+`Unknown architecture specified` - An invalid or unknown parameter was supplied to the `--arch` option in the command-line.
 
 `Unknown instruction or incorrect parameters for instruction` - An directive or instruction was encountered that was unknown, or the operand provided is incorrect.
 
