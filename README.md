@@ -108,10 +108,10 @@ As you can see, anonymous labels, though convenient, would hinder readability if
 ### Comments
 Adding comments to source promotes readability, particularly in assembly. Comments can be added to source code in one of two ways, as single-line trailing source code, or as a block. Single-line comments start with a semi-colon. Any text written after the semi-colon is ignored, unless it is being expressed as a string or constant character.
 ```
-    lda #0      ; 0 = color black
-    sta $d020   ; set border color to accumulator
-    lda #';'    ; the first semi-colon is a char literal so will be assembled
-    jsr $ffd2   
+    xor a,a      ; 0 = color black
+    call $2294   ; set border color to accumulator
+    ld	a,';'    ; the first semi-colon is a char literal so will be assembled
+    rst $10   
 ```
 Block comments span multiple lines, enclosed in `.comment` and `.endcomment` directives. These are useful when you want to exclude unwanted code:
 ```
@@ -119,8 +119,8 @@ Block comments span multiple lines, enclosed in `.comment` and `.endcomment` dir
 
     this will set the cpu on fire do not assemble!
 
-    lda #$ff
-    sta $5231
+    ld a,-1
+    ld ($5231),a
 
     .endcomment
 ```
