@@ -6,7 +6,6 @@ The z80DotNet Macro Assembler is a simple cross-assembler targeting the Zilog Z8
 
 ## Legal
 * z80DotNet (c) 2017 informedcitizenry
-* Mathos Parser, a [math expression parser](https://mathosparser.codeplex.com/) (c) 2012 Artem Los
 * System.CommandLine, a [command-line argument parser](https://github.com/dotnet/corefxlab/tree/master/src/System.CommandLine) (c) Microsoft Corporation
 
 See LICENSE and LICENSE_third_party for licensing information.
