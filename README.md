@@ -143,7 +143,7 @@ In addition to z80 assembly, data can also be assembled. Expressions evaluate in
 | `.align`  | Zero or more bytes        |
 | `.fill`   | One or more bytes         |   
 
-Multi-byte directives assemble in little-endian order (the least significant byte first), which conforms to the 6502 architecture. Data is comma-separated, and each value can be a constant or expression:
+Multi-byte directives assemble in little-endian order (the least significant byte first), which conforms to the z80 architecture. Data is comma-separated, and each value can be a constant or expression:
 ```
 sprite      .byte %......##,%########,%##......
 jump        .word sub1, sub2, sub3, sub4
@@ -165,7 +165,7 @@ highscore   .dword ?    ; uninitialized highscore variables
             xor a,a     ; The output is now 6 bytes in size
 ```
 ### Text processing and encoding
-In addition to integral values, 6502.Net can assemble Unicode text. Text strings are enclosed in double quotes, character literals in single quotes. Escaped double quotes are not recognized, so embedded quotation marks must be "broken out" as separate operands:
+In addition to integral values, z80DotNet can assemble Unicode text. Text strings are enclosed in double quotes, character literals in single quotes. Escaped double quotes are not recognized, so embedded quotation marks must be "broken out" as separate operands:
 ```
 "He said, ",'"',"How are you?",'"'
 ```
