@@ -449,6 +449,11 @@ These repetitions can also be nested, as shown below.
         .endrepeat
         ret
 ```
+## Future enhancements under consideration
+* Variables (redefinable symbols)
+* For-next loops
+* Switch-case conditions
+* Custom functions
 ## Reference
 ### Instruction set
 z80DotNet supports all legal and (virtual all) illegal instruction types, including the so-called `IXCB` instructions (e.g. `set 0,(ix+$00),b`). Please consult the official [Z80 User Manual](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=0ahUKEwiMg8yJ0aDWAhVCj1QKHeD0CDAQFggoMAA&url=http%3A%2F%2Fwww.zilog.com%2Fmanage_directlink.php%3Ffilepath%3Ddocs%2Fz80%2Fum0080&usg=AFQjCNGtbC4aBHHBIKcxfre8bzI0fxE_Cw) for more information on general Z80 programming.
@@ -863,16 +868,13 @@ start       ; same as start .equ *
 <tr><td><b>Example</b></td><td>
 <pre>
         * = $0400
-
         cycles = 4
-
         .if cycles == 4
             nop
         .elif cycles == 16
             nop
             nop
         .endif
-
         ;; will result as:
         ;;
         ;; nop
@@ -977,24 +979,24 @@ message     .cstring "HELLO, HIGH CODE!"
 highcode_end
             ;; outputs the following =>
             .comment
->5000 21 0e 50  ; start       ld  hl,highcode
->5003 11 00 60  ;             ld  de,relocated
->5006 01 20 00  ; -           ld  bc,highcode_end-highcode
->5009 ed b0     ;             ldir
->500b c3 00 60  ;             jp  relocated
->500e 21 0e 60  ;             ld  hl,message
->5011 7e        ; printloop   ld  a,(hl)
->5012 a7        ;             and a,a
->5013 28 06     ;             jr  z,done
->5015 cd ef 15  ;             call $15ef
->5018 23        ;             inc hl
->5019 18 f6     ;             jr  printloop
->501b c9        ; done        ret
+            &gt;5000 21 0e 50  ; start       ld  hl,highcode
+            &gt;5003 11 00 60  ;             ld  de,relocated
+            &gt;5006 01 20 00  ; -           ld  bc,highcode_end-highcode
+            &gt;5009 ed b0     ;             ldir
+            &gt;500b c3 00 60  ;             jp  relocated
+            &gt;500e 21 0e 60  ;             ld  hl,message
+            &gt;5011 7e        ; printloop   ld  a,(hl)
+            &gt;5012 a7        ;             and a,a
+            &gt;5013 28 06     ;             jr  z,done
+            &gt;5015 cd ef 15  ;             call $15ef
+            &gt;5018 23        ;             inc hl
+            &gt;5019 18 f6     ;             jr  printloop
+            &gt;501b c9        ; done        ret
 
-		;; message
->501c 48 45 4c 4c 4f 2c 20 48    
->5024 49 47 48 20 43 4f 44 45
->502c 21 00
+            ;; message
+            &gt;501c 48 45 4c 4c 4f 2c 20 48    
+            &gt;5024 49 47 48 20 43 4f 44 45
+            &gt;502c 21 00
             .endcomment
 </pre>
 </td></tr>
