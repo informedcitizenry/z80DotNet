@@ -956,9 +956,7 @@ print       .macro  value = 13, printsub = $15ef
 <tr><td><b>Example</b></td><td>
 <pre>
             * = $5000
-
 relocated   =   $6000            
-
 start       ld  hl,highcode
             ld  de,relocated
 -           ld  bc,highcode_end-highcode
@@ -977,7 +975,7 @@ done        ret
 message     .cstring "HELLO, HIGH CODE!"
             .endrelocate
 highcode_end
-            ;; outputs the following =>
+            ;; outputs the following:
             .comment
             &gt;5000 21 0e 50  ; start       ld  hl,highcode
             &gt;5003 11 00 60  ;             ld  de,relocated
@@ -992,7 +990,6 @@ highcode_end
             &gt;5018 23        ;             inc hl
             &gt;5019 18 f6     ;             jr  printloop
             &gt;501b c9        ; done        ret
-
             ;; message
             &gt;501c 48 45 4c 4c 4f 2c 20 48    
             &gt;5024 49 47 48 20 43 4f 44 45
@@ -1014,7 +1011,6 @@ highcode_end
         inc a
         .endrepeat
         ret
-
         ;; will assemble as:
         ;;
         ;; xor  a
