@@ -477,8 +477,6 @@ If required, loops can be broken out of using the `.break` directive
 ```
 **Caution:** Changing the value of the iteration variable inside the loop can cause the application to hang. 6502.Net does not restrict re-assigning the iteration variable inside its own or nested loops.
 ## Future enhancements under consideration
-* Variables (redefinable symbols)
-* For-next loops
 * Switch-case conditions
 * Custom functions
 ## Reference
