@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------------
+﻿//-----------------------------------------------------------------------------
 // Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -69,21 +69,13 @@ namespace DotNetAsm
         Action<IAssemblyController, BinaryWriter> FooterOutputAction { get; set; }
 
         /// <summary>
-        /// Get the value of the scoped label in the controller's symbol table (if exists).
-        /// </summary>
-        /// <param name="label">The label to lookup the value.</param>
-        /// <param name="line">The SourceLine where the label is being referenced.</param>
-        /// <returns>The label value as a string, otherwise an empty string.</returns>
-        string GetScopedLabelValue(string label, SourceLine line);
-
-        /// <summary>
         /// Checks if a given token is actually an instruction or directive, either
         /// for the DotNetAsm.AssemblyController or any line assemblers.
         /// </summary>
         /// <param name="token">The token to check</param>
         /// <returns>True, if the token is an instruction or directive</returns>
         bool IsInstruction(string token);
-
+ 
         /// <summary>
         /// Gets or sets the disassembler. 
         /// </summary>
@@ -102,7 +94,13 @@ namespace DotNetAsm
         /// <summary>
         /// Gets the labels for the controller.
         /// </summary>
-        IDictionary<string, string> Labels { get; }
+        SymbolCollectionBase Labels { get; }
+
+        /// <summary>
+        /// Gets the variables for the controller.
+        /// </summary>
+        /// <value>The variables.</value>
+        VariableCollection Variables { get; }
 
         /// <summary>
         /// Gets expression evaluator for the controller.

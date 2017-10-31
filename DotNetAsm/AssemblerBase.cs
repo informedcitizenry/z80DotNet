@@ -32,7 +32,7 @@ namespace DotNetAsm
     {
         #region Members
 
-        private IAssemblyController _controller;
+        IAssemblyController _controller;
 
         #endregion
 
@@ -42,7 +42,7 @@ namespace DotNetAsm
         /// Constructs an instance of the class implementing the base class.
         /// </summary>
         /// <param name="controller">The assembly controller.</param>
-        public AssemblerBase(IAssemblyController controller)
+        protected AssemblerBase(IAssemblyController controller)
         {
             Controller = controller;
 
@@ -56,17 +56,25 @@ namespace DotNetAsm
             }
         }
 
-        protected abstract bool IsReserved(string token);
-
         /// <summary>
         /// Constructs an instance of the class implementing the base class.
         /// </summary>
-        /// <param name="comparer">The string comparision.</param>
-        public AssemblerBase() :
+        protected AssemblerBase() :
             this(null)
         {
 
         }
+
+        #endregion
+
+        #region Methods
+
+        /// <summary>
+        /// Determines whether the token is a reserved word to the assembler object.
+        /// </summary>
+        /// <param name="token">The token to check if reserved</param>
+        /// <returns>True, if reserved</returns>
+        public virtual bool IsReserved(string token) { return false; }
 
         #endregion
 

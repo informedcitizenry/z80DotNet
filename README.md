@@ -1,5 +1,5 @@
 # z80DotNet, A Simple .Net-Based Z80 Cross-Assembler
-### Version 1.4
+### Version 1.5
 ## Introduction
 
 The z80DotNet Macro Assembler is a simple cross-assembler targeting the Zilog Z80 and compatible CPU. It is written for .Net (Version 4.5.1) and supports all of the published (legal) instructions of the Z80 processor, as well as most of the unpublished (illegal) operations. Like the MOS 6502, the Z80 was a popular choice for video game system and microcomputer manufacturers in the 1970s and mid-1980s. For more information, see [wiki entry](https://en.wikipedia.org/wiki/Zilog_Z80) or [Z80 resource page](http://www.z80.info/) to learn more about this microprocessor.
@@ -32,7 +32,7 @@ Negative numbers are assembled according to two's complement rules, with the hig
                 .byte %...###..
                 .byte %.#######
 ```                
-## Labels and Symbols
+## Labels, Symbols and Variables
 When writing assembly, hand-coding branches, addresses and constants can be time-consuming and lead to errors. Labels take care of this work for you! There is no restriction on name size, but all labels must begin with an underscore or letter, and can only contain underscores, letters, and digits, and they cannot be re-assigned:
 ```
             yellow   =   6
@@ -104,6 +104,13 @@ As you can see, anonymous labels, though convenient, would hinder readability if
 ```
 -               .byte $01, $02, $03
                 ld  a,(-)           ; best to put anonymous label reference inside paranetheses.
+```
+Label values are defined at first reference and cannot be changed. An alternative to labels are variables. Variables, like labels, are named references to values in operand expressions, but can be changed as often as required. A variable is declared with the `.let` directive, followed by an assignment expression. Variables and labels cannot share the same symbol name.
+```
+            .let myvar = 34
+                ld  a,myvar
+            .let myvar = myvar + 1
+                ld  b,myvar
 ```
 ### Comments
 Adding comments to source promotes readability, particularly in assembly. Comments can be added to source code in one of two ways, as single-line trailing source code, or as a block. Single-line comments start with a semi-colon. Any text written after the semi-colon is ignored, unless it is being expressed as a string or constant character.
@@ -404,10 +411,11 @@ variables   .byte ?
             .hivars
 ```
 Macros and segments must be defined before they can be invoked.
-## Conditional Assembly
-
+## Flow Control
+In cases where you want to control the flow of assembly, either based on certain conditions (environmental or target architecture) or in certain iterations, 6502.Net provides certain directives to handle this.
+### Conditional Assembly
+Conditional assembly is available using the `.if` and related directive.  Conditions can be nested, but expressions will be evaluated on first pass only.
 In cases where you want to control the flow of assembly based on certain conditions (environmental or target architecture), z80DotNet provides certain directives to handle this. Conditions can be nested, but expressions will be evaluated on first pass only.
-
 ```
     .ifdef ZXSPECTRUM
         call setcolor
@@ -421,18 +429,18 @@ In cases where you want to control the flow of assembly based on certain conditi
         .end        ; terminate assembly
     .endif          ; end
 ```
-## Repetitions
+**Caution:** Be careful not to use the `.end` directive inside a conditional block, otherwise the `.endif` closure will never be reached, and the assembler will report an error.
+### Basic Repetitions
 On occasions where certain instructions will be repeatedly assembled, it is convenient to repeat their output in a loop. For instance, if you want to pad a series of `nop` instructions. The `.repeat` directive does just that.
 
 ```
-        ;; will assemble $00 ten times
+        ;; will assemble $ea ten times
         .repeat 10
-        .nop
+        nop
         .endrepeat
 
 ```
 These repetitions can also be nested, as shown below.
-
 ```
         ;; print each letter of the alphabet 3 times
         * = $1000
@@ -449,6 +457,25 @@ These repetitions can also be nested, as shown below.
         .endrepeat
         ret
 ```
+### Loop Assembly
+Repetitions can also be handled in for/next loops, where source can be emitted repeatedly until a condition is met. The added advantage is the variable itself can be referenced inside the loop.
+```
+    xor a,a
+    .for i = $0400, i < $0800, i = i + 1
+        ld (i),a
+    .next
+```
+If required, loops can be broken out of using the `.break` directive
+```
+    .for i = 0, i < 256, i = i + 1
+        .if * >= $1000
+            .break          ; make sure assembly does not go past $1000
+        .endif
+        ld a,'A'
+        rst $10
+    .next
+```
+**Caution:** Changing the value of the iteration variable inside the loop can cause the application to hang. 6502.Net does not restrict re-assigning the iteration variable inside its own or nested loops.
 ## Future enhancements under consideration
 * Variables (redefinable symbols)
 * For-next loops
@@ -743,6 +770,22 @@ done    ret
 </td></tr>
 </table>
 <table>
+<tr><td><b>Name</b></td><td><code>.break</code></td></tr>
+<tr><td><b>Alias</b></td><td>None</td></tr>
+<tr><td><b>Definition</b></td><td>Break out of the current for-next loop.</td></tr>
+<tr><td><b>Arguments</b></td><td>None</td></tr>
+<tr><td><b>Example</b></td><td>
+<pre>
+        .for n = 0, n < 1000, n = n + 1
+            .if * > $7fff   ; unless address >= $8000
+                .break     
+            .endif
+            nop             ; do 1000 nops
+        .next
+</pre>
+</td></tr>
+</table>
+<table>
 <tr><td><b>Name</b></td><td><code>.comment</code>/<code>.endcomment</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
 <tr><td><b>Definition</b></td><td>Set a multi-line comment block.</td></tr>
@@ -864,7 +907,7 @@ start       ; same as start .equ *
         <li><code>.endif</code>                   - End of condition block
     </ul>
 </td></tr>
-<tr><td><b>Arguments</b></td><td><code>Conditional Expression</code></td></tr>
+<tr><td><b>Arguments</b></td><td><code>condition</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
         * = $0400
@@ -881,6 +924,21 @@ start       ; same as start .equ *
 </pre>
 </td></tr></table>
 <table>
+<tr><td><b>Name</b></td><td><code>.for</code>/<code>.next</code></td></tr>
+<tr><td><b>Alias</b></td><td>None</td></tr>
+<tr><td><b>Definition</b></td><td>Repeat until codition is met. The iteration variable can be used in source like any other variable. Multiple iteration expressions can be specified.</td></tr>
+<tr><td><b>Arguments</b></td><td><code>init_expression, condition[, iteration_expression[, ...]]</code></td></tr>
+<tr><td><b>Example</b></td><td>
+<pre>
+        .let x = 0
+        .for pages = $100, pages < $800, pages = pages + $100, x = x + 1
+            ld a,x
+            ld (pages),a
+        .next
+</pre>
+</td></tr>
+</table>
+<table>
 <tr><td><b>Name</b></td><td><code>.include</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
 <tr><td><b>Definition</b></td><td>Include a source file into the assembly. The specified file is z80DotNet-compatible source.</td></tr>
@@ -889,6 +947,20 @@ start       ; same as start .equ *
 <pre>
       .include "mylib.s"
       ;; mylib is now part of source
+</pre>
+</td></tr>
+</table>
+table>
+<tr><td><b>Name</b></td><td><code>.let</code></td></tr>
+<tr><td><b>Alias</b></td><td>None</td></tr>
+<tr><td><b>Definition</b></td><td>Declares and assigns or re-assigns a variable to the given expression. Labels cannot be redefined as variables, and vice versa.</td></tr>
+<tr><td><b>Arguments</b></td><td><code>expression</code></td></tr>
+<tr><td><b>Example</b></td><td>
+<pre>
+            .let myvar =    $c000
+            call myvar
+            .let myvar =    myvar-$1000
+            ld a,(myvar)
 </pre>
 </td></tr>
 </table>

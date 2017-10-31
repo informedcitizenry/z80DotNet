@@ -30,24 +30,35 @@ namespace DotNetAsm
     /// </summary>
     public class AsmCommandLineOptions
     {
+        #region Classes
+
+        class Option
+        {
+            public string Argument;
+            public string Help;
+        }
+
+        #endregion
+
         #region Members
 
-        private IReadOnlyList<string> _source;
-        private IReadOnlyList<string> _defines;
-        private string _arch;
-        private string _listingFile;
-        private string _labelFile;
-        private string _outputFile;
-        private bool _bigEndian;
-        private bool _quiet;
-        private bool _verboseDasm;
-        private bool _werror;
-        private bool _noWarn;
-        private bool _caseSensitive;
-        private bool _noAssembly;
-        private bool _noSource;
-        private bool _printVersion;
-        private bool _noDisassembly;
+        IReadOnlyList<string> _source;
+        IReadOnlyList<string> _defines;
+        Dictionary<string, Option> _userOptions;
+        string _arch;
+        string _listingFile;
+        string _labelFile;
+        string _outputFile;
+        bool _bigEndian;
+        bool _quiet;
+        bool _verboseDasm;
+        bool _werror;
+        bool _noWarn;
+        bool _caseSensitive;
+        bool _noAssembly;
+        bool _noSource;
+        bool _printVersion;
+        bool _noDisassembly;
 
         #endregion
 
@@ -58,6 +69,7 @@ namespace DotNetAsm
         /// </summary>
         public AsmCommandLineOptions()
         {
+            _userOptions = new Dictionary<string, Option>();
             _source = new List<string>();
             _defines = new List<string>();
             _arch =
@@ -74,6 +86,8 @@ namespace DotNetAsm
             _quiet =
             _printVersion =
             _caseSensitive = false;
+
+            ArgumentCommand<string> comm = new ArgumentCommand<string>("hI", "there");  
         }
 
         #endregion
@@ -96,6 +110,9 @@ namespace DotNetAsm
             args.CopyTo(Arguments, 0);
             var result = ArgumentSyntax.Parse(args, syntax =>
             {
+                foreach(var option in _userOptions)
+                    syntax.DefineOption(option.Key, ref option.Value.Argument, option.Value.Help);
+                
                 syntax.DefineOption("o|output", ref _outputFile, "Output assembly to <arg>");
                 syntax.DefineOption("b|big-endian", ref _bigEndian, "Set byte order of output to big-endian");
                 syntax.DefineOption("arch", ref _arch, "Specify architecture-specific options");
@@ -115,6 +132,30 @@ namespace DotNetAsm
             });
         }
 
+        /// <summary>
+        /// Define a custom option to parse at the command line.
+        /// </summary>
+        /// <param name="name">The option name</param>
+        /// <param name="help">The help associated with the option</param>
+        public void DefineOption(string name, string help)
+        {
+            _userOptions.Add(name, new Option
+                {
+                    Argument = string.Empty,
+                    Help = help
+                });
+        }
+
+        /// <summary>
+        /// Get the custom-defined argument for the option.
+        /// </summary>
+        /// <param name="option">The option name</param>
+        /// <returns>The argument string</returns>
+        public string GetOptionArgument(string option)
+        {
+            return _userOptions[option].Argument;
+        }
+
         #endregion
 
         #region Properties
@@ -122,7 +163,7 @@ namespace DotNetAsm
         /// <summary>
         /// Gets the argument string array passed.
         /// </summary>
-        public string[] Arguments { get; private set; }
+        public string[] Arguments { get; set; }
 
         /// <summary>
         /// Gets the target architecture information.

@@ -32,6 +32,13 @@ namespace DotNetAsm
     public interface IEvaluator
     {
         /// <summary>
+        /// Add a format for converting hexadecimal constants using a regular expression. The actual
+        /// hex value itself (excluding any prefix or suffix elements) must be in the first capture group.
+        /// </summary>
+        /// <param name="regex">The regex pattern.</param>
+        void AddHexFormat(string regex);
+
+        /// <summary>
         /// Evaluates a text string as a mathematical expression.
         /// </summary>
         /// <param name="expression">The string representation of the mathematical expression.</param>
@@ -52,7 +59,7 @@ namespace DotNetAsm
         /// <summary>
         /// Evaluates a text string as a conditional (boolean) evaluation.
         /// </summary>
-        /// <param name="condition">The string representation of the conditional expression.</param>
+        /// <param name="expression">The string representation of the conditional expression.</param>
         /// <returns>Returns true, if the expression is true, false otherwise.</returns>
         bool EvalCondition(string expression);
 

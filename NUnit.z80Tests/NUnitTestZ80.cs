@@ -28,7 +28,9 @@ namespace NUnit.z80Tests
             // to help throw errors 
             Evaluator.DefineSymbolLookup(@"[a-ehilr]", s => string.Empty);
 
-            Labels = new Dictionary<string, string>();
+            Labels = new LabelCollection(Options.StringComparar);
+
+            Variables = new VariableCollection(Options.StringComparar, Evaluator);
 
             if (args != null)
                 Options.ProcessArgs(args);
@@ -75,11 +77,6 @@ namespace NUnit.z80Tests
             }
         }
 
-        public string GetScopedLabelValue(string label, SourceLine line)
-        {
-            return Labels[label];
-        }
-
         public ILineDisassembler Disassembler
         {
             get
@@ -101,7 +98,9 @@ namespace NUnit.z80Tests
 
         public ErrorLog Log { get; private set; }
 
-        public IDictionary<string, string> Labels { get; private set; }
+        public SymbolCollectionBase Labels { get; private set; }
+
+        public VariableCollection Variables { get; private set; }
 
         public IEvaluator Evaluator { get; private set; }
 

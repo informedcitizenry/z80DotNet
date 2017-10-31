@@ -109,8 +109,7 @@ namespace z80DotNet
                 new FormatBuilder(@"^.+$()", "{2}", "${0:x4}", string.Empty, 1,1,0,1, Controller.Options.RegexOption, true)
             };
 
-            Reserved.DefineType("Mnemonics", new string[]
-                {
+            Reserved.DefineType("Mnemonics",
                     "adc", "add", "ccf", "cpd", "cpdr", "cpi", "cpir", "cpl", 
                     "daa", "dec", "di", "ei", "ex", "exx", "halt", "in", "inc",
                     "ind", "indr", "ini", "inir", "ld", "ldd", "lddr", "ldi",
@@ -118,38 +117,32 @@ namespace z80DotNet
                     "pop","push","reti","retn","rl", "rla", "rlc", "rlca", "rld",
                     "rr", "rra", "rrc", "rrca", "rrd", "rst", "sbc", "scf",
                     "sla", "sll", "slr", "sra", "srl", "xor"
-                });
+                );
 
-            Reserved.DefineType("Bits", new string[]
-                {
+            Reserved.DefineType("Bits", 
                     "bit","res","set"
-                });
+                );
 
-            Reserved.DefineType("Shifts", new string[]
-                {
+            Reserved.DefineType("Shifts", 
                     "rl", "rla", "rlc", "rld", "rr", "rra", "rrc", "rrd",
                     "sla", "sll", "slr", "sra", "srl"
-                });
+                );
 
-            Reserved.DefineType("ImpliedA", new string[]
-                {
+            Reserved.DefineType("ImpliedA", 
                     "and", "cp", "or", "sub", "xor"
-                });
+                );
 
-            Reserved.DefineType("Interrupt", new string[]
-                {
+            Reserved.DefineType("Interrupt", 
                     "im"
-                });
+                );
 
-            Reserved.DefineType("Branches", new string[]
-                {
+            Reserved.DefineType("Branches", 
                     "call", "jp", "jr", "ret"
-                });
+                );
 
-            Reserved.DefineType("Relatives", new string[]
-                {
+            Reserved.DefineType("Relatives", 
                     "djnz", "jr"
-                });
+                );
 
             Controller.AddSymbol("a");
             Controller.AddSymbol("af");
@@ -183,7 +176,7 @@ namespace z80DotNet
         /// </summary>
         /// <param name="line"></param>
         /// <returns>Returns a System.Tuple&lt;DotNetAsm.OperandFormat,DotNetAsm.Opcode&gt;</returns>
-        private Tuple<OperandFormat, Opcode> GetFormatAndOpcode(SourceLine line)
+        Tuple<OperandFormat, Opcode> GetFormatAndOpcode(SourceLine line)
         {
             OperandFormat fmt = null;
             Opcode opc = null;
@@ -192,8 +185,10 @@ namespace z80DotNet
 
             if (string.IsNullOrEmpty(line.Operand))
             {
-                fmt = new OperandFormat();
-                fmt.FormatString = instruction;
+                fmt = new OperandFormat
+                {
+                    FormatString = instruction
+                };
                 opc = Opcode.LookupOpcode(instruction, _opcodes);
             }
             else
@@ -214,8 +209,10 @@ namespace z80DotNet
                     }
                     else
                     {
-                        fmt = new OperandFormat();
-                        fmt.FormatString = "im " + Controller.Evaluator.Eval(operand).ToString();
+                        fmt = new OperandFormat
+                        {
+                            FormatString = "im " + Controller.Evaluator.Eval(operand).ToString()
+                        };
                     }
                     opc = Opcode.LookupOpcode(fmt.FormatString, _opcodes, Controller.Options.StringComparison);
                 }
@@ -366,7 +363,7 @@ namespace z80DotNet
             return Reserved.IsReserved(instruction);
         }
 
-        protected override bool IsReserved(string token)
+        public override bool IsReserved(string token)
         {
             return Reserved.IsReserved(token);
         }

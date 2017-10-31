@@ -23,9 +23,18 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace DotNetAsm
 {
+    public class ForNextException : Exception
+    {
+        public ForNextException(string message)
+            : base(message)
+        {
+
+        }
+    }
     /// <summary>
     /// Handles repetitions in assembly source.
     /// </summary>
@@ -93,19 +102,19 @@ namespace DotNetAsm
             /// <summary>
             /// The amount of times the block should be repeated in final assembly
             /// </summary>
-            public int RepeatAmounts { get; set; }
+            public long RepeatAmounts { get; set; }
         }
 
         #endregion
 
         #region Members
 
-        private RepetitionBlock _rootBlock;
-        private RepetitionBlock _currBlock;
+        RepetitionBlock _rootBlock;
+        RepetitionBlock _currBlock;
 
-        private List<SourceLine> _processedLines;
+        readonly List<SourceLine> _processedLines;
 
-        private int _levels;
+        int _levels;
 
         #endregion
 
@@ -119,6 +128,8 @@ namespace DotNetAsm
         public RepetitionHandler(IAssemblyController controller) :
             base(controller)
         {
+            Reserved.DefineType("Directives", ".repeat", ".endrepeat");
+
             _currBlock =
             _rootBlock = new RepetitionBlock();
             _levels = 0;
@@ -142,7 +153,7 @@ namespace DotNetAsm
                     Controller.Log.LogEntry(line, ErrorStrings.TooFewArguments, line.Instruction);
                     return;
                 }
-                else if (string.IsNullOrEmpty(line.Label) == false)
+                if (string.IsNullOrEmpty(line.Label) == false)
                 {
                     Controller.Log.LogEntry(line, ErrorStrings.None);
                     return;
@@ -150,16 +161,17 @@ namespace DotNetAsm
 
                 if (_levels > 0)
                 {
-                    RepetitionBlock block = new RepetitionBlock();
-                    block.BackLink = _currBlock;
+                    RepetitionBlock block = new RepetitionBlock
+                    {
+                        BackLink = _currBlock
+                    };
                     RepetitionBlock.RepetitionEntry entry =
                         new RepetitionBlock.RepetitionEntry(null, block);
                     _currBlock.Entries.Add(entry);
                     _currBlock = block;
                 }
-                _currBlock.RepeatAmounts = (int)Controller.Evaluator.Eval(line.Operand);
                 _levels++;
-
+                _currBlock.RepeatAmounts = Controller.Evaluator.Eval(line.Operand, int.MinValue, uint.MaxValue);
             }
             else if (line.Instruction.Equals(".endrepeat", Controller.Options.StringComparison))
             {
@@ -168,23 +180,20 @@ namespace DotNetAsm
                     Controller.Log.LogEntry(line, ErrorStrings.ClosureDoesNotCloseBlock, line.Instruction);
                     return;
                 }
-                else if (string.IsNullOrEmpty(line.Operand) == false)
+                if (string.IsNullOrEmpty(line.Operand) == false)
                 {
                     Controller.Log.LogEntry(line, ErrorStrings.TooManyArguments, line.Instruction);
                     return;
                 }
-                else if (string.IsNullOrEmpty(line.Label) == false)
+                if (string.IsNullOrEmpty(line.Label) == false)
                 {
                     Controller.Log.LogEntry(line, ErrorStrings.None);
                     return;
                 }
-
                 _levels--;
                 _currBlock = _currBlock.BackLink;
                 if (_levels == 0)
-                {
-                    ProcessLines(_rootBlock, _rootBlock.RepeatAmounts);
-                }
+                    ProcessLines(_rootBlock);
             }
             else
             {
@@ -198,21 +207,16 @@ namespace DotNetAsm
         /// Perform final processing on the DotNetAsm.RepetitionHandler.ProcessedLines.
         /// </summary>
         /// <param name="block">The DotNetAsm.RepetitionHandler.RepetitionBlock to process</param>
-        /// <param name="repeat">The number of times the block needs repeating</param>
-        private void ProcessLines(RepetitionBlock block, int repeat)
+        void ProcessLines(RepetitionBlock block)
         {
-            for (int i = 0; i < repeat; i++)
+            for (int i = 0; i < block.RepeatAmounts; i++)
             {
                 foreach (var entry in block.Entries)
                 {
                     if (entry.LinkedBlock != null)
-                    {
-                        ProcessLines(entry.LinkedBlock, entry.LinkedBlock.RepeatAmounts);
-                    }
+                        ProcessLines(entry.LinkedBlock);
                     else
-                    {
                         _processedLines.Add(entry.Line.Clone() as SourceLine);
-                    }
                 }
             }
         }
@@ -236,18 +240,7 @@ namespace DotNetAsm
         /// <returns>True, if the DotNetAsm.RepetitionHandler processes this token</returns>
         public bool Processes(string token)
         {
-            return IsReserved(token);
-        }
-
-        /// <summary>
-        /// Determines if the token is a reserved word.
-        /// </summary>
-        /// <param name="token">The token to determine</param>
-        /// <returns>True, if the token is reserved for the DotNetAsm.RepetitionHandler</returns>
-        protected override bool IsReserved(string token)
-        {
-            return token.Equals(".repeat", Controller.Options.StringComparison) ||
-                   token.Equals(".endrepeat", Controller.Options.StringComparison);
+            return Reserved.IsReserved(token);
         }
 
         /// <summary>
@@ -260,7 +253,7 @@ namespace DotNetAsm
         }
 
         /// <summary>
-        /// Gets the read-only processed blocks of repeated lines.
+        /// Gets the processed blocks of repeated lines.
         /// </summary>
         public IEnumerable<SourceLine> GetProcessedLines()
         {

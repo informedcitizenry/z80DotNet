@@ -28,8 +28,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-
-
 namespace z80DotNet
 {
     class Program
@@ -56,7 +54,7 @@ namespace z80DotNet
             controller.VerboseBannerText = vsb.ToString();
         }
 
-        private static void targetHeader(IAssemblyController controller, BinaryWriter writer)
+        static void TargetHeader(IAssemblyController controller, BinaryWriter writer)
         {
             string arch = controller.Options.Architecture.ToLower();
             ushort progstart = Convert.ToUInt16(controller.Output.ProgramStart);
@@ -71,24 +69,26 @@ namespace z80DotNet
                 else
                     name = name.PadLeft(10);
 
-                List<byte> buffer = new List<byte>();
-                // header
-                buffer.Add(0x00);
-                // file type - code
-                buffer.Add(0x03);   
+                List<byte> buffer = new List<byte>
+                {
+                    // header
+                    0x00,
+                    // file type - code
+                    0x03
+                };
                 // file name
-                buffer.AddRange(ASCIIEncoding.ASCII.GetBytes(name));
+                buffer.AddRange(Encoding.ASCII.GetBytes(name));
                 // file size
                 buffer.AddRange(BitConverter.GetBytes(size));
                 // program start
                 buffer.AddRange(BitConverter.GetBytes(progstart));
                 // unused
                 buffer.AddRange(BitConverter.GetBytes(0x8000));
-                
+
                 // calculate checksum
                 byte checksum = 0x00;
                 buffer.ForEach(b => { checksum ^= b; });
-                
+
                 // add checksum
                 buffer.Add(checksum);
 
@@ -120,7 +120,7 @@ namespace z80DotNet
                 }
 
                 // name
-                buffer.AddRange(ASCIIEncoding.ASCII.GetBytes(name));
+                buffer.AddRange(Encoding.ASCII.GetBytes(name));
 
                 if (arch.Equals("amsdos"))
                 {
@@ -207,7 +207,7 @@ namespace z80DotNet
                 IAssemblyController controller = new AssemblyController(args);
                 controller.AddAssembler(new z80Asm(controller));
                 SetBannerTexts(controller);
-                controller.HeaderOutputAction = targetHeader;
+                controller.HeaderOutputAction = TargetHeader;
                 controller.Assemble();
             }
             catch (Exception ex)
