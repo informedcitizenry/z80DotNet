@@ -72,11 +72,7 @@ namespace DotNetAsm
     /// <summary>
     /// Represents a symbol collection. This class must be inherited.
     /// </summary>
-<<<<<<< Updated upstream
-    public abstract class SymbolCollectionBase : IEnumerable
-=======
     public abstract class SymbolCollectionBase : IEnumerable<KeyValuePair<string, long>>
->>>>>>> Stashed changes
     {
         #region Members
 
@@ -117,15 +113,11 @@ namespace DotNetAsm
             {
                 return new List<string>();
             }
-<<<<<<< Updated upstream
-            var result = new List<string>();
-            result.Add(parent);
-=======
             var result = new List<string>
             {
                 parent
             };
->>>>>>> Stashed changes
+
             var split = parent.Split('.').ToList();
             split.RemoveAt(split.Count - 1);
             string combined = string.Join(".", split);
@@ -208,11 +200,7 @@ namespace DotNetAsm
         }
 
         /// <summary>
-<<<<<<< Updated upstream
-        /// Ises the symbol.
-=======
         /// Checks if the collection contains the symbol.
->>>>>>> Stashed changes
         /// </summary>
         /// <returns><c>true</c>, if the symbol exists in the collection, 
         /// <c>false</c> otherwise.</returns>
@@ -264,16 +252,12 @@ namespace DotNetAsm
         /// Gets the enumerator.
         /// </summary>
         /// <returns>The enumerator.</returns>
-<<<<<<< Updated upstream
-        public IEnumerator GetEnumerator()
-=======
         public IEnumerator<KeyValuePair<string, long>> GetEnumerator()
         {
             return _symbols.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
->>>>>>> Stashed changes
         {
             return _symbols.GetEnumerator();
         }

@@ -20,16 +20,8 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-<<<<<<< Updated upstream
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
-=======
-using System.Collections.Generic;
-using System.Linq;
->>>>>>> Stashed changes
-
 namespace DotNetAsm
 {
     public class ForNextHandler : AssemblerBase, IBlockHandler
@@ -306,11 +298,8 @@ namespace DotNetAsm
                         LineNumber = line.LineNumber,
                         Filename = line.Filename
                     });
-<<<<<<< Updated upstream
-                }      
-=======
                 }
->>>>>>> Stashed changes
+
                 // .for <init_expression>, <condition>, <iteration_expression>
                 var csvs = line.CommaSeparateOperand();
                 if (csvs.Count < 2)
@@ -336,21 +325,7 @@ namespace DotNetAsm
                 _currBlock.Condition = csvs[1];
 
                 if (_currBlock == _rootBlock)
-                {
-<<<<<<< Updated upstream
-                    var iteratorvar = Controller.Variables.SetVariable(_currBlock.InitExpression, _currBlock.Scope);
-                    if (string.IsNullOrEmpty(iteratorvar.Key))
-                    {
-                        Controller.Log.LogEntry(line, ErrorStrings.BadExpression, csvs.First());
-                        return;
-                    }
-                    _processedLines.Add(new SourceLine()
-                    {
-                        SourceString = ConstStrings.SHADOW_SOURCE,
-                        Instruction = ConstStrings.VAR_DIRECTIVE,
-                        Operand = string.Format("{0}={1}", iteratorvar.Key, iteratorvar.Value)
-                    });
-=======
+                {                  
                     if (!string.IsNullOrEmpty(_currBlock.InitExpression))
                     {
                         var iteratorvar = Controller.Variables.SetVariable(_currBlock.InitExpression, _currBlock.Scope);
@@ -366,7 +341,6 @@ namespace DotNetAsm
                             Operand = string.Format("{0}={1}", iteratorvar.Key, iteratorvar.Value)
                         });
                     }
->>>>>>> Stashed changes
                 }
                 _currBlock.AddEntry(new SourceLine()
                 {
@@ -378,13 +352,7 @@ namespace DotNetAsm
                 {
                     _currBlock.IterExpressions.Clear();
                     _currBlock.IterExpressions.AddRange(csvs.GetRange(2, csvs.Count - 2));
-<<<<<<< Updated upstream
-                }   
-     
-=======
                 }
-
->>>>>>> Stashed changes
             }
             else if (instruction.Equals(".next"))
             {
@@ -450,11 +418,7 @@ namespace DotNetAsm
                     _currBlock.Begin();
                     _currBlock.Advance();
 
-<<<<<<< Updated upstream
-                    if (_breakBlock == null)
-=======
                     if (_breakBlock == null && !string.IsNullOrEmpty(_currBlock.InitExpression))
->>>>>>> Stashed changes
                     {
                         var initval = Controller.Variables.SetVariable(_currBlock.InitExpression, _currBlock.Scope);
                         _processedLines.Add(new SourceLine()
@@ -472,11 +436,7 @@ namespace DotNetAsm
                 {
                     if (_currBlock == _breakBlock)
                         _breakBlock = null;
-<<<<<<< Updated upstream
-      
-=======
 
->>>>>>> Stashed changes
                     _currBlock = _currBlock.Parent;
                     if (_currBlock == null)
                     {
@@ -487,11 +447,7 @@ namespace DotNetAsm
 
                 // update each var in the expressions during runtime as well as
                 // in output source (i.e., emit .let n = ... epxressions)
-<<<<<<< Updated upstream
-                foreach(var iterexp in _currBlock.IterExpressions)
-=======
                 foreach (var iterexp in _currBlock.IterExpressions)
->>>>>>> Stashed changes
                 {
                     var itervar = Controller.Variables.SetVariable(iterexp, _currBlock.Scope);
                     _processedLines.Add(new SourceLine()
@@ -532,11 +488,7 @@ namespace DotNetAsm
         /// </summary>
         public void Reset()
         {
-<<<<<<< Updated upstream
-            _processedLines.Clear(); 
-=======
             _processedLines.Clear();
->>>>>>> Stashed changes
         }
 
         /// <summary>
