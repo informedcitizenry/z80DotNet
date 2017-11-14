@@ -173,11 +173,7 @@ namespace DotNetAsm
             /// </summary>
             public void ResetEntries()
             {
-<<<<<<< Updated upstream
-                foreach(var entry in _entries)
-=======
                 foreach (var entry in _entries)
->>>>>>> Stashed changes
                 {
                     if (entry.LinkedBlock != null)
                         entry.LinkedBlock.ResetEntries();
@@ -236,11 +232,7 @@ namespace DotNetAsm
         public ForNextHandler(IAssemblyController controller)
             : base(controller)
         {
-<<<<<<< Updated upstream
-            Reserved.DefineType("Directives", 
-=======
             Reserved.DefineType("Directives",
->>>>>>> Stashed changes
                 ".for", ".next", ".break",
                 "@@ for @@", "@@ next @@", "@@ break @@"
             );
