@@ -1,5 +1,5 @@
 # z80DotNet, A Simple .Net-Based Z80 Cross-Assembler
-### Version 1.5
+### Version 1.6
 ## Introduction
 
 The z80DotNet Macro Assembler is a simple cross-assembler targeting the Zilog Z80 and compatible CPU. It is written for .Net (Version 4.5.1) and supports all of the published (legal) instructions of the Z80 processor, as well as most of the unpublished (illegal) operations. Like the MOS 6502, the Z80 was a popular choice for video game system and microcomputer manufacturers in the 1970s and mid-1980s. For more information, see [wiki entry](https://en.wikipedia.org/wiki/Zilog_Z80) or [Z80 resource page](http://www.z80.info/) to learn more about this microprocessor.
@@ -112,6 +112,12 @@ Label values are defined at first reference and cannot be changed. An alternativ
             .let myvar = myvar + 1
                 ld  b,myvar
 ```
+Unlike labels, variables cannot be referenced in other expressions before they are declared, since variables are not preserved between passes.
+```
+            .let y = x  
+            .let x = 3
+```
+In the above example, the assembler would error assuming `x` has never been declared before.
 ### Comments
 Adding comments to source promotes readability, particularly in assembly. Comments can be added to source code in one of two ways, as single-line trailing source code, or as a block. Single-line comments start with a semi-colon. Any text written after the semi-colon is ignored, unless it is being expressed as a string or constant character.
 ```
@@ -233,6 +239,56 @@ The output can be one to four bytes. Entire character sets can also be mapped, w
         .map 'a', 'A' ;; this is now the same as .map 'a', 'a'
 ```
 Instead express character literals as one-character strings in double-quotes, which will evaluate to UTF-8.
+
+### File inclusions
+
+Other files can be included in final assembly, either as 6502.Net-compatible source or as raw binary. Source files are included using the `.include` and `.binclude` directives. This is useful for libraries or other organized source you would not want to include in your main source file. The operand is the file name (and path) enclosed in quotes. `.include` simply inserts the source at the directive.
+```
+    ;; inside "../lib/library.s"
+
+    .macro  inc16 mem
+    inc \mem
+    bne +
+    inc \mem+1
++   .endmacro
+    ...
+```
+This file called `"library.s"` inside the path `../lib` contains a macro definition called `inc16` (See the section below for more information about macros). 
+```
+        .include "../lib/library.s"
+
+        .inc16 $033c    ; 16-bit increment value at $033c and $033d
+``` 
+If the included library file also contained its own symbols, caution would be required to ensure no symbol clashes. An alternative to `.include` is `.binclude`, which resolves this problem by enclosing the included source in its own scoped block.
+```
+lib     .binclude "../lib/library.s"    ; all symbols in "library.s" 
+                                        ; are in the "lib" scope
+
+        jsr lib.memcopy
+```
+If no label is prefixed to the `.binclude` directive then the block is anonymous and labels are not visible to your code.
+
+External files containing raw binary that will be needed to be included in your final output, such as `.sid` files or sprite data, can be assembled using the `.binary` directive.
+```
+        * = $1000
+
+        .binary "../rsrc/sprites.raw"
+
+        ...
+
+        lda #64     ; pointer to first sprite in "./rsrc/sprites.raw"
+        sta 2040    ; set first sprite to that sprite shape
+```
+You can also control how the binary will be included by specifying the offset (number of bytes from the start) and size to include.
+```
+        * = $1000
+
+        .binary "../rsrc/music.sid", $7e    ; skip first 126 bytes
+                                            ; (SID header)
+
+        .binary "../lib/compiledlib.bin", 2, 256    ; skip load header
+                                                    ; and take 256 bytes
+```
 ### Mathematical and Conditional Expressions
 All non-string operands are treated as math or conditional expressions. Compound expressions are nested in paranetheses. There are several available operators for both binary and unary expressions.
 #### Binary Operations
@@ -465,6 +521,17 @@ Repetitions can also be handled in for/next loops, where source can be emitted r
         ld (i),a
     .next
 ```
+A minimum two operands are required: The initial expression and the condition expression. A third iteration expression is option. The iteration expression can be blank, however.
+```
+    .let n = 1;
+    .for , n < 10
+        .if a == 3
+            .let n = n + 1;
+        .else
+            .let n = n + 5;
+        .endif
+    .next
+```
 If required, loops can be broken out of using the `.break` directive
 ```
     .for i = 0, i < 256, i = i + 1
@@ -475,7 +542,10 @@ If required, loops can be broken out of using the `.break` directive
         rst $10
     .next
 ```
-**Caution:** Changing the value of the iteration variable inside the loop can cause the application to hang. 6502.Net does not restrict re-assigning the iteration variable inside its own or nested loops.
+All expressions, including the condition, are only evaluated on the first pass.
+
+**Caution:** Changing the value of the iteration variable inside the loop can cause the application to hang. z80DotNet does not restrict re-assigning the iteration variable inside its own or nested loops.
+
 ## Future enhancements under consideration
 * Switch-case conditions
 * Custom functions

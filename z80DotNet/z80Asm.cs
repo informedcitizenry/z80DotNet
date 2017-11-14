@@ -23,6 +23,7 @@
 using DotNetAsm;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace z80DotNet
@@ -42,12 +43,7 @@ namespace z80DotNet
         public z80Asm(IAssemblyController controller) :
             base(controller)
         {
-            _opcodes[0xcb].Extension = _bitsOpcodes;
-            _opcodes[0xdd].Extension = _ixOpcodes;
-            _opcodes[0xed].Extension = _exOpcodes;
-            _opcodes[0xfd].Extension = _iyOpcodes;
-            _ixOpcodes[0xcb].Extension = _ixBitsOpcodes;
-            _iyOpcodes[0xcb].Extension = _iyBitsOpcodes;
+            _opcodes = _opcodes.OrderBy(o => o.Index).ToArray();
 
             _builders = new FormatBuilder[]
             {
@@ -189,7 +185,7 @@ namespace z80DotNet
                 {
                     FormatString = instruction
                 };
-                opc = Opcode.LookupOpcode(instruction, _opcodes);
+                opc = _opcodes.FirstOrDefault(o => o.DisasmFormat.Equals(instruction));//Opcode.LookupOpcode(instruction, _opcodes);
             }
             else
             {
@@ -214,7 +210,7 @@ namespace z80DotNet
                             FormatString = "im " + Controller.Evaluator.Eval(operand).ToString()
                         };
                     }
-                    opc = Opcode.LookupOpcode(fmt.FormatString, _opcodes, Controller.Options.StringComparison);
+                    opc = _opcodes.FirstOrDefault(o => o.DisasmFormat.Equals(fmt.FormatString, Controller.Options.StringComparison));
                 }
                 else
                 {
@@ -225,11 +221,11 @@ namespace z80DotNet
                             continue;
 
                         string instrFmt = string.Format("{0} {1}", instruction, fmt.FormatString);
-                        opc = Opcode.LookupOpcode(instrFmt, _opcodes, Controller.Options.StringComparison);
+                        opc = _opcodes.FirstOrDefault(o => o.DisasmFormat.Equals(instrFmt, Controller.Options.StringComparison));
                         if (opc == null)
                         {
                             instrFmt = instrFmt.Replace("${0:x4}", "${0:x2}");
-                            opc = Opcode.LookupOpcode(instrFmt, _opcodes, Controller.Options.StringComparison);
+                            opc = _opcodes.FirstOrDefault(o => o.DisasmFormat.Equals(instrFmt, Controller.Options.StringComparison));
                         }
                         break;
                     }
@@ -325,32 +321,46 @@ namespace z80DotNet
                 line.Disassembly = string.Format(fmt.FormatString, evalAbs, eval2);
             else
                 line.Disassembly = string.Format(fmt.FormatString, evalAbs);
-            int opcode = opc.Index & 0xFFFF;
-            if (opcode == 0xCBDD || opcode == 0xCBFD) // bit/res/set <BIT>,(ix+<OFFS),<REG>
+
+            int exprsize = eval == long.MinValue ? 0 : eval.Size();
+
+            exprsize += eval2 == long.MinValue ? 0 : eval2.Size();
+
+            int opcodesize = 1;
+            int opcode = opc.Index;
+            var opclsb = opcode & 0xFF;
+
+            if (opclsb == 0xCB || opclsb == 0xED || opclsb == 0xDD || opclsb == 0xFD)
             {
-                opcode = opcode | ((int)eval << 16) | ((opc.Index & 0xFF0000) << 8);
+                opcodesize++;
+
+                if ((opclsb == 0xDD || opclsb == 0xFD) && ((opcode >> 8) & 0xFF) == 0xCB)
+                    opcodesize++;
             }
-            else if (opcode == 0x36DD || opcode == 0x36FD) // ld (ix+<OFFS),<BYTE>
+            if (opcodesize + exprsize > opc.Size)
             {
-                opcode = opcode | ((int)eval << 16) | ((int)eval2 << 24);
+                Controller.Log.LogEntry(line, ErrorStrings.UnknownInstruction, line.Instruction);
+                return;
             }
-            else
+
+            var opcbase = opcode & 0xFFFF;
+            if (opcbase == 0xCBDD || opcbase == 0xCBFD)
             {
-                opcode = opc.Index;
-                if (eval != long.MinValue)
-                {
-                    var opcsize = ((long)opc.Index).Size();
-                    opcode |= ((int)eval << (opcsize * 8));
-                }
+                opcode = opcbase | ((int)eval << 16) | ((opcode & 0xFF0000) << 8);
+            }
+            else if (opcbase == 0x36DD || opcbase == 0x36FD)
+            {
+                opcode = opcbase | ((int)eval << 16) | ((int)eval2 << 24);
+            }
+            else if (eval != long.MinValue)
+            {
+                opcode |= ((int)eval << (opcodesize * 8));
             }
             line.Assembly = Controller.Output.Add(opcode, opc.Size);
         }
 
         public int GetInstructionSize(SourceLine line)
         {
-            if (string.IsNullOrEmpty(line.Operand))
-                return Opcode.LookupOpcode(line.Instruction.ToLower(), _opcodes).Size;
-
             var opc = GetFormatAndOpcode(line);
 
             if (opc.Item2 != null)

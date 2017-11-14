@@ -21,10 +21,7 @@
 //-----------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace DotNetAsm
 {
@@ -45,7 +42,6 @@ namespace DotNetAsm
         /// <param name="symbol"></param>
         void AddSymbol(string symbol);
 
-
         /// <summary>
         /// Performs assembly operations based on the command line arguments passed,
         /// including output to an object file and assembly listing.
@@ -59,23 +55,13 @@ namespace DotNetAsm
         AsmCommandLineOptions Options { get; }
 
         /// <summary>
-        /// Gets or sets an output action to write custom-architecture header data to the output.
-        /// </summary>
-        Action<IAssemblyController,BinaryWriter> HeaderOutputAction { get; set; }
-
-        /// <summary>
-        /// Gets or sets an output action to writer custom-architecture header data to the output.
-        /// </summary>
-        Action<IAssemblyController, BinaryWriter> FooterOutputAction { get; set; }
-
-        /// <summary>
         /// Checks if a given token is actually an instruction or directive, either
         /// for the DotNetAsm.AssemblyController or any line assemblers.
         /// </summary>
         /// <param name="token">The token to check</param>
         /// <returns>True, if the token is an instruction or directive</returns>
         bool IsInstruction(string token);
- 
+
         /// <summary>
         /// Gets or sets the disassembler. 
         /// </summary>
@@ -113,13 +99,23 @@ namespace DotNetAsm
         AsmEncoding Encoding { get; }
 
         /// <summary>
-        /// Gets or sets the banner text used at start of compilation.
+        /// Occurs when the CPU has changed.
         /// </summary>
-        string BannerText { get; set; }
+        event CpuChangeEventHandler CpuChanged;
 
         /// <summary>
-        /// Gets or sets the verbose banner text at start of compilation
+        /// Occurs when the assembler is displaying banner information (copyright, application name, etc.).
         /// </summary>
-        string VerboseBannerText { get; set; }
+        event DisplayBannerEventHandler DisplayingBanner;
+
+        /// <summary>
+        /// Occurs when the assembler is writing header data to the binary output.
+        /// </summary>
+        event WriteBytesEventHandler WritingHeader;
+
+        /// <summary>
+        /// Occurs when the assembler is writing footer data to the binary output.
+        /// </summary>
+        event WriteBytesEventHandler WritingFooter;
     }
 }

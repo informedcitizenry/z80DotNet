@@ -106,29 +106,14 @@ namespace NUnit.z80Tests
 
         public AsmEncoding Encoding { get; private set; }
 
-        public string BannerText
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public event CpuChangeEventHandler CpuChanged;
 
-        public string VerboseBannerText
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public event DisplayBannerEventHandler DisplayingBanner;
+
+        public event WriteBytesEventHandler WritingHeader;
+
+        public event WriteBytesEventHandler WritingFooter;
+
     }
 
     [TestFixture]

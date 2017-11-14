@@ -21,7 +21,6 @@
 //-----------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -49,7 +48,7 @@ namespace DotNetAsm
         {
             Reserved.DefineType("Functions", "str");
 
-            Reserved.DefineType("Directives", 
+            Reserved.DefineType("Directives",
                     ".cstring", ".lsstring", ".nstring", ".pstring", ".string"
                 );
 
@@ -105,7 +104,7 @@ namespace DotNetAsm
                         if (parms.Count < 2 || parms.Count > 3)
                             throw new ArgumentException(line.Operand);
                         char translation = EvalEncodingParam(parms.Last());
-                   
+
                         if (parms.Count == 2)
                         {
                             if (string.IsNullOrEmpty(mapstring) == false)
@@ -129,7 +128,7 @@ namespace DotNetAsm
                     {
                         if (parms.Count > 2)
                             throw new ArgumentException(line.Operand);
-                        
+
                         if (parms.Count == 1)
                         {
                             if (string.IsNullOrEmpty(mapstring))
@@ -171,7 +170,7 @@ namespace DotNetAsm
                     throw new ArgumentException(p);
                 return p.Trim('"').First();
             }
-            
+
             // else return the evaluated expression
             return (char)Controller.Evaluator.Eval(p);
         }
@@ -189,7 +188,7 @@ namespace DotNetAsm
                 var m = _regStrFunc.Match(arg);
                 string strval = m.Groups[1].Value;
                 var param = strval.TrimStart('(').TrimEnd(')');
-                if (string.IsNullOrEmpty(strval) || 
+                if (string.IsNullOrEmpty(strval) ||
                     strval.FirstParenEnclosure() != m.Groups[1].Value)
                 {
                     Controller.Log.LogEntry(line, ErrorStrings.None);
@@ -217,8 +216,7 @@ namespace DotNetAsm
             {
                 if (s.EnclosedInQuotes())
                 {
-                    //var encodedString = Encoder.TranslateString(CurrentEncoding, s.Trim('"'));
-                    size += Controller.Encoding.GetByteCount(s.Trim('"'));//encodedString.Count();
+                    size += Controller.Encoding.GetByteCount(s.Trim('"'));
                 }
                 else
                 {
@@ -249,7 +247,7 @@ namespace DotNetAsm
 
         public override bool IsReserved(string token)
         {
-            return Reserved.IsOneOf("Directives", token) || 
+            return Reserved.IsOneOf("Directives", token) ||
                    Reserved.IsOneOf("Encoding", token);
         }
 

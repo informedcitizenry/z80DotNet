@@ -97,7 +97,7 @@ namespace DotNetAsm
         public SourceLine() :
             this(string.Empty, 0, string.Empty)
         {
-            
+
         }
 
         #region Static Constructors
@@ -107,11 +107,11 @@ namespace DotNetAsm
         /// </summary>
         static SourceLine()
         {
-            _regThree    = new Regex(@"^([^\s]+)\s+(([^\s]+)\s+(.+))$", RegexOptions.Compiled);
-            _regThreeAlt = new Regex(@"^([^\s]+)\s*(=)\s*(.+)$",        RegexOptions.Compiled);
-            _regTwo      = new Regex(@"^([^\s]+)\s+(.+)$",              RegexOptions.Compiled);
-            _regOne      = new Regex(@"^([^\s]+)$",                     RegexOptions.Compiled);
-            _regUnicode  = new Regex(@"(\\u[a-fA-F0-9]{4}|\\U[a-fA-F0-9]{8})", 
+            _regThree = new Regex(@"^([^\s]+)\s+(([^\s]+)\s+(.+))$", RegexOptions.Compiled);
+            _regThreeAlt = new Regex(@"^([^\s]+)\s*(=)\s*(.+)$", RegexOptions.Compiled);
+            _regTwo = new Regex(@"^([^\s]+)\s+(.+)$", RegexOptions.Compiled);
+            _regOne = new Regex(@"^([^\s]+)$", RegexOptions.Compiled);
+            _regUnicode = new Regex(@"(\\u[a-fA-F0-9]{4}|\\U[a-fA-F0-9]{8})",
                                                                         RegexOptions.Compiled);
         }
 
@@ -273,7 +273,7 @@ namespace DotNetAsm
                 {
                     if (c == '"' && !single_enclosed)
                         double_enclosed = true;
-                    else 
+                    else
                         single_enclosed |= (c == '\'' && !double_enclosed);
 
                     sb.Append(c);

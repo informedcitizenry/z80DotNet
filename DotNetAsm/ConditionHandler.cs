@@ -21,7 +21,6 @@
 //-----------------------------------------------------------------------------
 
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 
 namespace DotNetAsm
 {
@@ -50,8 +49,8 @@ namespace DotNetAsm
         public ConditionHandler(IAssemblyController controller)
             : base(controller)
         {
-            Reserved.DefineType("Conditions", 
-                ".if", ".ifdef", ".ifndef", 
+            Reserved.DefineType("Conditions",
+                ".if", ".ifdef", ".ifndef",
                 ".elif", ".elifdef", ".elifndef",
                 ".else", ".endif"
             );

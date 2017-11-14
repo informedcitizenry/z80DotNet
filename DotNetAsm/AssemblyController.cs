@@ -29,6 +29,10 @@ using System.Text.RegularExpressions;
 
 namespace DotNetAsm
 {
+    public delegate string DisplayBannerEventHandler(object sender, bool isVerbose);
+
+    public delegate byte[] WriteBytesEventHandler(object sender);
+
     /// <summary>
     /// Implements an assembly controller to process source input and convert 
     /// to assembled output.
@@ -63,8 +67,8 @@ namespace DotNetAsm
         public AssemblyController(string[] args)
         {
             Reserved.DefineType("Directives",
-                    ".endrelocate", ".equ", ".pseudopc", ".realpc", ".relocate", ".end",
-                    ".proff", ".pron", ".repeat", ".endrepeat", ConstStrings.VAR_DIRECTIVE
+                    ".cpu", ".endrelocate", ".equ", ".pseudopc", ".realpc", ".relocate", ".end",
+                    ".endrepeat", ".proff", ".pron", ".repeat", ConstStrings.VAR_DIRECTIVE
                 );
 
             Reserved.DefineType("Functions",
@@ -110,10 +114,10 @@ namespace DotNetAsm
             _preprocessor = new Preprocessor(this, s => IsSymbolName(s.TrimEnd(':'), true, false));
             _assemblers = new Stack<ILineAssembler>();
             _assemblers.Push(new PseudoAssembler(this, arg =>
-                {
-                    return IsReserved(arg) ||
-                    _labelCollection.IsScopedSymbol(arg, _currentLine.Scope);
-                }));
+            {
+                return IsReserved(arg) ||
+                _labelCollection.IsScopedSymbol(arg, _currentLine.Scope);
+            }));
 
             _assemblers.Push(new MiscAssembler(this));
 
@@ -137,10 +141,7 @@ namespace DotNetAsm
         /// </summary>
         /// <param name="chr">The character to encode.</param>
         /// <returns>The encoded value as a string.</returns>
-        string GetCharValue(string chr)
-        {
-            return Encoding.GetEncodedValue(chr.Trim('\'').First()).ToString();
-        }
+        string GetCharValue(string chr) => Encoding.GetEncodedValue(chr.Trim('\'').First()).ToString();
 
         /// <summary>
         /// Used by the expression evaluator to convert an anonymous symbol
@@ -152,7 +153,7 @@ namespace DotNetAsm
         {
             string trimmed = symbol.Trim(new char[] { '(', ')' });
             long addr = GetAnonymousAddress(_currentLine, trimmed);
-            if (addr < 0)
+            if (addr < 0 && _passes > 0)
             {
                 Log.LogEntry(_currentLine, ErrorStrings.CannotResolveAnonymousLabel);
                 return "0";
@@ -166,14 +167,10 @@ namespace DotNetAsm
         /// </summary>
         /// <param name="token">The token to check</param>
         /// <returns>True, if the token is an instruction or directive</returns>
-        public bool IsInstruction(string token)
-        {
-            bool reserved = Reserved.IsOneOf("Directives", token) ||
-                            _preprocessor.IsReserved(token) ||
-                            _blockHandlers.Any(handler => handler.Processes(token)) ||
-                            _assemblers.Any(assembler => assembler.AssemblesInstruction(token));
-            return reserved;
-        }
+        public bool IsInstruction(string token) => Reserved.IsOneOf("Directives", token) ||
+                                                    _preprocessor.IsReserved(token) ||
+                                                    _blockHandlers.Any(handler => handler.Processes(token)) ||
+                                                    _assemblers.Any(assembler => assembler.AssemblesInstruction(token));
 
         /// <summary>
         /// Determines whether the token is a reserved keyword, such as an instruction
@@ -181,10 +178,7 @@ namespace DotNetAsm
         /// </summary>
         /// <param name="token">The token to test.</param>
         /// <returns>True, if the token is a reserved word, otherwise false.</returns>
-        public override bool IsReserved(string token)
-        {
-            return IsInstruction(token) || Reserved.IsReserved(token);
-        }
+        public override bool IsReserved(string token) => IsInstruction(token) || Reserved.IsReserved(token);
 
         /// <summary>
         /// Checks whether the token is a valid symbol/label name.
@@ -242,6 +236,9 @@ namespace DotNetAsm
 
                 return source;
             }
+            if (!string.IsNullOrEmpty(Options.CPU))
+                OnCpuChanged(new SourceLine { SourceString = ConstStrings.COMMANDLINE_ARG, Operand = Options.CPU });
+
             return null;
         }
 
@@ -278,10 +275,18 @@ namespace DotNetAsm
                     Label = name,
                     Instruction = "=",
                     Operand = definition,
-                    SourceString = string.Format("{0}={1} ;-D {2}", name, definition, label)
+                    SourceString = string.Format($"{name}={definition} ;-D {label}", name, definition, label)
                 });
             }
             return labels;
+        }
+
+        void OnCpuChanged(SourceLine line)
+        {
+            if (CpuChanged != null)
+                CpuChanged.Invoke(new CpuChangedEventArgs { Line = line });
+            else
+                Log.LogEntry(line, ErrorStrings.UnknownInstruction, line.Instruction);
         }
 
         /// <summary>
@@ -293,40 +298,37 @@ namespace DotNetAsm
         void FirstPass(IEnumerable<SourceLine> source)
         {
             _passes = 0;
-
-            Stack<string> scope = new Stack<string>();
-
             int id = 0;
 
             List<SourceLine> sourceList = source.ToList();
+
             for (int i = 0; i < sourceList.Count; i++)
             {
-                SourceLine line = sourceList[i];
+                _currentLine = sourceList[i];
                 try
                 {
-                    if (line.DoNotAssemble)
+                    if (_currentLine.DoNotAssemble)
                     {
-                        if (line.IsComment)
-                            _processedLines.Add(line);
+                        if (_currentLine.IsComment)
+                            _processedLines.Add(_currentLine);
                         continue;
                     }
-                    _currentLine = line;
-                    if (line.Instruction.Equals(".end", Options.StringComparison))
+                    if (_currentLine.Instruction.Equals(".end", Options.StringComparison))
                         break;
 
                     var currentHandler = _blockHandlers.FirstOrDefault(h => h.IsProcessing());
                     if (currentHandler == null)
-                        currentHandler = _blockHandlers.FirstOrDefault(h => h.Processes(line.Instruction));
+                        currentHandler = _blockHandlers.FirstOrDefault(h => h.Processes(_currentLine.Instruction));
                     if (currentHandler != null)
                     {
                         sourceList.RemoveAt(i--);
                         try
                         {
-                            currentHandler.Process(line);
+                            currentHandler.Process(_currentLine);
                         }
                         catch (ForNextException forNextExc)
                         {
-                            Log.LogEntry(line, forNextExc.Message);
+                            Log.LogEntry(_currentLine, forNextExc.Message);
                         }
                         if (currentHandler.IsProcessing() == false)
                         {
@@ -336,7 +338,7 @@ namespace DotNetAsm
                     }
                     else
                     {
-                        line.Id = id++;
+                        _currentLine.Id = id++;
                         FirstPassLine();
                     }
                 }
@@ -349,18 +351,16 @@ namespace DotNetAsm
                 }
                 catch (ExpressionException exprEx)
                 {
-                    Log.LogEntry(line, ErrorStrings.BadExpression, exprEx.Message);
+                    Log.LogEntry(_currentLine, ErrorStrings.BadExpression, exprEx.Message);
                 }
                 catch (Exception)
                 {
-                    Log.LogEntry(line, ErrorStrings.None);
+                    Log.LogEntry(_currentLine, ErrorStrings.None);
                 }
             }
 
-            if (scope.Count > 0 || _blockHandlers.Any(h => h.IsProcessing()))
-            {
+            if (_blockHandlers.Any(h => h.IsProcessing()))
                 Log.LogEntry(_processedLines.Last(), ErrorStrings.MissingClosure);
-            }
         }
 
         /// <summary>
@@ -371,6 +371,19 @@ namespace DotNetAsm
         {
             try
             {
+                if (_currentLine.Instruction.Equals(".cpu", Options.StringComparison))
+                {
+                    if (!_currentLine.Operand.EnclosedInQuotes())
+                        Controller.Log.LogEntry(_currentLine, ErrorStrings.QuoteStringNotEnclosed);
+                    else
+                        OnCpuChanged(_currentLine);
+                    return;
+                }
+                else if (_currentLine.Instruction.Equals(ConstStrings.VAR_DIRECTIVE, Options.StringComparison))
+                {
+                    _currentLine.PC = Variables.SetVariable(_currentLine.Operand, _currentLine.Scope).Value;
+                }
+
                 UpdatePC();
 
                 _currentLine.PC = Output.LogicalPC;
@@ -411,13 +424,6 @@ namespace DotNetAsm
             bool passNeeded = false;
             if (IsAssignmentDirective())
             {
-                if (_currentLine.Instruction.Equals(ConstStrings.VAR_DIRECTIVE, Options.StringComparison))
-                {
-                    var varparts = Variables.SetVariable(_currentLine.Operand, _currentLine.Scope);
-                    //var variable = SetVariable(_currentLine.Operand, true);
-                    _currentLine.PC = varparts.Value;//variable.Value;
-                    return false;
-                }
                 if (_currentLine.Label.Equals("*")) return false;
                 long val = long.MinValue;
 
@@ -441,6 +447,16 @@ namespace DotNetAsm
 
                 }
                 _currentLine.PC = val;
+            }
+            else if (_currentLine.Instruction.Equals(ConstStrings.VAR_DIRECTIVE, Options.StringComparison))
+            {
+                var varparts = Variables.SetVariable(_currentLine.Operand, _currentLine.Scope);
+                passNeeded = _currentLine.PC != varparts.Value;
+                _currentLine.PC = varparts.Value;
+            }
+            else if (_currentLine.Instruction.Equals(".cpu", Options.StringComparison))
+            {
+                OnCpuChanged(_currentLine);
             }
             else
             {
@@ -513,20 +529,12 @@ namespace DotNetAsm
                 finalPass = !passNeeded;
             }
             if (_passes > MAX_PASSES)
-            {
                 throw new Exception("Too many passes attempted.");
-            }
         }
 
-        public void AddAssembler(ILineAssembler lineAssembler)
-        {
-            _assemblers.Push(lineAssembler);
-        }
+        public void AddAssembler(ILineAssembler lineAssembler) => _assemblers.Push(lineAssembler);
 
-        public void AddSymbol(string symbol)
-        {
-            Reserved.AddWord("UserDefined", symbol);
-        }
+        public void AddSymbol(string symbol) => Reserved.AddWord("UserDefined", symbol);
 
         public void AssembleLine()
         {
@@ -540,16 +548,11 @@ namespace DotNetAsm
             if (IsInstruction(_currentLine.Instruction) == false)
             {
                 Log.LogEntry(_currentLine, ErrorStrings.UnknownInstruction, _currentLine.Instruction);
-                return;
             }
-
-            foreach (var asm in _assemblers)
+            else
             {
-                if (asm.AssemblesInstruction(_currentLine.Instruction))
-                {
-                    asm.AssembleLine(_currentLine);
-                    return;
-                }
+                var asm = _assemblers.FirstOrDefault(a => a.AssemblesInstruction(_currentLine.Instruction));
+                asm?.AssembleLine(_currentLine);
             }
         }
 
@@ -561,12 +564,9 @@ namespace DotNetAsm
         /// <returns>The size in bytes of the instruction, including opcode and operand</returns>
         int GetInstructionSize()
         {
-            foreach (var asm in _assemblers)
-            {
-                if (asm.AssemblesInstruction(_currentLine.Instruction))
-                    return asm.GetInstructionSize(_currentLine);
-            }
-            return 0;
+            var asm = _assemblers.FirstOrDefault(a => a.AssemblesInstruction(_currentLine.Instruction));
+            var size = (asm != null) ? asm.GetInstructionSize(_currentLine) : 0;
+            return size;
         }
 
         /// <summary>
@@ -574,9 +574,6 @@ namespace DotNetAsm
         /// </summary>
         void DefineLabel()
         {
-            if (_currentLine.Instruction.Equals(ConstStrings.VAR_DIRECTIVE, Options.StringComparison))
-                _currentLine.PC = Variables.SetVariable(_currentLine.Operand, _currentLine.Scope).Value;
-
             if (string.IsNullOrEmpty(_currentLine.Label) == false)
             {
                 if (_currentLine.Label.Equals("*"))
@@ -618,7 +615,6 @@ namespace DotNetAsm
                         val = Evaluator.Eval(_currentLine.Operand, int.MinValue, uint.MaxValue);
                     else
                         val = _currentLine.PC;
-
                     _labelCollection.SetLabel(scopedLabel, val, false, true);
 
                 }
@@ -687,8 +683,7 @@ namespace DotNetAsm
                 return false; // define a constant string??
 
             if (_currentLine.Instruction.Equals("=") ||
-                _currentLine.Instruction.Equals(".equ", Options.StringComparison) ||
-                _currentLine.Instruction.Equals(ConstStrings.VAR_DIRECTIVE, Options.StringComparison))
+                _currentLine.Instruction.Equals(".equ", Options.StringComparison))
                 return true;
 
             return false;
@@ -724,8 +719,8 @@ namespace DotNetAsm
                 TimeSpan ts = DateTime.Now.Subtract(asmTime);
 
                 Console.WriteLine("{0} bytes, {1} sec.",
-                    Output.GetCompilation().Count,
-                    ts.TotalSeconds);
+                                    Output.GetCompilation().Count,
+                                    ts.TotalSeconds);
                 Console.WriteLine("*********************************");
                 Console.WriteLine("Assembly completed successfully.");
             }
@@ -749,8 +744,9 @@ namespace DotNetAsm
                 {
                     string exec = Path.GetFileName(System.Reflection.Assembly.GetEntryAssembly().Location);
                     string argstring = string.Join(" ", Options.Arguments);
-                    string bannerstring = BannerText.Split(new char[] { '\n', '\r' }).First();
-                    writer.WriteLine(";; {0}", bannerstring);
+                    string bannerstring = DisplayingBanner != null ? DisplayingBanner.Invoke(this, false) : string.Empty;
+
+                    writer.WriteLine(";; {0}", bannerstring.Split(new char[] { '\n', '\r' }).First());
                     writer.WriteLine(";; {0} {1}", exec, argstring);
                     writer.WriteLine(";; {0:f}\n", DateTime.Now);
                     writer.WriteLine(";; Input files:\n");
@@ -763,11 +759,10 @@ namespace DotNetAsm
             }
             if (!string.IsNullOrEmpty(Options.LabelFile))
             {
-                listing = GetLabels();
+                listing = GetLabelsAndVariables();
                 using (StreamWriter writer = new StreamWriter(Options.LabelFile, false))
                 {
                     writer.WriteLine(";; Input files:\n");
-
                     _preprocessor.FileRegistry.ToList().ForEach(f => writer.WriteLine(";; {0}", f));
                     writer.WriteLine();
                     writer.WriteLine(listing);
@@ -775,28 +770,36 @@ namespace DotNetAsm
             }
         }
 
+        string GetSymbolListing(string symbol, long value, bool isVar)
+        {
+            var symbolname = Regex.Replace(symbol, @"(?<=^|\.)[0-9]+(?=\.|$)", "::");
+            var maxlen = symbolname.Length > 30 ? 30 : symbolname.Length;
+            if (maxlen < 0) maxlen++;
+            symbolname = symbolname.Substring(symbolname.Length - maxlen, maxlen);
+            var size = value.Size() * 2;
+            var assignsym = isVar ? ":=" : " =";
+
+            return string.Format("{0,-30} {1} ${2,-4:x" + size.ToString() + "} : ({2}){3}",
+                                symbolname,
+                                assignsym,
+                                value,
+                                Environment.NewLine);
+        }
+
         /// <summary>
         /// Used by the ToListing method to get a listing of all defined labels.
         /// </summary>
         /// <returns>A string containing all label definitions.</returns>
-        string GetLabels()
+        string GetLabelsAndVariables()
         {
             StringBuilder listing = new StringBuilder();
 
             foreach (var label in _labelCollection)
-            {
-                var dict = (KeyValuePair<string, long>)label;
-                var labelname = Regex.Replace(dict.Key, @"(?<=^|\.)[0-9]+(?=\.|$)", "{anonymous}");
-                var maxlen = labelname.Length > 30 ? 30 : labelname.Length;
-                if (maxlen < 0) maxlen++;
-                labelname = labelname.Substring(labelname.Length - maxlen, maxlen);
-                var size = dict.Value.Size() * 2;
-                listing.AppendFormat("{0,-30} = ${1,-4:x" + size.ToString() + "} ; ({2})",
-                    labelname,
-                    dict.Value,
-                    dict.Value)
-                    .AppendLine();
-            }
+                listing.Append(GetSymbolListing(label.Key, label.Value, false));
+
+            foreach (var variable in Variables)
+                listing.Append(GetSymbolListing(variable.Key, variable.Value, true));
+
             return listing.ToString();
         }
 
@@ -807,13 +810,8 @@ namespace DotNetAsm
         {
             StringBuilder listing = new StringBuilder();
 
-            foreach (SourceLine line in _processedLines)
-            {
-                if (line.Instruction.Equals(".end", Options.StringComparison))
-                    break;
+            _processedLines.ForEach(l => Disassembler.DisassembleLine(l, listing));
 
-                Disassembler.DisassembleLine(line, listing);
-            }
             if (listing.ToString().EndsWith(Environment.NewLine, Options.StringComparison))
                 return listing.ToString().Substring(0, listing.Length - Environment.NewLine.Length);
 
@@ -834,11 +832,13 @@ namespace DotNetAsm
 
             using (BinaryWriter writer = new BinaryWriter(new FileStream(outputfile, FileMode.Create, FileAccess.Write)))
             {
-                HeaderOutputAction?.Invoke(this, writer);
+                if (WritingHeader != null)
+                    writer.Write(WritingHeader.Invoke(this));
 
                 writer.Write(Output.GetCompilation().ToArray());
 
-                FooterOutputAction?.Invoke(this, writer);
+                if (WritingFooter != null)
+                    writer.Write(WritingFooter.Invoke(this));
             }
         }
 
@@ -847,14 +847,14 @@ namespace DotNetAsm
             if (Options.InputFiles.Count == 0)
                 return;
 
-            if (Options.PrintVersion)
-                Console.WriteLine(VerboseBannerText);
+            if (Options.PrintVersion && DisplayingBanner != null)
+                Console.WriteLine(DisplayingBanner.Invoke(this, true));
 
             if (Options.Quiet)
                 Console.SetOut(TextWriter.Null);
 
-            if (Options.PrintVersion == false)
-                Console.WriteLine(BannerText);
+            if (!Options.PrintVersion && DisplayingBanner != null)
+                Console.WriteLine(DisplayingBanner.Invoke(this, false));
 
             DateTime asmTime = DateTime.Now;
 
@@ -873,10 +873,11 @@ namespace DotNetAsm
                         SaveOutput();
 
                         ToListing();
+
+                        PrintStatus(asmTime);
                     }
                 }
             }
-            PrintStatus(asmTime);
         }
 
         /// <summary>
@@ -969,13 +970,17 @@ namespace DotNetAsm
 
         public ILineDisassembler Disassembler { get; set; }
 
-        public Action<IAssemblyController, BinaryWriter> HeaderOutputAction { get; set; }
+        #endregion
 
-        public Action<IAssemblyController, BinaryWriter> FooterOutputAction { get; set; }
+        #region Events
 
-        public string BannerText { get; set; }
+        public event CpuChangeEventHandler CpuChanged;
 
-        public string VerboseBannerText { get; set; }
+        public event DisplayBannerEventHandler DisplayingBanner;
+
+        public event WriteBytesEventHandler WritingHeader;
+
+        public event WriteBytesEventHandler WritingFooter;
 
         #endregion
     }

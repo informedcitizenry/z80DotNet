@@ -21,7 +21,6 @@
 //-----------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace DotNetAsm
@@ -40,9 +39,9 @@ namespace DotNetAsm
         public MiscAssembler(IAssemblyController controller) :
             base(controller)
         {
-            Reserved.DefineType("Directives", 
+            Reserved.DefineType("Directives",
                     "assert", ".eor", ".echo", ".target",
-                    ".error", ".errorif", 
+                    ".error", ".errorif",
                     ".warnif", ".warn"
                 );
         }
@@ -103,7 +102,7 @@ namespace DotNetAsm
             }
 
             byte eor_b = Convert.ToByte(eor);
-            Controller.Output.Transforms.Push(delegate(byte b)
+            Controller.Output.Transforms.Push(delegate (byte b)
             {
                 b ^= eor_b;
                 return b;

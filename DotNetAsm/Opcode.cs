@@ -33,149 +33,6 @@ namespace DotNetAsm
     /// </summary>
     public class Opcode
     {
-        #region Methods
-
-        /// <summary>
-        /// Lookup an opcode from a supplied System.Collections.Generic.IEnumerable&lt;Opcode&gt;
-        /// by its disassembly format.
-        /// </summary>
-        /// <param name="format">The disassembly format to use to lookup the opcode</param>
-        /// <param name="opcodes">The System.Collections.Generic.IEnumerable&lt;Opcode&gt; to look in</param>
-        /// <param name="comparison">A System.StringComparison enumeration value of how 
-        /// the strings will be compared</param>
-        /// <returns>The DotNetAsm.Opcode matching the format</returns>
-        public static Opcode LookupOpcode(string format, IEnumerable<Opcode> opcodes, StringComparison comparison)
-        {
-            Opcode opc = null;
-
-            Opcode[] opcList = opcodes.ToArray();
-
-            for (int i = 0; i < 0x100; i++)
-            {
-                if (opcList[i] == null)
-                    continue;
-                if (opcList[i].Extension != null)
-                {
-                    Opcode result = LookupOpcode(format, opcList[i].Extension.ToArray(), comparison);
-                    if (result != null)
-                    {
-                        opc = result;
-                        opc.Index = i | (result.Index << 8);
-                        break;
-                    }
-                }
-                else if (opcList[i].DisasmFormat.Equals(format, comparison))
-                {
-                    opc = opcList[i];
-                    opc.Index = i;
-                    break;
-                }
-            }
-            return opc;
-        }
-
-        /// <summary>
-        /// Lookup an opcode from a supplied System.Collections.Generic.IEnumerable&lt;Opcode&gt;
-        /// by its disassembly format.
-        /// </summary>
-        /// <param name="format">The disassembly format to use to lookup the opcode</param>
-        /// <param name="opcodes">The System.Collections.Generic.IEnumerable&lt;Opcode&gt; to look in</param>
-        /// <returns>The DotNetAsm.Opcode matching the format</returns>
-        public static Opcode LookupOpcode(string format, IEnumerable<Opcode> opcodes)
-        {
-            return LookupOpcode(format, opcodes, StringComparison.CurrentCulture);
-        }
-
-        /// <summary>
-        /// Lookup the index of an opcode in a supplied System.Collections.Generic.IEnumerable&lt;Opcode&gt;
-        /// from its disassembly format.
-        /// </summary>
-        /// <param name="format">The disassembly format to use to lookup the opcode</param>
-        /// <param name="opcodes">The System.Collections.Generic.IEnumerable&lt;Opcode&gt; to look in</param>
-        /// <param name="comparison">A System.StringComparison enumeration value of how 
-        /// the strings will be compared</param>
-        /// <returns>The index of the DotNetAsm.Opcode matching the format</returns>
-        public static int LookupOpcodeIndex(string format, IEnumerable<Opcode> opcodes, StringComparison comparison)
-        {
-            Opcode[] opcList = opcodes.ToArray();
-            int index = -1;
-
-            for (int i = 0; i < 0x100; i++)
-            {
-                if (opcList[i] == null)
-                    continue;
-                if (opcList[i].Extension != null)
-                {
-                    Opcode result = LookupOpcode(format, opcList[i].Extension.ToArray(), comparison);
-                    if (result != null)
-                    {
-                        index = i | (result.Index << 8);
-                        break;
-                    }
-                }
-                else if (opcList[i].DisasmFormat.Equals(format, comparison))
-                {
-                    index = i;
-                    break;
-                }
-            }
-            return index;
-        }
-
-        /// <summary>
-        /// Lookup the index of an opcode in a supplied System.Collections.Generic.IEnumerable&lt;Opcode&gt;
-        /// from its disassembly format.
-        /// </summary>
-        /// <param name="format">The disassembly format to use to lookup the opcode</param>
-        /// <param name="opcodes">The System.Collections.Generic.IEnumerable&lt;Opcode&gt; to look in</param>
-        /// <returns>The index of the DotNetAsm.Opcode matching the format</returns>
-        public static int LookupOpcodeIndex(string format, IEnumerable<Opcode> opcodes)
-        {
-            return LookupOpcodeIndex(format, opcodes, StringComparison.CurrentCulture);
-        }
-
-        /// <summary>
-        /// Lookup an opcode from a supplied System.Collections.Generic.IEnumerable&lt;string&gt;
-        /// by its disassembly format.
-        /// </summary>
-        /// <param name="format">The disassembly format to use to lookup the opcode</param>
-        /// <param name="opcodes">The System.Collections.Generic.IEnumerable&lt;string&gt; to look in</param>
-        /// <param name="comparison">A System.StringComparison enumeration value of how 
-        /// the strings will be compared</param>
-        /// <returns>The index of the DotNetAsm.Opcode matching the format</returns>
-        public static int LookupOpcodeIndex(string format, IEnumerable<string> opcodes, StringComparison comparison)
-        {
-            string[] opcList = opcodes.ToArray();
-            for (int i = 0; i < opcList.Length; i++ )
-            {
-                if (format.Equals(opcList[i], comparison))
-                    return i;
-            }
-            return -1;
-        }
-
-        /// <summary>
-        /// Lookup an opcode from a supplied System.Collections.Generic.IEnumerable&lt;string&gt;
-        /// by its disassembly format.
-        /// </summary>
-        /// <param name="format">The disassembly format to use to lookup the opcode</param>
-        /// <param name="opcodes">The System.Collections.Generic.IEnumerable&lt;string&gt; to look in</param>
-        /// <returns>The index of the DotNetAsm.Opcode matching the format</returns>
-        public static int LookupOpcodeIndex(string format, IEnumerable<string> opcodes)
-        {
-            return LookupOpcodeIndex(format, opcodes, StringComparison.CurrentCulture);
-        }
-
-        #endregion
-
-        #region Properties
-
-        /// <summary>
-        /// The System.Collections.Generic.IEnumerable&lt;Opcode&gt; that extends from
-        /// this opcode.
-        /// </summary>
-        public IEnumerable<Opcode> Extension { get; set; }
-
         /// <summary>
         /// The Disassembly string format
         /// </summary>
@@ -191,8 +48,11 @@ namespace DotNetAsm
         /// </summary>
         public int Index { get; set; }
 
-
-        #endregion
+        /// <summary>
+        /// Gets or sets the CPU of this opcode.
+        /// </summary>
+        /// <value>The cpu.</value>
+        public string CPU { get; set; }
     }
 
     /// <summary>

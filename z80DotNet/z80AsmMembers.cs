@@ -31,1824 +31,1274 @@ namespace z80DotNet
     {
         #region Members
 
-        Opcode[] _bitsOpcodes = 
-        {
-            new Opcode{ Extension = null, DisasmFormat = "rlc b",             Size = 2 }, // cb 00
-            new Opcode{ Extension = null, DisasmFormat = "rlc c",             Size = 2 }, // cb 01
-            new Opcode{ Extension = null, DisasmFormat = "rlc d",             Size = 2 }, // cb 02
-            new Opcode{ Extension = null, DisasmFormat = "rlc e",             Size = 2 }, // cb 03
-            new Opcode{ Extension = null, DisasmFormat = "rlc h",             Size = 2 }, // cb 04
-            new Opcode{ Extension = null, DisasmFormat = "rlc l",             Size = 2 }, // cb 05
-            new Opcode{ Extension = null, DisasmFormat = "rlc (hl)",          Size = 2 }, // cb 06
-            new Opcode{ Extension = null, DisasmFormat = "rlc a",             Size = 2 }, // cb 07
-            new Opcode{ Extension = null, DisasmFormat = "rrc b",             Size = 2 }, // cb 08
-            new Opcode{ Extension = null, DisasmFormat = "rrc c",             Size = 2 }, // cb 09
-            new Opcode{ Extension = null, DisasmFormat = "rrc d",             Size = 2 }, // cb 0a
-            new Opcode{ Extension = null, DisasmFormat = "rrc e",             Size = 2 }, // cb 0b
-            new Opcode{ Extension = null, DisasmFormat = "rrc h",             Size = 2 }, // cb 0c
-            new Opcode{ Extension = null, DisasmFormat = "rrc l",             Size = 2 }, // cb 0d
-            new Opcode{ Extension = null, DisasmFormat = "rrc (hl)",          Size = 2 }, // cb 0e
-            new Opcode{ Extension = null, DisasmFormat = "rrc a",             Size = 2 }, // cb 0f
-            new Opcode{ Extension = null, DisasmFormat = "rl b",              Size = 2 }, // cb 10
-            new Opcode{ Extension = null, DisasmFormat = "rl c",              Size = 2 }, // cb 11
-            new Opcode{ Extension = null, DisasmFormat = "rl d",              Size = 2 }, // cb 12
-            new Opcode{ Extension = null, DisasmFormat = "rl e",              Size = 2 }, // cb 13
-            new Opcode{ Extension = null, DisasmFormat = "rl h",              Size = 2 }, // cb 14
-            new Opcode{ Extension = null, DisasmFormat = "rl l",              Size = 2 }, // cb 15
-            new Opcode{ Extension = null, DisasmFormat = "rl (hl)",           Size = 2 }, // cb 16
-            new Opcode{ Extension = null, DisasmFormat = "rl a",              Size = 2 }, // cb 17
-            new Opcode{ Extension = null, DisasmFormat = "rr b",              Size = 2 }, // cb 18
-            new Opcode{ Extension = null, DisasmFormat = "rr c",              Size = 2 }, // cb 19
-            new Opcode{ Extension = null, DisasmFormat = "rr d",              Size = 2 }, // cb 1a
-            new Opcode{ Extension = null, DisasmFormat = "rr e",              Size = 2 }, // cb 1b
-            new Opcode{ Extension = null, DisasmFormat = "rr h",              Size = 2 }, // cb 1c
-            new Opcode{ Extension = null, DisasmFormat = "rr l",              Size = 2 }, // cb 1d
-            new Opcode{ Extension = null, DisasmFormat = "rr (hl)",           Size = 2 }, // cb 1e
-            new Opcode{ Extension = null, DisasmFormat = "rr a",              Size = 2 }, // cb 1f
-            new Opcode{ Extension = null, DisasmFormat = "sla b",             Size = 2 }, // cb 20
-            new Opcode{ Extension = null, DisasmFormat = "sla c",             Size = 2 }, // cb 21
-            new Opcode{ Extension = null, DisasmFormat = "sla d",             Size = 2 }, // cb 22
-            new Opcode{ Extension = null, DisasmFormat = "sla e",             Size = 2 }, // cb 23
-            new Opcode{ Extension = null, DisasmFormat = "sla h",             Size = 2 }, // cb 24
-            new Opcode{ Extension = null, DisasmFormat = "sla l",             Size = 2 }, // cb 25
-            new Opcode{ Extension = null, DisasmFormat = "sla (hl)",          Size = 2 }, // cb 26
-            new Opcode{ Extension = null, DisasmFormat = "sla a",             Size = 2 }, // cb 27
-            new Opcode{ Extension = null, DisasmFormat = "sra b",             Size = 2 }, // cb 28
-            new Opcode{ Extension = null, DisasmFormat = "sra c",             Size = 2 }, // cb 29
-            new Opcode{ Extension = null, DisasmFormat = "sra d",             Size = 2 }, // cb 2a
-            new Opcode{ Extension = null, DisasmFormat = "sra e",             Size = 2 }, // cb 2b
-            new Opcode{ Extension = null, DisasmFormat = "sra h",             Size = 2 }, // cb 2c
-            new Opcode{ Extension = null, DisasmFormat = "sra l",             Size = 2 }, // cb 2d
-            new Opcode{ Extension = null, DisasmFormat = "sra (hl)",          Size = 2 }, // cb 2e
-            new Opcode{ Extension = null, DisasmFormat = "sra a",             Size = 2 }, // cb 2f
-            new Opcode{ Extension = null, DisasmFormat = "sll b",             Size = 2 }, // cb 30
-            new Opcode{ Extension = null, DisasmFormat = "sll c",             Size = 2 }, // cb 31
-            new Opcode{ Extension = null, DisasmFormat = "sll d",             Size = 2 }, // cb 32
-            new Opcode{ Extension = null, DisasmFormat = "sll e",             Size = 2 }, // cb 33
-            new Opcode{ Extension = null, DisasmFormat = "sll h",             Size = 2 }, // cb 34
-            new Opcode{ Extension = null, DisasmFormat = "sll l",             Size = 2 }, // cb 35
-            new Opcode{ Extension = null, DisasmFormat = "sll (hl)",          Size = 2 }, // cb 36
-            new Opcode{ Extension = null, DisasmFormat = "sll a",             Size = 2 }, // cb 37
-            new Opcode{ Extension = null, DisasmFormat = "srl b",             Size = 2 }, // cb 38
-            new Opcode{ Extension = null, DisasmFormat = "srl c",             Size = 2 }, // cb 39
-            new Opcode{ Extension = null, DisasmFormat = "srl d",             Size = 2 }, // cb 3a
-            new Opcode{ Extension = null, DisasmFormat = "srl e",             Size = 2 }, // cb 3b
-            new Opcode{ Extension = null, DisasmFormat = "srl h",             Size = 2 }, // cb 3c
-            new Opcode{ Extension = null, DisasmFormat = "srl l",             Size = 2 }, // cb 3d
-            new Opcode{ Extension = null, DisasmFormat = "srl (hl)",          Size = 2 }, // cb 3e
-            new Opcode{ Extension = null, DisasmFormat = "srl a",             Size = 2 }, // cb 3f
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,b",           Size = 2 }, // cb 40
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,c",           Size = 2 }, // cb 41
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,d",           Size = 2 }, // cb 42
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,e",           Size = 2 }, // cb 43
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,h",           Size = 2 }, // cb 44
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,l",           Size = 2 }, // cb 45
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,(hl)",        Size = 2 }, // cb 46
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,a",           Size = 2 }, // cb 47
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,b",           Size = 2 }, // cb 48
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,c",           Size = 2 }, // cb 49
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,d",           Size = 2 }, // cb 4a
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,e",           Size = 2 }, // cb 4b
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,h",           Size = 2 }, // cb 4c
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,l",           Size = 2 }, // cb 4d
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,(hl)",        Size = 2 }, // cb 4e
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,a",           Size = 2 }, // cb 4f
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,b",           Size = 2 }, // cb 50
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,c",           Size = 2 }, // cb 51
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,d",           Size = 2 }, // cb 52
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,e",           Size = 2 }, // cb 53
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,h",           Size = 2 }, // cb 54
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,l",           Size = 2 }, // cb 55
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,(hl)",        Size = 2 }, // cb 56
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,a",           Size = 2 }, // cb 57
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,b",           Size = 2 }, // cb 58
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,c",           Size = 2 }, // cb 59
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,d",           Size = 2 }, // cb 5a
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,e",           Size = 2 }, // cb 5b
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,h",           Size = 2 }, // cb 5c
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,l",           Size = 2 }, // cb 5d
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,(hl)",        Size = 2 }, // cb 5e
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,a",           Size = 2 }, // cb 5f
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,b",           Size = 2 }, // cb 60
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,c",           Size = 2 }, // cb 61
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,d",           Size = 2 }, // cb 62
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,e",           Size = 2 }, // cb 63
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,h",           Size = 2 }, // cb 64
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,l",           Size = 2 }, // cb 65
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,(hl)",        Size = 2 }, // cb 66
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,a",           Size = 2 }, // cb 67
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,b",           Size = 2 }, // cb 68
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,c",           Size = 2 }, // cb 69
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,d",           Size = 2 }, // cb 6a
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,e",           Size = 2 }, // cb 6b
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,h",           Size = 2 }, // cb 6c
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,l",           Size = 2 }, // cb 6d
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,(hl)",        Size = 2 }, // cb 6e
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,a",           Size = 2 }, // cb 6f
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,b",           Size = 2 }, // cb 70
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,c",           Size = 2 }, // cb 71
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,d",           Size = 2 }, // cb 72
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,e",           Size = 2 }, // cb 73
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,h",           Size = 2 }, // cb 74
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,l",           Size = 2 }, // cb 75
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,(hl)",        Size = 2 }, // cb 76
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,a",           Size = 2 }, // cb 77
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,b",           Size = 2 }, // cb 78
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,c",           Size = 2 }, // cb 79
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,d",           Size = 2 }, // cb 7a
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,e",           Size = 2 }, // cb 7b
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,h",           Size = 2 }, // cb 7c
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,l",           Size = 2 }, // cb 7d
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,(hl)",        Size = 2 }, // cb 7e
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,a",           Size = 2 }, // cb 7f
-            new Opcode{ Extension = null, DisasmFormat = "res 0,b",           Size = 2 }, // cb 80
-            new Opcode{ Extension = null, DisasmFormat = "res 0,c",           Size = 2 }, // cb 81
-            new Opcode{ Extension = null, DisasmFormat = "res 0,d",           Size = 2 }, // cb 82
-            new Opcode{ Extension = null, DisasmFormat = "res 0,e",           Size = 2 }, // cb 83
-            new Opcode{ Extension = null, DisasmFormat = "res 0,h",           Size = 2 }, // cb 84
-            new Opcode{ Extension = null, DisasmFormat = "res 0,l",           Size = 2 }, // cb 85
-            new Opcode{ Extension = null, DisasmFormat = "res 0,(hl)",        Size = 2 }, // cb 86
-            new Opcode{ Extension = null, DisasmFormat = "res 0,a",           Size = 2 }, // cb 87
-            new Opcode{ Extension = null, DisasmFormat = "res 1,b",           Size = 2 }, // cb 88
-            new Opcode{ Extension = null, DisasmFormat = "res 1,c",           Size = 2 }, // cb 89
-            new Opcode{ Extension = null, DisasmFormat = "res 1,d",           Size = 2 }, // cb 8a
-            new Opcode{ Extension = null, DisasmFormat = "res 1,e",           Size = 2 }, // cb 8b
-            new Opcode{ Extension = null, DisasmFormat = "res 1,h",           Size = 2 }, // cb 8c
-            new Opcode{ Extension = null, DisasmFormat = "res 1,l",           Size = 2 }, // cb 8d
-            new Opcode{ Extension = null, DisasmFormat = "res 1,(hl)",        Size = 2 }, // cb 8e
-            new Opcode{ Extension = null, DisasmFormat = "res 1,a",           Size = 2 }, // cb 8f
-            new Opcode{ Extension = null, DisasmFormat = "res 2,b",           Size = 2 }, // cb 90
-            new Opcode{ Extension = null, DisasmFormat = "res 2,c",           Size = 2 }, // cb 91
-            new Opcode{ Extension = null, DisasmFormat = "res 2,d",           Size = 2 }, // cb 92
-            new Opcode{ Extension = null, DisasmFormat = "res 2,e",           Size = 2 }, // cb 93
-            new Opcode{ Extension = null, DisasmFormat = "res 2,h",           Size = 2 }, // cb 94
-            new Opcode{ Extension = null, DisasmFormat = "res 2,l",           Size = 2 }, // cb 95
-            new Opcode{ Extension = null, DisasmFormat = "res 2,(hl)",        Size = 2 }, // cb 96
-            new Opcode{ Extension = null, DisasmFormat = "res 2,a",           Size = 2 }, // cb 97
-            new Opcode{ Extension = null, DisasmFormat = "res 3,b",           Size = 2 }, // cb 98
-            new Opcode{ Extension = null, DisasmFormat = "res 3,c",           Size = 2 }, // cb 99
-            new Opcode{ Extension = null, DisasmFormat = "res 3,d",           Size = 2 }, // cb 9a
-            new Opcode{ Extension = null, DisasmFormat = "res 3,e",           Size = 2 }, // cb 9b
-            new Opcode{ Extension = null, DisasmFormat = "res 3,h",           Size = 2 }, // cb 9c
-            new Opcode{ Extension = null, DisasmFormat = "res 3,l",           Size = 2 }, // cb 9d
-            new Opcode{ Extension = null, DisasmFormat = "res 3,(hl)",        Size = 2 }, // cb 9e
-            new Opcode{ Extension = null, DisasmFormat = "res 3,a",           Size = 2 }, // cb 9f
-            new Opcode{ Extension = null, DisasmFormat = "res 4,b",           Size = 2 }, // cb a0
-            new Opcode{ Extension = null, DisasmFormat = "res 4,c",           Size = 2 }, // cb a1
-            new Opcode{ Extension = null, DisasmFormat = "res 4,d",           Size = 2 }, // cb a2
-            new Opcode{ Extension = null, DisasmFormat = "res 4,e",           Size = 2 }, // cb a3
-            new Opcode{ Extension = null, DisasmFormat = "res 4,h",           Size = 2 }, // cb a4
-            new Opcode{ Extension = null, DisasmFormat = "res 4,l",           Size = 2 }, // cb a5
-            new Opcode{ Extension = null, DisasmFormat = "res 4,(hl)",        Size = 2 }, // cb a6
-            new Opcode{ Extension = null, DisasmFormat = "res 4,a",           Size = 2 }, // cb a7
-            new Opcode{ Extension = null, DisasmFormat = "res 5,b",           Size = 2 }, // cb a8
-            new Opcode{ Extension = null, DisasmFormat = "res 5,c",           Size = 2 }, // cb a9
-            new Opcode{ Extension = null, DisasmFormat = "res 5,d",           Size = 2 }, // cb aa
-            new Opcode{ Extension = null, DisasmFormat = "res 5,e",           Size = 2 }, // cb ab
-            new Opcode{ Extension = null, DisasmFormat = "res 5,h",           Size = 2 }, // cb ac
-            new Opcode{ Extension = null, DisasmFormat = "res 5,l",           Size = 2 }, // cb ad
-            new Opcode{ Extension = null, DisasmFormat = "res 5,(hl)",        Size = 2 }, // cb ae
-            new Opcode{ Extension = null, DisasmFormat = "res 5,a",           Size = 2 }, // cb af
-            new Opcode{ Extension = null, DisasmFormat = "res 6,b",           Size = 2 }, // cb b0
-            new Opcode{ Extension = null, DisasmFormat = "res 6,c",           Size = 2 }, // cb b1
-            new Opcode{ Extension = null, DisasmFormat = "res 6,d",           Size = 2 }, // cb b2
-            new Opcode{ Extension = null, DisasmFormat = "res 6,e",           Size = 2 }, // cb b3
-            new Opcode{ Extension = null, DisasmFormat = "res 6,h",           Size = 2 }, // cb b4
-            new Opcode{ Extension = null, DisasmFormat = "res 6,l",           Size = 2 }, // cb b5
-            new Opcode{ Extension = null, DisasmFormat = "res 6,(hl)",        Size = 2 }, // cb b6
-            new Opcode{ Extension = null, DisasmFormat = "res 6,a",           Size = 2 }, // cb b7
-            new Opcode{ Extension = null, DisasmFormat = "res 7,b",           Size = 2 }, // cb b8
-            new Opcode{ Extension = null, DisasmFormat = "res 7,c",           Size = 2 }, // cb b9
-            new Opcode{ Extension = null, DisasmFormat = "res 7,d",           Size = 2 }, // cb ba
-            new Opcode{ Extension = null, DisasmFormat = "res 7,e",           Size = 2 }, // cb bb
-            new Opcode{ Extension = null, DisasmFormat = "res 7,h",           Size = 2 }, // cb bc
-            new Opcode{ Extension = null, DisasmFormat = "res 7,l",           Size = 2 }, // cb bd
-            new Opcode{ Extension = null, DisasmFormat = "res 7,(hl)",        Size = 2 }, // cb be
-            new Opcode{ Extension = null, DisasmFormat = "res 7,a",           Size = 2 }, // cb bf
-            new Opcode{ Extension = null, DisasmFormat = "set 0,b",           Size = 2 }, // cb c0
-            new Opcode{ Extension = null, DisasmFormat = "set 0,c",           Size = 2 }, // cb c1
-            new Opcode{ Extension = null, DisasmFormat = "set 0,d",           Size = 2 }, // cb c2
-            new Opcode{ Extension = null, DisasmFormat = "set 0,e",           Size = 2 }, // cb c3
-            new Opcode{ Extension = null, DisasmFormat = "set 0,h",           Size = 2 }, // cb c4
-            new Opcode{ Extension = null, DisasmFormat = "set 0,l",           Size = 2 }, // cb c5
-            new Opcode{ Extension = null, DisasmFormat = "set 0,(hl)",        Size = 2 }, // cb c6
-            new Opcode{ Extension = null, DisasmFormat = "set 0,a",           Size = 2 }, // cb c7
-            new Opcode{ Extension = null, DisasmFormat = "set 1,b",           Size = 2 }, // cb c8
-            new Opcode{ Extension = null, DisasmFormat = "set 1,c",           Size = 2 }, // cb c9
-            new Opcode{ Extension = null, DisasmFormat = "set 1,d",           Size = 2 }, // cb ca
-            new Opcode{ Extension = null, DisasmFormat = "set 1,e",           Size = 2 }, // cb cb
-            new Opcode{ Extension = null, DisasmFormat = "set 1,h",           Size = 2 }, // cb cc
-            new Opcode{ Extension = null, DisasmFormat = "set 1,l",           Size = 2 }, // cb cd
-            new Opcode{ Extension = null, DisasmFormat = "set 1,(hl)",        Size = 2 }, // cb ce
-            new Opcode{ Extension = null, DisasmFormat = "set 1,a",           Size = 2 }, // cb cf
-            new Opcode{ Extension = null, DisasmFormat = "set 2,b",           Size = 2 }, // cb d0
-            new Opcode{ Extension = null, DisasmFormat = "set 2,c",           Size = 2 }, // cb d1
-            new Opcode{ Extension = null, DisasmFormat = "set 2,d",           Size = 2 }, // cb d2
-            new Opcode{ Extension = null, DisasmFormat = "set 2,e",           Size = 2 }, // cb d3
-            new Opcode{ Extension = null, DisasmFormat = "set 2,h",           Size = 2 }, // cb d4
-            new Opcode{ Extension = null, DisasmFormat = "set 2,l",           Size = 2 }, // cb d5
-            new Opcode{ Extension = null, DisasmFormat = "set 2,(hl)",        Size = 2 }, // cb d6
-            new Opcode{ Extension = null, DisasmFormat = "set 2,a",           Size = 2 }, // cb d7
-            new Opcode{ Extension = null, DisasmFormat = "set 3,b",           Size = 2 }, // cb d8
-            new Opcode{ Extension = null, DisasmFormat = "set 3,c",           Size = 2 }, // cb d9
-            new Opcode{ Extension = null, DisasmFormat = "set 3,d",           Size = 2 }, // cb da
-            new Opcode{ Extension = null, DisasmFormat = "set 3,e",           Size = 2 }, // cb db
-            new Opcode{ Extension = null, DisasmFormat = "set 3,h",           Size = 2 }, // cb dc
-            new Opcode{ Extension = null, DisasmFormat = "set 3,l",           Size = 2 }, // cb dd
-            new Opcode{ Extension = null, DisasmFormat = "set 3,(hl)",        Size = 2 }, // cb de
-            new Opcode{ Extension = null, DisasmFormat = "set 3,a",           Size = 2 }, // cb df
-            new Opcode{ Extension = null, DisasmFormat = "set 4,b",           Size = 2 }, // cb e0
-            new Opcode{ Extension = null, DisasmFormat = "set 4,c",           Size = 2 }, // cb e1
-            new Opcode{ Extension = null, DisasmFormat = "set 4,d",           Size = 2 }, // cb e2
-            new Opcode{ Extension = null, DisasmFormat = "set 4,e",           Size = 2 }, // cb e3
-            new Opcode{ Extension = null, DisasmFormat = "set 4,h",           Size = 2 }, // cb e4
-            new Opcode{ Extension = null, DisasmFormat = "set 4,l",           Size = 2 }, // cb e5
-            new Opcode{ Extension = null, DisasmFormat = "set 4,(hl)",        Size = 2 }, // cb e6
-            new Opcode{ Extension = null, DisasmFormat = "set 4,a",           Size = 2 }, // cb e7
-            new Opcode{ Extension = null, DisasmFormat = "set 5,b",           Size = 2 }, // cb e8
-            new Opcode{ Extension = null, DisasmFormat = "set 5,c",           Size = 2 }, // cb e9
-            new Opcode{ Extension = null, DisasmFormat = "set 5,d",           Size = 2 }, // cb ea
-            new Opcode{ Extension = null, DisasmFormat = "set 5,e",           Size = 2 }, // cb eb
-            new Opcode{ Extension = null, DisasmFormat = "set 5,h",           Size = 2 }, // cb ec
-            new Opcode{ Extension = null, DisasmFormat = "set 5,l",           Size = 2 }, // cb ed
-            new Opcode{ Extension = null, DisasmFormat = "set 5,(hl)",        Size = 2 }, // cb ee
-            new Opcode{ Extension = null, DisasmFormat = "set 5,a",           Size = 2 }, // cb ef
-            new Opcode{ Extension = null, DisasmFormat = "set 6,b",           Size = 2 }, // cb f0
-            new Opcode{ Extension = null, DisasmFormat = "set 6,c",           Size = 2 }, // cb f1
-            new Opcode{ Extension = null, DisasmFormat = "set 6,d",           Size = 2 }, // cb f2
-            new Opcode{ Extension = null, DisasmFormat = "set 6,e",           Size = 2 }, // cb f3
-            new Opcode{ Extension = null, DisasmFormat = "set 6,h",           Size = 2 }, // cb f4
-            new Opcode{ Extension = null, DisasmFormat = "set 6,l",           Size = 2 }, // cb f5
-            new Opcode{ Extension = null, DisasmFormat = "set 6,(hl)",        Size = 2 }, // cb f6
-            new Opcode{ Extension = null, DisasmFormat = "set 6,a",           Size = 2 }, // cb f7
-            new Opcode{ Extension = null, DisasmFormat = "set 7,b",           Size = 2 }, // cb f8
-            new Opcode{ Extension = null, DisasmFormat = "set 7,c",           Size = 2 }, // cb f9
-            new Opcode{ Extension = null, DisasmFormat = "set 7,d",           Size = 2 }, // cb fa
-            new Opcode{ Extension = null, DisasmFormat = "set 7,e",           Size = 2 }, // cb fb
-            new Opcode{ Extension = null, DisasmFormat = "set 7,h",           Size = 2 }, // cb fc
-            new Opcode{ Extension = null, DisasmFormat = "set 7,l",           Size = 2 }, // cb fd
-            new Opcode{ Extension = null, DisasmFormat = "set 7,(hl)",        Size = 2 }, // cb fe
-            new Opcode{ Extension = null, DisasmFormat = "set 7,a",           Size = 2 }  // cb ff
-        };
-
-        Opcode[] _exOpcodes = 
-        {
-            null                                                                          , // ed 00
-            null                                                                          , // ed 01
-            null                                                                          , // ed 02
-            null                                                                          , // ed 03
-            null                                                                          , // ed 04
-            null                                                                          , // ed 05
-            null                                                                          , // ed 06
-            null                                                                          , // ed 07
-            null                                                                          , // ed 08
-            null                                                                          , // ed 09
-            null                                                                          , // ed 0a
-            null                                                                          , // ed 0b
-            null                                                                          , // ed 0c
-            null                                                                          , // ed 0d
-            null                                                                          , // ed 0e
-            null                                                                          , // ed 0f
-            null                                                                          , // ed 10
-            null                                                                          , // ed 11
-            null                                                                          , // ed 12
-            null                                                                          , // ed 13
-            null                                                                          , // ed 14
-            null                                                                          , // ed 15
-            null                                                                          , // ed 16
-            null                                                                          , // ed 17
-            null                                                                          , // ed 18
-            null                                                                          , // ed 19
-            null                                                                          , // ed 1a
-            null                                                                          , // ed 1b
-            null                                                                          , // ed 1c
-            null                                                                          , // ed 1d
-            null                                                                          , // ed 1e
-            null                                                                          , // ed 1f
-            null                                                                          , // ed 20
-            null                                                                          , // ed 21
-            null                                                                          , // ed 22
-            null                                                                          , // ed 23
-            null                                                                          , // ed 24
-            null                                                                          , // ed 25
-            null                                                                          , // ed 26
-            null                                                                          , // ed 27
-            null                                                                          , // ed 28
-            null                                                                          , // ed 29
-            null                                                                          , // ed 2a
-            null                                                                          , // ed 2b
-            null                                                                          , // ed 2c
-            null                                                                          , // ed 2d
-            null                                                                          , // ed 2e
-            null                                                                          , // ed 2f
-            null                                                                          , // ed 30
-            null                                                                          , // ed 31
-            null                                                                          , // ed 32
-            null                                                                          , // ed 33
-            null                                                                          , // ed 34
-            null                                                                          , // ed 35
-            null                                                                          , // ed 36
-            null                                                                          , // ed 37
-            null                                                                          , // ed 38
-            null                                                                          , // ed 39
-            null                                                                          , // ed 3a
-            null                                                                          , // ed 3b
-            null                                                                          , // ed 3c
-            null                                                                          , // ed 3d
-            null                                                                          , // ed 3e
-            null                                                                          , // ed 3f
-            new Opcode{ Extension = null, DisasmFormat = "in b,(c)",          Size = 2 }, // ed 40
-            new Opcode{ Extension = null, DisasmFormat = "out (c),b",         Size = 2 }, // ed 41
-            new Opcode{ Extension = null, DisasmFormat = "sbc hl,bc",         Size = 2 }, // ed 42
-            new Opcode{ Extension = null, DisasmFormat = "ld (${0:x4}),bc",   Size = 4 }, // ed 43
-            new Opcode{ Extension = null, DisasmFormat = "neg",               Size = 2 }, // ed 44
-            new Opcode{ Extension = null, DisasmFormat = "retn",              Size = 2 }, // ed 45
-            new Opcode{ Extension = null, DisasmFormat = "im 0",              Size = 2 }, // ed 46
-            new Opcode{ Extension = null, DisasmFormat = "ld i,a",            Size = 2 }, // ed 47
-            new Opcode{ Extension = null, DisasmFormat = "in c,(c)",          Size = 2 }, // ed 48
-            new Opcode{ Extension = null, DisasmFormat = "out (c),c",         Size = 2 }, // ed 49
-            new Opcode{ Extension = null, DisasmFormat = "adc hl,bc",         Size = 2 }, // ed 4a
-            new Opcode{ Extension = null, DisasmFormat = "ld bc,(${0:x4})",   Size = 4 }, // ed 4b
-            new Opcode{ Extension = null, DisasmFormat = "neg",               Size = 2 }, // ed 4c
-            new Opcode{ Extension = null, DisasmFormat = "reti",              Size = 2 }, // ed 4d
-            null,                                                                           // ed 4e
-            new Opcode{ Extension = null, DisasmFormat = "ld r,a",            Size = 2 }, // ed 4f
-            new Opcode{ Extension = null, DisasmFormat = "in d,(c)",          Size = 2 }, // ed 50
-            new Opcode{ Extension = null, DisasmFormat = "out (c),d",         Size = 2 }, // ed 51
-            new Opcode{ Extension = null, DisasmFormat = "sbc hl,de",         Size = 2 }, // ed 52
-            new Opcode{ Extension = null, DisasmFormat = "ld (${0:x4}),de",   Size = 4 }, // ed 53
-            new Opcode{ Extension = null, DisasmFormat = "neg",               Size = 2 }, // ed 54
-            new Opcode{ Extension = null, DisasmFormat = "retn",              Size = 2 }, // ed 55
-            new Opcode{ Extension = null, DisasmFormat = "im 1",              Size = 2 }, // ed 56
-            new Opcode{ Extension = null, DisasmFormat = "ld a,i",            Size = 2 }, // ed 57
-            new Opcode{ Extension = null, DisasmFormat = "in e,(c)",          Size = 2 }, // ed 58
-            new Opcode{ Extension = null, DisasmFormat = "out (c),e",         Size = 2 }, // ed 59
-            new Opcode{ Extension = null, DisasmFormat = "adc hl,de",         Size = 2 }, // ed 5a
-            new Opcode{ Extension = null, DisasmFormat = "ld de,(${0:x4})",   Size = 4 }, // ed 5b
-            new Opcode{ Extension = null, DisasmFormat = "neg",               Size = 2 }, // ed 5c
-            new Opcode{ Extension = null, DisasmFormat = "retn",              Size = 2 }, // ed 5d
-            new Opcode{ Extension = null, DisasmFormat = "im 2",              Size = 2 }, // ed 5e
-            new Opcode{ Extension = null, DisasmFormat = "ld a,r",            Size = 2 }, // ed 5f
-            new Opcode{ Extension = null, DisasmFormat = "in h,(c)",          Size = 2 }, // ed 60
-            new Opcode{ Extension = null, DisasmFormat = "out (c),h",         Size = 2 }, // ed 61
-            new Opcode{ Extension = null, DisasmFormat = "sbc hl,hl",         Size = 2 }, // ed 62
-            new Opcode{ Extension = null, DisasmFormat = "ld (${0:x4}),hl",   Size = 4 }, // ed 63
-            new Opcode{ Extension = null, DisasmFormat = "neg",               Size = 2 }, // ed 64
-            new Opcode{ Extension = null, DisasmFormat = "retn",              Size = 2 }, // ed 65
-            new Opcode{ Extension = null, DisasmFormat = "im 0",              Size = 2 }, // ed 66
-            new Opcode{ Extension = null, DisasmFormat = "rrd",               Size = 2 }, // ed 67
-            new Opcode{ Extension = null, DisasmFormat = "in l,(c)",          Size = 2 }, // ed 68
-            new Opcode{ Extension = null, DisasmFormat = "out (c),l",         Size = 2 }, // ed 69
-            new Opcode{ Extension = null, DisasmFormat = "adc hl,hl",         Size = 2 }, // ed 6a
-            new Opcode{ Extension = null, DisasmFormat = "ld hl,(${0:x4})",   Size = 4 }, // ed 6b
-            new Opcode{ Extension = null, DisasmFormat = "neg",               Size = 2 }, // ed 6c
-            new Opcode{ Extension = null, DisasmFormat = "retn",              Size = 2 }, // ed 6d
-            null,                                                                           // ed 6e
-            new Opcode{ Extension = null, DisasmFormat = "rld",               Size = 2 }, // ed 6f
-            new Opcode{ Extension = null, DisasmFormat = "in (c)",            Size = 2 }, // ed 70
-            new Opcode{ Extension = null, DisasmFormat = "out (c),0",         Size = 2 }, // ed 71
-            new Opcode{ Extension = null, DisasmFormat = "sbc hl,sp",         Size = 2 }, // ed 72
-            new Opcode{ Extension = null, DisasmFormat = "ld (${0:x4}),sp",   Size = 4 }, // ed 73
-            new Opcode{ Extension = null, DisasmFormat = "neg",               Size = 2 }, // ed 74
-            new Opcode{ Extension = null, DisasmFormat = "retn",              Size = 2 }, // ed 75
-            new Opcode{ Extension = null, DisasmFormat = "im 1",              Size = 2 }, // ed 76
-            null                                                                          , // ed 77
-            new Opcode{ Extension = null, DisasmFormat = "in a,(c)",          Size = 2 }, // ed 78
-            new Opcode{ Extension = null, DisasmFormat = "out (c),a",         Size = 2 }, // ed 79
-            new Opcode{ Extension = null, DisasmFormat = "adc hl,sp",         Size = 2 }, // ed 7a
-            new Opcode{ Extension = null, DisasmFormat = "ld sp,(${0:x4})",   Size = 4 }, // ed 7b
-            new Opcode{ Extension = null, DisasmFormat = "neg",               Size = 2 }, // ed 7c
-            new Opcode{ Extension = null, DisasmFormat = "retn",              Size = 2 }, // ed 7d
-            new Opcode{ Extension = null, DisasmFormat = "im 2",              Size = 2 }, // ed 7e
-            null                                                                          , // ed 7f
-            null                                                                          , // ed 80
-            null                                                                          , // ed 81
-            null                                                                          , // ed 82
-            null                                                                          , // ed 83
-            null                                                                          , // ed 84
-            null                                                                          , // ed 85
-            null                                                                          , // ed 86
-            null                                                                          , // ed 87
-            null                                                                          , // ed 88
-            null                                                                          , // ed 89
-            null                                                                          , // ed 8a
-            null                                                                          , // ed 8b
-            null                                                                          , // ed 8c
-            null                                                                          , // ed 8d
-            null                                                                          , // ed 8e
-            null                                                                          , // ed 8f
-            null                                                                          , // ed 90
-            null                                                                          , // ed 91
-            null                                                                          , // ed 92
-            null                                                                          , // ed 93
-            null                                                                          , // ed 94
-            null                                                                          , // ed 95
-            null                                                                          , // ed 96
-            null                                                                          , // ed 97
-            null                                                                          , // ed 98
-            null                                                                          , // ed 99
-            null                                                                          , // ed 9a
-            null                                                                          , // ed 9b
-            null                                                                          , // ed 9c
-            null                                                                          , // ed 9d
-            null                                                                          , // ed 9e
-            null                                                                          , // ed 9f
-            new Opcode{ Extension = null, DisasmFormat = "ldi",               Size = 2 }, // ed a0
-            new Opcode{ Extension = null, DisasmFormat = "cpi",               Size = 2 }, // ed a1
-            new Opcode{ Extension = null, DisasmFormat = "ini",               Size = 2 }, // ed a2
-            new Opcode{ Extension = null, DisasmFormat = "outi",              Size = 2 }, // ed a3
-            null                                                                          , // ed a4
-            null                                                                          , // ed a5
-            null                                                                          , // ed a6
-            null                                                                          , // ed a7
-            new Opcode{ Extension = null, DisasmFormat = "ldd",               Size = 2 }, // ed a8
-            new Opcode{ Extension = null, DisasmFormat = "cpd",               Size = 2 }, // ed a9
-            new Opcode{ Extension = null, DisasmFormat = "ind",               Size = 2 }, // ed aa
-            new Opcode{ Extension = null, DisasmFormat = "outd",              Size = 2 }, // ed ab
-            null                                                                          , // ed ac
-            null                                                                          , // ed ad
-            null                                                                          , // ed ae
-            null                                                                          , // ed af
-            new Opcode{ Extension = null, DisasmFormat = "ldir",              Size = 2 }, // ed b0
-            new Opcode{ Extension = null, DisasmFormat = "cpir",              Size = 2 }, // ed b1
-            new Opcode{ Extension = null, DisasmFormat = "inir",              Size = 2 }, // ed b2
-            new Opcode{ Extension = null, DisasmFormat = "otir",              Size = 2 }, // ed b3
-            null                                                                          , // ed b4
-            null                                                                          , // ed b5
-            null                                                                          , // ed b6
-            null                                                                          , // ed b7
-            new Opcode{ Extension = null, DisasmFormat = "lddr",              Size = 2 }, // ed b8
-            new Opcode{ Extension = null, DisasmFormat = "cpdr",              Size = 2 }, // ed b9
-            new Opcode{ Extension = null, DisasmFormat = "indr",              Size = 2 }, // ed ba
-            new Opcode{ Extension = null, DisasmFormat = "otdr",              Size = 2 }, // ed bb
-            null                                                                          , // ed bc
-            null                                                                          , // ed bd
-            null                                                                          , // ed be
-            null                                                                          , // ed bf
-            null                                                                          , // ed c0
-            null                                                                          , // ed c1
-            null                                                                          , // ed c2
-            null                                                                          , // ed c3
-            null                                                                          , // ed c4
-            null                                                                          , // ed c5
-            null                                                                          , // ed c6
-            null                                                                          , // ed c7
-            null                                                                          , // ed c8
-            null                                                                          , // ed c9
-            null                                                                          , // ed ca
-            null                                                                          , // ed cb
-            null                                                                          , // ed cc
-            null                                                                          , // ed cd
-            null                                                                          , // ed ce
-            null                                                                          , // ed cf
-            null                                                                          , // ed d0
-            null                                                                          , // ed d1
-            null                                                                          , // ed d2
-            null                                                                          , // ed d3
-            null                                                                          , // ed d4
-            null                                                                          , // ed d5
-            null                                                                          , // ed d6
-            null                                                                          , // ed d7
-            null                                                                          , // ed d8
-            null                                                                          , // ed d9
-            null                                                                          , // ed da
-            null                                                                          , // ed db
-            null                                                                          , // ed dc
-            null                                                                          , // ed dd
-            null                                                                          , // ed de
-            null                                                                          , // ed df
-            null                                                                          , // ed e0
-            null                                                                          , // ed e1
-            null                                                                          , // ed e2
-            null                                                                          , // ed e3
-            null                                                                          , // ed e4
-            null                                                                          , // ed e5
-            null                                                                          , // ed e6
-            null                                                                          , // ed e7
-            null                                                                          , // ed e8
-            null                                                                          , // ed e9
-            null                                                                          , // ed ea
-            null                                                                          , // ed eb
-            null                                                                          , // ed ec
-            null                                                                          , // ed ed
-            null                                                                          , // ed ee
-            null                                                                          , // ed ef
-            null                                                                          , // ed f0
-            null                                                                          , // ed f1
-            null                                                                          , // ed f2
-            null                                                                          , // ed f3
-            null                                                                          , // ed f4
-            null                                                                          , // ed f5
-            null                                                                          , // ed f6
-            null                                                                          , // ed f7
-            null                                                                          , // ed f8
-            null                                                                          , // ed f9
-            null                                                                          , // ed fa
-            null                                                                          , // ed fb
-            null                                                                          , // ed fc
-            null                                                                          , // ed fd
-            null                                                                          , // ed fe
-            null                                                                            // ed ff
-        };
-
-        Opcode[] _ixBitsOpcodes = 
-        {
-            new Opcode{ Extension = null, DisasmFormat = "rlc (ix+${0:x2}),b",    Size = 4 }, // dd cb 00
-            new Opcode{ Extension = null, DisasmFormat = "rlc (ix+${0:x2}),c",    Size = 4 }, // dd cb 01
-            new Opcode{ Extension = null, DisasmFormat = "rlc (ix+${0:x2}),d",    Size = 4 }, // dd cb 02
-            new Opcode{ Extension = null, DisasmFormat = "rlc (ix+${0:x2}),e",    Size = 4 }, // dd cb 03
-            new Opcode{ Extension = null, DisasmFormat = "rlc (ix+${0:x2}),h",    Size = 4 }, // dd cb 04
-            new Opcode{ Extension = null, DisasmFormat = "rlc (ix+${0:x2}),l",    Size = 4 }, // dd cb 05
-            new Opcode{ Extension = null, DisasmFormat = "rlc (ix+${0:x2})",      Size = 4 }, // dd cb 06
-            new Opcode{ Extension = null, DisasmFormat = "rlc (ix+${0:x2}),a",    Size = 4 }, // dd cb 07
-            new Opcode{ Extension = null, DisasmFormat = "rrc (ix+${0:x2}),b",    Size = 4 }, // dd cb 08
-            new Opcode{ Extension = null, DisasmFormat = "rrc (ix+${0:x2}),c",    Size = 4 }, // dd cb 09
-            new Opcode{ Extension = null, DisasmFormat = "rrc (ix+${0:x2}),d",    Size = 4 }, // dd cb 0a
-            new Opcode{ Extension = null, DisasmFormat = "rrc (ix+${0:x2}),e",    Size = 4 }, // dd cb 0b
-            new Opcode{ Extension = null, DisasmFormat = "rrc (ix+${0:x2}),h",    Size = 4 }, // dd cb 0c
-            new Opcode{ Extension = null, DisasmFormat = "rrc (ix+${0:x2}),l",    Size = 4 }, // dd cb 0d
-            new Opcode{ Extension = null, DisasmFormat = "rrc (ix+${0:x2})",      Size = 4 }, // dd cb 0e
-            new Opcode{ Extension = null, DisasmFormat = "rrc (ix+${0:x2}),a",    Size = 4 }, // dd cb 0f
-            new Opcode{ Extension = null, DisasmFormat = "rl (ix+${0:x2}),b",     Size = 4 }, // dd cb 10
-            new Opcode{ Extension = null, DisasmFormat = "rl (ix+${0:x2}),c",     Size = 4 }, // dd cb 11
-            new Opcode{ Extension = null, DisasmFormat = "rl (ix+${0:x2}),d",     Size = 4 }, // dd cb 12
-            new Opcode{ Extension = null, DisasmFormat = "rl (ix+${0:x2}),e",     Size = 4 }, // dd cb 13
-            new Opcode{ Extension = null, DisasmFormat = "rl (ix+${0:x2}),h",     Size = 4 }, // dd cb 14
-            new Opcode{ Extension = null, DisasmFormat = "rl (ix+${0:x2}),l",     Size = 4 }, // dd cb 15
-            new Opcode{ Extension = null, DisasmFormat = "rl (ix+${0:x2})",       Size = 4 }, // dd cb 16
-            new Opcode{ Extension = null, DisasmFormat = "rl (ix+${0:x2}),a",     Size = 4 }, // dd cb 17
-            new Opcode{ Extension = null, DisasmFormat = "rr (ix+${0:x2}),b",     Size = 4 }, // dd cb 18
-            new Opcode{ Extension = null, DisasmFormat = "rr (ix+${0:x2}),c",     Size = 4 }, // dd cb 19
-            new Opcode{ Extension = null, DisasmFormat = "rr (ix+${0:x2}),d",     Size = 4 }, // dd cb 1a
-            new Opcode{ Extension = null, DisasmFormat = "rr (ix+${0:x2}),e",     Size = 4 }, // dd cb 1b
-            new Opcode{ Extension = null, DisasmFormat = "rr (ix+${0:x2}),h",     Size = 4 }, // dd cb 1c
-            new Opcode{ Extension = null, DisasmFormat = "rr (ix+${0:x2}),l",     Size = 4 }, // dd cb 1d
-            new Opcode{ Extension = null, DisasmFormat = "rr (ix+${0:x2})",       Size = 4 }, // dd cb 1e
-            new Opcode{ Extension = null, DisasmFormat = "rr (ix+${0:x2}),a",     Size = 4 }, // dd cb 1f
-            new Opcode{ Extension = null, DisasmFormat = "sla (ix+${0:x2}),b",    Size = 4 }, // dd cb 20
-            new Opcode{ Extension = null, DisasmFormat = "sla (ix+${0:x2}),c",    Size = 4 }, // dd cb 21
-            new Opcode{ Extension = null, DisasmFormat = "sla (ix+${0:x2}),d",    Size = 4 }, // dd cb 22
-            new Opcode{ Extension = null, DisasmFormat = "sla (ix+${0:x2}),e",    Size = 4 }, // dd cb 23
-            new Opcode{ Extension = null, DisasmFormat = "sla (ix+${0:x2}),h",    Size = 4 }, // dd cb 24
-            new Opcode{ Extension = null, DisasmFormat = "sla (ix+${0:x2}),l",    Size = 4 }, // dd cb 25
-            new Opcode{ Extension = null, DisasmFormat = "sla (ix+${0:x2})",      Size = 4 }, // dd cb 26
-            new Opcode{ Extension = null, DisasmFormat = "sla (ix+${0:x2}),a",    Size = 4 }, // dd cb 27
-            new Opcode{ Extension = null, DisasmFormat = "sra (ix+${0:x2}),b",    Size = 4 }, // dd cb 28
-            new Opcode{ Extension = null, DisasmFormat = "sra (ix+${0:x2}),c",    Size = 4 }, // dd cb 29
-            new Opcode{ Extension = null, DisasmFormat = "sra (ix+${0:x2}),d",    Size = 4 }, // dd cb 2a
-            new Opcode{ Extension = null, DisasmFormat = "sra (ix+${0:x2}),e",    Size = 4 }, // dd cb 2b
-            new Opcode{ Extension = null, DisasmFormat = "sra (ix+${0:x2}),h",    Size = 4 }, // dd cb 2c
-            new Opcode{ Extension = null, DisasmFormat = "sra (ix+${0:x2}),l",    Size = 4 }, // dd cb 2d
-            new Opcode{ Extension = null, DisasmFormat = "sra (ix+${0:x2})",      Size = 4 }, // dd cb 2e
-            new Opcode{ Extension = null, DisasmFormat = "sra (ix+${0:x2}),a",    Size = 4 }, // dd cb 2f
-            new Opcode{ Extension = null, DisasmFormat = "sll (ix+${0:x2}),b",    Size = 4 }, // dd cb 30
-            new Opcode{ Extension = null, DisasmFormat = "sll (ix+${0:x2}),c",    Size = 4 }, // dd cb 31
-            new Opcode{ Extension = null, DisasmFormat = "sll (ix+${0:x2}),d",    Size = 4 }, // dd cb 32
-            new Opcode{ Extension = null, DisasmFormat = "sll (ix+${0:x2}),e",    Size = 4 }, // dd cb 33
-            new Opcode{ Extension = null, DisasmFormat = "sll (ix+${0:x2}),h",    Size = 4 }, // dd cb 34
-            new Opcode{ Extension = null, DisasmFormat = "sll (ix+${0:x2}),l",    Size = 4 }, // dd cb 35
-            new Opcode{ Extension = null, DisasmFormat = "sll (ix+${0:x2})",      Size = 4 }, // dd cb 36
-            new Opcode{ Extension = null, DisasmFormat = "sll (ix+${0:x2}),a",    Size = 4 }, // dd cb 37
-            new Opcode{ Extension = null, DisasmFormat = "srl (ix+${0:x2}),b",    Size = 4 }, // dd cb 38
-            new Opcode{ Extension = null, DisasmFormat = "srl (ix+${0:x2}),c",    Size = 4 }, // dd cb 39
-            new Opcode{ Extension = null, DisasmFormat = "srl (ix+${0:x2}),d",    Size = 4 }, // dd cb 3a
-            new Opcode{ Extension = null, DisasmFormat = "srl (ix+${0:x2}),e",    Size = 4 }, // dd cb 3b
-            new Opcode{ Extension = null, DisasmFormat = "srl (ix+${0:x2}),h",    Size = 4 }, // dd cb 3c
-            new Opcode{ Extension = null, DisasmFormat = "srl (ix+${0:x2}),l",    Size = 4 }, // dd cb 3d
-            new Opcode{ Extension = null, DisasmFormat = "srl (ix+${0:x2})",      Size = 4 }, // dd cb 3e
-            new Opcode{ Extension = null, DisasmFormat = "srl (ix+${0:x2}),a",    Size = 4 }, // dd cb 3f
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,(ix+${0:x2}),b",  Size = 4 }, // dd cb 40
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,(ix+${0:x2}),c",  Size = 4 }, // dd cb 41
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,(ix+${0:x2}),d",  Size = 4 }, // dd cb 42
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,(ix+${0:x2}),e",  Size = 4 }, // dd cb 43
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,(ix+${0:x2}),h",  Size = 4 }, // dd cb 44
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,(ix+${0:x2}),l",  Size = 4 }, // dd cb 45
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,(ix+${0:x2})",    Size = 4 }, // dd cb 46
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,(ix+${0:x2}),a",  Size = 4 }, // dd cb 47
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,(ix+${0:x2}),b",  Size = 4 }, // dd cb 48
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,(ix+${0:x2}),c",  Size = 4 }, // dd cb 49
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,(ix+${0:x2}),d",  Size = 4 }, // dd cb 4a
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,(ix+${0:x2}),e",  Size = 4 }, // dd cb 4b
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,(ix+${0:x2}),h",  Size = 4 }, // dd cb 4c
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,(ix+${0:x2}),l",  Size = 4 }, // dd cb 4d
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,(ix+${0:x2})",    Size = 4 }, // dd cb 4e
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,(ix+${0:x2}),a",  Size = 4 }, // dd cb 4f
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,(ix+${0:x2}),b",  Size = 4 }, // dd cb 50
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,(ix+${0:x2}),c",  Size = 4 }, // dd cb 51
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,(ix+${0:x2}),d",  Size = 4 }, // dd cb 52
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,(ix+${0:x2}),e",  Size = 4 }, // dd cb 53
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,(ix+${0:x2}),h",  Size = 4 }, // dd cb 54
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,(ix+${0:x2}),l",  Size = 4 }, // dd cb 55
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,(ix+${0:x2})",    Size = 4 }, // dd cb 56
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,(ix+${0:x2}),a",  Size = 4 }, // dd cb 57
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,(ix+${0:x2}),b",  Size = 4 }, // dd cb 58
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,(ix+${0:x2}),c",  Size = 4 }, // dd cb 59
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,(ix+${0:x2}),d",  Size = 4 }, // dd cb 5a
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,(ix+${0:x2}),e",  Size = 4 }, // dd cb 5b
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,(ix+${0:x2}),h",  Size = 4 }, // dd cb 5c
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,(ix+${0:x2}),l",  Size = 4 }, // dd cb 5d
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,(ix+${0:x2})",    Size = 4 }, // dd cb 5e
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,(ix+${0:x2}),a",  Size = 4 }, // dd cb 5f
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,(ix+${0:x2}),b",  Size = 4 }, // dd cb 60
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,(ix+${0:x2}),c",  Size = 4 }, // dd cb 61
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,(ix+${0:x2}),d",  Size = 4 }, // dd cb 62
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,(ix+${0:x2}),e",  Size = 4 }, // dd cb 63
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,(ix+${0:x2}),h",  Size = 4 }, // dd cb 64
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,(ix+${0:x2}),l",  Size = 4 }, // dd cb 65
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,(ix+${0:x2})",    Size = 4 }, // dd cb 66
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,(ix+${0:x2}),a",  Size = 4 }, // dd cb 67
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,(ix+${0:x2}),b",  Size = 4 }, // dd cb 68
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,(ix+${0:x2}),c",  Size = 4 }, // dd cb 69
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,(ix+${0:x2}),d",  Size = 4 }, // dd cb 6a
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,(ix+${0:x2}),e",  Size = 4 }, // dd cb 6b
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,(ix+${0:x2}),h",  Size = 4 }, // dd cb 6c
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,(ix+${0:x2}),l",  Size = 4 }, // dd cb 6d
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,(ix+${0:x2})",    Size = 4 }, // dd cb 6e
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,(ix+${0:x2}),a",  Size = 4 }, // dd cb 6f
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,(ix+${0:x2}),b",  Size = 4 }, // dd cb 70
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,(ix+${0:x2}),c",  Size = 4 }, // dd cb 71
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,(ix+${0:x2}),d",  Size = 4 }, // dd cb 72
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,(ix+${0:x2}),e",  Size = 4 }, // dd cb 73
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,(ix+${0:x2}),h",  Size = 4 }, // dd cb 74
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,(ix+${0:x2}),l",  Size = 4 }, // dd cb 75
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,(ix+${0:x2})",    Size = 4 }, // dd cb 76
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,(ix+${0:x2}),a",  Size = 4 }, // dd cb 77
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,(ix+${0:x2}),b",  Size = 4 }, // dd cb 78
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,(ix+${0:x2}),c",  Size = 4 }, // dd cb 79
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,(ix+${0:x2}),d",  Size = 4 }, // dd cb 7a
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,(ix+${0:x2}),e",  Size = 4 }, // dd cb 7b
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,(ix+${0:x2}),h",  Size = 4 }, // dd cb 7c
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,(ix+${0:x2}),l",  Size = 4 }, // dd cb 7d
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,(ix+${0:x2})",    Size = 4 }, // dd cb 7e
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,(ix+${0:x2}),a",  Size = 4 }, // dd cb 7f
-            new Opcode{ Extension = null, DisasmFormat = "res 0,(ix+${0:x2}),b",  Size = 4 }, // dd cb 80
-            new Opcode{ Extension = null, DisasmFormat = "res 0,(ix+${0:x2}),c",  Size = 4 }, // dd cb 81
-            new Opcode{ Extension = null, DisasmFormat = "res 0,(ix+${0:x2}),d",  Size = 4 }, // dd cb 82
-            new Opcode{ Extension = null, DisasmFormat = "res 0,(ix+${0:x2}),e",  Size = 4 }, // dd cb 83
-            new Opcode{ Extension = null, DisasmFormat = "res 0,(ix+${0:x2}),h",  Size = 4 }, // dd cb 84
-            new Opcode{ Extension = null, DisasmFormat = "res 0,(ix+${0:x2}),l",  Size = 4 }, // dd cb 85
-            new Opcode{ Extension = null, DisasmFormat = "res 0,(ix+${0:x2})",    Size = 4 }, // dd cb 86
-            new Opcode{ Extension = null, DisasmFormat = "res 0,(ix+${0:x2}),a",  Size = 4 }, // dd cb 87
-            new Opcode{ Extension = null, DisasmFormat = "res 1,(ix+${0:x2}),b",  Size = 4 }, // dd cb 88
-            new Opcode{ Extension = null, DisasmFormat = "res 1,(ix+${0:x2}),c",  Size = 4 }, // dd cb 89
-            new Opcode{ Extension = null, DisasmFormat = "res 1,(ix+${0:x2}),d",  Size = 4 }, // dd cb 8a
-            new Opcode{ Extension = null, DisasmFormat = "res 1,(ix+${0:x2}),e",  Size = 4 }, // dd cb 8b
-            new Opcode{ Extension = null, DisasmFormat = "res 1,(ix+${0:x2}),h",  Size = 4 }, // dd cb 8c
-            new Opcode{ Extension = null, DisasmFormat = "res 1,(ix+${0:x2}),l",  Size = 4 }, // dd cb 8d
-            new Opcode{ Extension = null, DisasmFormat = "res 1,(ix+${0:x2})",    Size = 4 }, // dd cb 8e
-            new Opcode{ Extension = null, DisasmFormat = "res 1,(ix+${0:x2}),a",  Size = 4 }, // dd cb 8f
-            new Opcode{ Extension = null, DisasmFormat = "res 2,(ix+${0:x2}),b",  Size = 4 }, // dd cb 90
-            new Opcode{ Extension = null, DisasmFormat = "res 2,(ix+${0:x2}),c",  Size = 4 }, // dd cb 91
-            new Opcode{ Extension = null, DisasmFormat = "res 2,(ix+${0:x2}),d",  Size = 4 }, // dd cb 92
-            new Opcode{ Extension = null, DisasmFormat = "res 2,(ix+${0:x2}),e",  Size = 4 }, // dd cb 93
-            new Opcode{ Extension = null, DisasmFormat = "res 2,(ix+${0:x2}),h",  Size = 4 }, // dd cb 94
-            new Opcode{ Extension = null, DisasmFormat = "res 2,(ix+${0:x2}),l",  Size = 4 }, // dd cb 95
-            new Opcode{ Extension = null, DisasmFormat = "res 2,(ix+${0:x2})",    Size = 4 }, // dd cb 96
-            new Opcode{ Extension = null, DisasmFormat = "res 2,(ix+${0:x2}),a",  Size = 4 }, // dd cb 97
-            new Opcode{ Extension = null, DisasmFormat = "res 3,(ix+${0:x2}),b",  Size = 4 }, // dd cb 98
-            new Opcode{ Extension = null, DisasmFormat = "res 3,(ix+${0:x2}),c",  Size = 4 }, // dd cb 99
-            new Opcode{ Extension = null, DisasmFormat = "res 3,(ix+${0:x2}),d",  Size = 4 }, // dd cb 9a
-            new Opcode{ Extension = null, DisasmFormat = "res 3,(ix+${0:x2}),e",  Size = 4 }, // dd cb 9b
-            new Opcode{ Extension = null, DisasmFormat = "res 3,(ix+${0:x2}),h",  Size = 4 }, // dd cb 9c
-            new Opcode{ Extension = null, DisasmFormat = "res 3,(ix+${0:x2}),l",  Size = 4 }, // dd cb 9d
-            new Opcode{ Extension = null, DisasmFormat = "res 3,(ix+${0:x2})",    Size = 4 }, // dd cb 9e
-            new Opcode{ Extension = null, DisasmFormat = "res 3,(ix+${0:x2}),a",  Size = 4 }, // dd cb 9f
-            new Opcode{ Extension = null, DisasmFormat = "res 4,(ix+${0:x2}),b",  Size = 4 }, // dd cb a0
-            new Opcode{ Extension = null, DisasmFormat = "res 4,(ix+${0:x2}),c",  Size = 4 }, // dd cb a1
-            new Opcode{ Extension = null, DisasmFormat = "res 4,(ix+${0:x2}),d",  Size = 4 }, // dd cb a2
-            new Opcode{ Extension = null, DisasmFormat = "res 4,(ix+${0:x2}),e",  Size = 4 }, // dd cb a3
-            new Opcode{ Extension = null, DisasmFormat = "res 4,(ix+${0:x2}),h",  Size = 4 }, // dd cb a4
-            new Opcode{ Extension = null, DisasmFormat = "res 4,(ix+${0:x2}),l",  Size = 4 }, // dd cb a5
-            new Opcode{ Extension = null, DisasmFormat = "res 4,(ix+${0:x2})",    Size = 4 }, // dd cb a6
-            new Opcode{ Extension = null, DisasmFormat = "res 4,(ix+${0:x2}),a",  Size = 4 }, // dd cb a7
-            new Opcode{ Extension = null, DisasmFormat = "res 5,(ix+${0:x2}),b",  Size = 4 }, // dd cb a8
-            new Opcode{ Extension = null, DisasmFormat = "res 5,(ix+${0:x2}),c",  Size = 4 }, // dd cb a9
-            new Opcode{ Extension = null, DisasmFormat = "res 5,(ix+${0:x2}),d",  Size = 4 }, // dd cb aa
-            new Opcode{ Extension = null, DisasmFormat = "res 5,(ix+${0:x2}),e",  Size = 4 }, // dd cb ab
-            new Opcode{ Extension = null, DisasmFormat = "res 5,(ix+${0:x2}),h",  Size = 4 }, // dd cb ac
-            new Opcode{ Extension = null, DisasmFormat = "res 5,(ix+${0:x2}),l",  Size = 4 }, // dd cb ad
-            new Opcode{ Extension = null, DisasmFormat = "res 5,(ix+${0:x2})",    Size = 4 }, // dd cb ae
-            new Opcode{ Extension = null, DisasmFormat = "res 5,(ix+${0:x2}),a",  Size = 4 }, // dd cb af
-            new Opcode{ Extension = null, DisasmFormat = "res 6,(ix+${0:x2}),b",  Size = 4 }, // dd cb b0
-            new Opcode{ Extension = null, DisasmFormat = "res 6,(ix+${0:x2}),c",  Size = 4 }, // dd cb b1
-            new Opcode{ Extension = null, DisasmFormat = "res 6,(ix+${0:x2}),d",  Size = 4 }, // dd cb b2
-            new Opcode{ Extension = null, DisasmFormat = "res 6,(ix+${0:x2}),e",  Size = 4 }, // dd cb b3
-            new Opcode{ Extension = null, DisasmFormat = "res 6,(ix+${0:x2}),h",  Size = 4 }, // dd cb b4
-            new Opcode{ Extension = null, DisasmFormat = "res 6,(ix+${0:x2}),l",  Size = 4 }, // dd cb b5
-            new Opcode{ Extension = null, DisasmFormat = "res 6,(ix+${0:x2})",    Size = 4 }, // dd cb b6
-            new Opcode{ Extension = null, DisasmFormat = "res 6,(ix+${0:x2}),a",  Size = 4 }, // dd cb b7
-            new Opcode{ Extension = null, DisasmFormat = "res 7,(ix+${0:x2}),b",  Size = 4 }, // dd cb b8
-            new Opcode{ Extension = null, DisasmFormat = "res 7,(ix+${0:x2}),c",  Size = 4 }, // dd cb b9
-            new Opcode{ Extension = null, DisasmFormat = "res 7,(ix+${0:x2}),d",  Size = 4 }, // dd cb ba
-            new Opcode{ Extension = null, DisasmFormat = "res 7,(ix+${0:x2}),e",  Size = 4 }, // dd cb bb
-            new Opcode{ Extension = null, DisasmFormat = "res 7,(ix+${0:x2}),h",  Size = 4 }, // dd cb bc
-            new Opcode{ Extension = null, DisasmFormat = "res 7,(ix+${0:x2}),l",  Size = 4 }, // dd cb bd
-            new Opcode{ Extension = null, DisasmFormat = "res 7,(ix+${0:x2})",    Size = 4 }, // dd cb be
-            new Opcode{ Extension = null, DisasmFormat = "res 7,(ix+${0:x2}),a",  Size = 4 }, // dd cb bf
-            new Opcode{ Extension = null, DisasmFormat = "set 0,(ix+${0:x2}),b",  Size = 4 }, // dd cb c0
-            new Opcode{ Extension = null, DisasmFormat = "set 0,(ix+${0:x2}),c",  Size = 4 }, // dd cb c1
-            new Opcode{ Extension = null, DisasmFormat = "set 0,(ix+${0:x2}),d",  Size = 4 }, // dd cb c2
-            new Opcode{ Extension = null, DisasmFormat = "set 0,(ix+${0:x2}),e",  Size = 4 }, // dd cb c3
-            new Opcode{ Extension = null, DisasmFormat = "set 0,(ix+${0:x2}),h",  Size = 4 }, // dd cb c4
-            new Opcode{ Extension = null, DisasmFormat = "set 0,(ix+${0:x2}),l",  Size = 4 }, // dd cb c5
-            new Opcode{ Extension = null, DisasmFormat = "set 0,(ix+${0:x2})",    Size = 4 }, // dd cb c6
-            new Opcode{ Extension = null, DisasmFormat = "set 0,(ix+${0:x2}),a",  Size = 4 }, // dd cb c7
-            new Opcode{ Extension = null, DisasmFormat = "set 1,(ix+${0:x2}),b",  Size = 4 }, // dd cb c8
-            new Opcode{ Extension = null, DisasmFormat = "set 1,(ix+${0:x2}),c",  Size = 4 }, // dd cb c9
-            new Opcode{ Extension = null, DisasmFormat = "set 1,(ix+${0:x2}),d",  Size = 4 }, // dd cb ca
-            new Opcode{ Extension = null, DisasmFormat = "set 1,(ix+${0:x2}),e",  Size = 4 }, // dd cb cb
-            new Opcode{ Extension = null, DisasmFormat = "set 1,(ix+${0:x2}),h",  Size = 4 }, // dd cb cc
-            new Opcode{ Extension = null, DisasmFormat = "set 1,(ix+${0:x2}),l",  Size = 4 }, // dd cb cd
-            new Opcode{ Extension = null, DisasmFormat = "set 1,(ix+${0:x2})",    Size = 4 }, // dd cb ce
-            new Opcode{ Extension = null, DisasmFormat = "set 1,(ix+${0:x2}),a",  Size = 4 }, // dd cb cf
-            new Opcode{ Extension = null, DisasmFormat = "set 2,(ix+${0:x2}),b",  Size = 4 }, // dd cb d0
-            new Opcode{ Extension = null, DisasmFormat = "set 2,(ix+${0:x2}),c",  Size = 4 }, // dd cb d1
-            new Opcode{ Extension = null, DisasmFormat = "set 2,(ix+${0:x2}),d",  Size = 4 }, // dd cb d2
-            new Opcode{ Extension = null, DisasmFormat = "set 2,(ix+${0:x2}),e",  Size = 4 }, // dd cb d3
-            new Opcode{ Extension = null, DisasmFormat = "set 2,(ix+${0:x2}),h",  Size = 4 }, // dd cb d4
-            new Opcode{ Extension = null, DisasmFormat = "set 2,(ix+${0:x2}),l",  Size = 4 }, // dd cb d5
-            new Opcode{ Extension = null, DisasmFormat = "set 2,(ix+${0:x2})",    Size = 4 }, // dd cb d6
-            new Opcode{ Extension = null, DisasmFormat = "set 2,(ix+${0:x2}),a",  Size = 4 }, // dd cb d7
-            new Opcode{ Extension = null, DisasmFormat = "set 3,(ix+${0:x2}),b",  Size = 4 }, // dd cb d8
-            new Opcode{ Extension = null, DisasmFormat = "set 3,(ix+${0:x2}),c",  Size = 4 }, // dd cb d9
-            new Opcode{ Extension = null, DisasmFormat = "set 3,(ix+${0:x2}),d",  Size = 4 }, // dd cb da
-            new Opcode{ Extension = null, DisasmFormat = "set 3,(ix+${0:x2}),e",  Size = 4 }, // dd cb db
-            new Opcode{ Extension = null, DisasmFormat = "set 3,(ix+${0:x2}),h",  Size = 4 }, // dd cb dc
-            new Opcode{ Extension = null, DisasmFormat = "set 3,(ix+${0:x2}),l",  Size = 4 }, // dd cb dd
-            new Opcode{ Extension = null, DisasmFormat = "set 3,(ix+${0:x2})",    Size = 4 }, // dd cb de
-            new Opcode{ Extension = null, DisasmFormat = "set 3,(ix+${0:x2}),a",  Size = 4 }, // dd cb df
-            new Opcode{ Extension = null, DisasmFormat = "set 4,(ix+${0:x2}),b",  Size = 4 }, // dd cb e0
-            new Opcode{ Extension = null, DisasmFormat = "set 4,(ix+${0:x2}),c",  Size = 4 }, // dd cb e1
-            new Opcode{ Extension = null, DisasmFormat = "set 4,(ix+${0:x2}),d",  Size = 4 }, // dd cb e2
-            new Opcode{ Extension = null, DisasmFormat = "set 4,(ix+${0:x2}),e",  Size = 4 }, // dd cb e3
-            new Opcode{ Extension = null, DisasmFormat = "set 4,(ix+${0:x2}),h",  Size = 4 }, // dd cb e4
-            new Opcode{ Extension = null, DisasmFormat = "set 4,(ix+${0:x2}),l",  Size = 4 }, // dd cb e5
-            new Opcode{ Extension = null, DisasmFormat = "set 4,(ix+${0:x2})",    Size = 4 }, // dd cb e6
-            new Opcode{ Extension = null, DisasmFormat = "set 4,(ix+${0:x2}),a",  Size = 4 }, // dd cb e7
-            new Opcode{ Extension = null, DisasmFormat = "set 5,(ix+${0:x2}),b",  Size = 4 }, // dd cb e8
-            new Opcode{ Extension = null, DisasmFormat = "set 5,(ix+${0:x2}),c",  Size = 4 }, // dd cb e9
-            new Opcode{ Extension = null, DisasmFormat = "set 5,(ix+${0:x2}),d",  Size = 4 }, // dd cb ea
-            new Opcode{ Extension = null, DisasmFormat = "set 5,(ix+${0:x2}),e",  Size = 4 }, // dd cb eb
-            new Opcode{ Extension = null, DisasmFormat = "set 5,(ix+${0:x2}),h",  Size = 4 }, // dd cb ec
-            new Opcode{ Extension = null, DisasmFormat = "set 5,(ix+${0:x2}),l",  Size = 4 }, // dd cb ed
-            new Opcode{ Extension = null, DisasmFormat = "set 5,(ix+${0:x2})",    Size = 4 }, // dd cb ee
-            new Opcode{ Extension = null, DisasmFormat = "set 5,(ix+${0:x2}),a",  Size = 4 }, // dd cb ef
-            new Opcode{ Extension = null, DisasmFormat = "set 6,(ix+${0:x2}),b",  Size = 4 }, // dd cb f0
-            new Opcode{ Extension = null, DisasmFormat = "set 6,(ix+${0:x2}),c",  Size = 4 }, // dd cb f1
-            new Opcode{ Extension = null, DisasmFormat = "set 6,(ix+${0:x2}),d",  Size = 4 }, // dd cb f2
-            new Opcode{ Extension = null, DisasmFormat = "set 6,(ix+${0:x2}),e",  Size = 4 }, // dd cb f3
-            new Opcode{ Extension = null, DisasmFormat = "set 6,(ix+${0:x2}),h",  Size = 4 }, // dd cb f4
-            new Opcode{ Extension = null, DisasmFormat = "set 6,(ix+${0:x2}),l",  Size = 4 }, // dd cb f5
-            new Opcode{ Extension = null, DisasmFormat = "set 6,(ix+${0:x2})",    Size = 4 }, // dd cb f6
-            new Opcode{ Extension = null, DisasmFormat = "set 6,(ix+${0:x2}),a",  Size = 4 }, // dd cb f7
-            new Opcode{ Extension = null, DisasmFormat = "set 7,(ix+${0:x2}),b",  Size = 4 }, // dd cb f8
-            new Opcode{ Extension = null, DisasmFormat = "set 7,(ix+${0:x2}),c",  Size = 4 }, // dd cb f9
-            new Opcode{ Extension = null, DisasmFormat = "set 7,(ix+${0:x2}),d",  Size = 4 }, // dd cb fa
-            new Opcode{ Extension = null, DisasmFormat = "set 7,(ix+${0:x2}),e",  Size = 4 }, // dd cb fb
-            new Opcode{ Extension = null, DisasmFormat = "set 7,(ix+${0:x2}),h",  Size = 4 }, // dd cb fc
-            new Opcode{ Extension = null, DisasmFormat = "set 7,(ix+${0:x2}),l",  Size = 4 }, // dd cb fd
-            new Opcode{ Extension = null, DisasmFormat = "set 7,(ix+${0:x2})",    Size = 4 }, // dd cb fe
-            new Opcode{ Extension = null, DisasmFormat = "set 7,(ix+${0:x2}),a",  Size = 4 }  // dd cb ff
-        };
-
-        Opcode[] _iyBitsOpcodes =
-        {
-            new Opcode{ Extension = null, DisasmFormat = "rlc (iy+${0:x2}),b",    Size = 4 }, // fd cb 00
-            new Opcode{ Extension = null, DisasmFormat = "rlc (iy+${0:x2}),c",    Size = 4 }, // fd cb 01
-            new Opcode{ Extension = null, DisasmFormat = "rlc (iy+${0:x2}),d",    Size = 4 }, // fd cb 02
-            new Opcode{ Extension = null, DisasmFormat = "rlc (iy+${0:x2}),e",    Size = 4 }, // fd cb 03
-            new Opcode{ Extension = null, DisasmFormat = "rlc (iy+${0:x2}),h",    Size = 4 }, // fd cb 04
-            new Opcode{ Extension = null, DisasmFormat = "rlc (iy+${0:x2}),l",    Size = 4 }, // fd cb 05
-            new Opcode{ Extension = null, DisasmFormat = "rlc (iy+${0:x2})",      Size = 4 }, // fd cb 06
-            new Opcode{ Extension = null, DisasmFormat = "rlc (iy+${0:x2}),a",    Size = 4 }, // fd cb 07
-            new Opcode{ Extension = null, DisasmFormat = "rrc (iy+${0:x2}),b",    Size = 4 }, // fd cb 08
-            new Opcode{ Extension = null, DisasmFormat = "rrc (iy+${0:x2}),c",    Size = 4 }, // fd cb 09
-            new Opcode{ Extension = null, DisasmFormat = "rrc (iy+${0:x2}),d",    Size = 4 }, // fd cb 0a
-            new Opcode{ Extension = null, DisasmFormat = "rrc (iy+${0:x2}),e",    Size = 4 }, // fd cb 0b
-            new Opcode{ Extension = null, DisasmFormat = "rrc (iy+${0:x2}),h",    Size = 4 }, // fd cb 0c
-            new Opcode{ Extension = null, DisasmFormat = "rrc (iy+${0:x2}),l",    Size = 4 }, // fd cb 0d
-            new Opcode{ Extension = null, DisasmFormat = "rrc (iy+${0:x2})",      Size = 4 }, // fd cb 0e
-            new Opcode{ Extension = null, DisasmFormat = "rrc (iy+${0:x2}),a",    Size = 4 }, // fd cb 0f
-            new Opcode{ Extension = null, DisasmFormat = "rl (iy+${0:x2}),b",     Size = 4 }, // fd cb 10
-            new Opcode{ Extension = null, DisasmFormat = "rl (iy+${0:x2}),c",     Size = 4 }, // fd cb 11
-            new Opcode{ Extension = null, DisasmFormat = "rl (iy+${0:x2}),d",     Size = 4 }, // fd cb 12
-            new Opcode{ Extension = null, DisasmFormat = "rl (iy+${0:x2}),e",     Size = 4 }, // fd cb 13
-            new Opcode{ Extension = null, DisasmFormat = "rl (iy+${0:x2}),h",     Size = 4 }, // fd cb 14
-            new Opcode{ Extension = null, DisasmFormat = "rl (iy+${0:x2}),l",     Size = 4 }, // fd cb 15
-            new Opcode{ Extension = null, DisasmFormat = "rl (iy+${0:x2})",       Size = 4 }, // fd cb 16
-            new Opcode{ Extension = null, DisasmFormat = "rl (iy+${0:x2}),a",     Size = 4 }, // fd cb 17
-            new Opcode{ Extension = null, DisasmFormat = "rr (iy+${0:x2}),b",     Size = 4 }, // fd cb 18
-            new Opcode{ Extension = null, DisasmFormat = "rr (iy+${0:x2}),c",     Size = 4 }, // fd cb 19
-            new Opcode{ Extension = null, DisasmFormat = "rr (iy+${0:x2}),d",     Size = 4 }, // fd cb 1a
-            new Opcode{ Extension = null, DisasmFormat = "rr (iy+${0:x2}),e",     Size = 4 }, // fd cb 1b
-            new Opcode{ Extension = null, DisasmFormat = "rr (iy+${0:x2}),h",     Size = 4 }, // fd cb 1c
-            new Opcode{ Extension = null, DisasmFormat = "rr (iy+${0:x2}),l",     Size = 4 }, // fd cb 1d
-            new Opcode{ Extension = null, DisasmFormat = "rr (iy+${0:x2})",       Size = 4 }, // fd cb 1e
-            new Opcode{ Extension = null, DisasmFormat = "rr (iy+${0:x2}),a",     Size = 4 }, // fd cb 1f
-            new Opcode{ Extension = null, DisasmFormat = "sla (iy+${0:x2}),b",    Size = 4 }, // fd cb 20
-            new Opcode{ Extension = null, DisasmFormat = "sla (iy+${0:x2}),c",    Size = 4 }, // fd cb 21
-            new Opcode{ Extension = null, DisasmFormat = "sla (iy+${0:x2}),d",    Size = 4 }, // fd cb 22
-            new Opcode{ Extension = null, DisasmFormat = "sla (iy+${0:x2}),e",    Size = 4 }, // fd cb 23
-            new Opcode{ Extension = null, DisasmFormat = "sla (iy+${0:x2}),h",    Size = 4 }, // fd cb 24
-            new Opcode{ Extension = null, DisasmFormat = "sla (iy+${0:x2}),l",    Size = 4 }, // fd cb 25
-            new Opcode{ Extension = null, DisasmFormat = "sla (iy+${0:x2})",      Size = 4 }, // fd cb 26
-            new Opcode{ Extension = null, DisasmFormat = "sla (iy+${0:x2}),a",    Size = 4 }, // fd cb 27
-            new Opcode{ Extension = null, DisasmFormat = "sra (iy+${0:x2}),b",    Size = 4 }, // fd cb 28
-            new Opcode{ Extension = null, DisasmFormat = "sra (iy+${0:x2}),c",    Size = 4 }, // fd cb 29
-            new Opcode{ Extension = null, DisasmFormat = "sra (iy+${0:x2}),d",    Size = 4 }, // fd cb 2a
-            new Opcode{ Extension = null, DisasmFormat = "sra (iy+${0:x2}),e",    Size = 4 }, // fd cb 2b
-            new Opcode{ Extension = null, DisasmFormat = "sra (iy+${0:x2}),h",    Size = 4 }, // fd cb 2c
-            new Opcode{ Extension = null, DisasmFormat = "sra (iy+${0:x2}),l",    Size = 4 }, // fd cb 2d
-            new Opcode{ Extension = null, DisasmFormat = "sra (iy+${0:x2})",      Size = 4 }, // fd cb 2e
-            new Opcode{ Extension = null, DisasmFormat = "sra (iy+${0:x2}),a",    Size = 4 }, // fd cb 2f
-            new Opcode{ Extension = null, DisasmFormat = "sll (iy+${0:x2}),b",    Size = 4 }, // fd cb 30
-            new Opcode{ Extension = null, DisasmFormat = "sll (iy+${0:x2}),c",    Size = 4 }, // fd cb 31
-            new Opcode{ Extension = null, DisasmFormat = "sll (iy+${0:x2}),d",    Size = 4 }, // fd cb 32
-            new Opcode{ Extension = null, DisasmFormat = "sll (iy+${0:x2}),e",    Size = 4 }, // fd cb 33
-            new Opcode{ Extension = null, DisasmFormat = "sll (iy+${0:x2}),h",    Size = 4 }, // fd cb 34
-            new Opcode{ Extension = null, DisasmFormat = "sll (iy+${0:x2}),l",    Size = 4 }, // fd cb 35
-            new Opcode{ Extension = null, DisasmFormat = "sll (iy+${0:x2})",      Size = 4 }, // fd cb 36
-            new Opcode{ Extension = null, DisasmFormat = "sll (iy+${0:x2}),a",    Size = 4 }, // fd cb 37
-            new Opcode{ Extension = null, DisasmFormat = "srl (iy+${0:x2}),b",    Size = 4 }, // fd cb 38
-            new Opcode{ Extension = null, DisasmFormat = "srl (iy+${0:x2}),c",    Size = 4 }, // fd cb 39
-            new Opcode{ Extension = null, DisasmFormat = "srl (iy+${0:x2}),d",    Size = 4 }, // fd cb 3a
-            new Opcode{ Extension = null, DisasmFormat = "srl (iy+${0:x2}),e",    Size = 4 }, // fd cb 3b
-            new Opcode{ Extension = null, DisasmFormat = "srl (iy+${0:x2}),h",    Size = 4 }, // fd cb 3c
-            new Opcode{ Extension = null, DisasmFormat = "srl (iy+${0:x2}),l",    Size = 4 }, // fd cb 3d
-            new Opcode{ Extension = null, DisasmFormat = "srl (iy+${0:x2})",      Size = 4 }, // fd cb 3e
-            new Opcode{ Extension = null, DisasmFormat = "srl (iy+${0:x2}),a",    Size = 4 }, // fd cb 3f
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,(iy+${0:x2}),b",  Size = 4 }, // fd cb 40
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,(iy+${0:x2}),c",  Size = 4 }, // fd cb 41
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,(iy+${0:x2}),d",  Size = 4 }, // fd cb 42
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,(iy+${0:x2}),e",  Size = 4 }, // fd cb 43
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,(iy+${0:x2}),h",  Size = 4 }, // fd cb 44
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,(iy+${0:x2}),l",  Size = 4 }, // fd cb 45
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,(iy+${0:x2})",    Size = 4 }, // fd cb 46
-            new Opcode{ Extension = null, DisasmFormat = "bit 0,(iy+${0:x2}),a",  Size = 4 }, // fd cb 47
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,(iy+${0:x2}),b",  Size = 4 }, // fd cb 48
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,(iy+${0:x2}),c",  Size = 4 }, // fd cb 49
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,(iy+${0:x2}),d",  Size = 4 }, // fd cb 4a
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,(iy+${0:x2}),e",  Size = 4 }, // fd cb 4b
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,(iy+${0:x2}),h",  Size = 4 }, // fd cb 4c
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,(iy+${0:x2}),l",  Size = 4 }, // fd cb 4d
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,(iy+${0:x2})",    Size = 4 }, // fd cb 4e
-            new Opcode{ Extension = null, DisasmFormat = "bit 1,(iy+${0:x2}),a",  Size = 4 }, // fd cb 4f
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,(iy+${0:x2}),b",  Size = 4 }, // fd cb 50
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,(iy+${0:x2}),c",  Size = 4 }, // fd cb 51
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,(iy+${0:x2}),d",  Size = 4 }, // fd cb 52
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,(iy+${0:x2}),e",  Size = 4 }, // fd cb 53
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,(iy+${0:x2}),h",  Size = 4 }, // fd cb 54
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,(iy+${0:x2}),l",  Size = 4 }, // fd cb 55
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,(iy+${0:x2})",    Size = 4 }, // fd cb 56
-            new Opcode{ Extension = null, DisasmFormat = "bit 2,(iy+${0:x2}),a",  Size = 4 }, // fd cb 57
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,(iy+${0:x2}),b",  Size = 4 }, // fd cb 58
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,(iy+${0:x2}),c",  Size = 4 }, // fd cb 59
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,(iy+${0:x2}),d",  Size = 4 }, // fd cb 5a
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,(iy+${0:x2}),e",  Size = 4 }, // fd cb 5b
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,(iy+${0:x2}),h",  Size = 4 }, // fd cb 5c
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,(iy+${0:x2}),l",  Size = 4 }, // fd cb 5d
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,(iy+${0:x2})",    Size = 4 }, // fd cb 5e
-            new Opcode{ Extension = null, DisasmFormat = "bit 3,(iy+${0:x2}),a",  Size = 4 }, // fd cb 5f
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,(iy+${0:x2}),b",  Size = 4 }, // fd cb 60
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,(iy+${0:x2}),c",  Size = 4 }, // fd cb 61
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,(iy+${0:x2}),d",  Size = 4 }, // fd cb 62
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,(iy+${0:x2}),e",  Size = 4 }, // fd cb 63
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,(iy+${0:x2}),h",  Size = 4 }, // fd cb 64
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,(iy+${0:x2}),l",  Size = 4 }, // fd cb 65
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,(iy+${0:x2})",    Size = 4 }, // fd cb 66
-            new Opcode{ Extension = null, DisasmFormat = "bit 4,(iy+${0:x2}),a",  Size = 4 }, // fd cb 67
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,(iy+${0:x2}),b",  Size = 4 }, // fd cb 68
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,(iy+${0:x2}),c",  Size = 4 }, // fd cb 69
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,(iy+${0:x2}),d",  Size = 4 }, // fd cb 6a
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,(iy+${0:x2}),e",  Size = 4 }, // fd cb 6b
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,(iy+${0:x2}),h",  Size = 4 }, // fd cb 6c
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,(iy+${0:x2}),l",  Size = 4 }, // fd cb 6d
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,(iy+${0:x2})",    Size = 4 }, // fd cb 6e
-            new Opcode{ Extension = null, DisasmFormat = "bit 5,(iy+${0:x2}),a",  Size = 4 }, // fd cb 6f
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,(iy+${0:x2}),b",  Size = 4 }, // fd cb 70
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,(iy+${0:x2}),c",  Size = 4 }, // fd cb 71
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,(iy+${0:x2}),d",  Size = 4 }, // fd cb 72
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,(iy+${0:x2}),e",  Size = 4 }, // fd cb 73
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,(iy+${0:x2}),h",  Size = 4 }, // fd cb 74
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,(iy+${0:x2}),l",  Size = 4 }, // fd cb 75
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,(iy+${0:x2})",    Size = 4 }, // fd cb 76
-            new Opcode{ Extension = null, DisasmFormat = "bit 6,(iy+${0:x2}),a",  Size = 4 }, // fd cb 77
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,(iy+${0:x2}),b",  Size = 4 }, // fd cb 78
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,(iy+${0:x2}),c",  Size = 4 }, // fd cb 79
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,(iy+${0:x2}),d",  Size = 4 }, // fd cb 7a
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,(iy+${0:x2}),e",  Size = 4 }, // fd cb 7b
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,(iy+${0:x2}),h",  Size = 4 }, // fd cb 7c
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,(iy+${0:x2}),l",  Size = 4 }, // fd cb 7d
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,(iy+${0:x2})",    Size = 4 }, // fd cb 7e
-            new Opcode{ Extension = null, DisasmFormat = "bit 7,(iy+${0:x2}),a",  Size = 4 }, // fd cb 7f
-            new Opcode{ Extension = null, DisasmFormat = "res 0,(iy+${0:x2}),b",  Size = 4 }, // fd cb 80
-            new Opcode{ Extension = null, DisasmFormat = "res 0,(iy+${0:x2}),c",  Size = 4 }, // fd cb 81
-            new Opcode{ Extension = null, DisasmFormat = "res 0,(iy+${0:x2}),d",  Size = 4 }, // fd cb 82
-            new Opcode{ Extension = null, DisasmFormat = "res 0,(iy+${0:x2}),e",  Size = 4 }, // fd cb 83
-            new Opcode{ Extension = null, DisasmFormat = "res 0,(iy+${0:x2}),h",  Size = 4 }, // fd cb 84
-            new Opcode{ Extension = null, DisasmFormat = "res 0,(iy+${0:x2}),l",  Size = 4 }, // fd cb 85
-            new Opcode{ Extension = null, DisasmFormat = "res 0,(iy+${0:x2})",    Size = 4 }, // fd cb 86
-            new Opcode{ Extension = null, DisasmFormat = "res 0,(iy+${0:x2}),a",  Size = 4 }, // fd cb 87
-            new Opcode{ Extension = null, DisasmFormat = "res 1,(iy+${0:x2}),b",  Size = 4 }, // fd cb 88
-            new Opcode{ Extension = null, DisasmFormat = "res 1,(iy+${0:x2}),c",  Size = 4 }, // fd cb 89
-            new Opcode{ Extension = null, DisasmFormat = "res 1,(iy+${0:x2}),d",  Size = 4 }, // fd cb 8a
-            new Opcode{ Extension = null, DisasmFormat = "res 1,(iy+${0:x2}),e",  Size = 4 }, // fd cb 8b
-            new Opcode{ Extension = null, DisasmFormat = "res 1,(iy+${0:x2}),h",  Size = 4 }, // fd cb 8c
-            new Opcode{ Extension = null, DisasmFormat = "res 1,(iy+${0:x2}),l",  Size = 4 }, // fd cb 8d
-            new Opcode{ Extension = null, DisasmFormat = "res 1,(iy+${0:x2})",    Size = 4 }, // fd cb 8e
-            new Opcode{ Extension = null, DisasmFormat = "res 1,(iy+${0:x2}),a",  Size = 4 }, // fd cb 8f
-            new Opcode{ Extension = null, DisasmFormat = "res 2,(iy+${0:x2}),b",  Size = 4 }, // fd cb 90
-            new Opcode{ Extension = null, DisasmFormat = "res 2,(iy+${0:x2}),c",  Size = 4 }, // fd cb 91
-            new Opcode{ Extension = null, DisasmFormat = "res 2,(iy+${0:x2}),d",  Size = 4 }, // fd cb 92
-            new Opcode{ Extension = null, DisasmFormat = "res 2,(iy+${0:x2}),e",  Size = 4 }, // fd cb 93
-            new Opcode{ Extension = null, DisasmFormat = "res 2,(iy+${0:x2}),h",  Size = 4 }, // fd cb 94
-            new Opcode{ Extension = null, DisasmFormat = "res 2,(iy+${0:x2}),l",  Size = 4 }, // fd cb 95
-            new Opcode{ Extension = null, DisasmFormat = "res 2,(iy+${0:x2})",    Size = 4 }, // fd cb 96
-            new Opcode{ Extension = null, DisasmFormat = "res 2,(iy+${0:x2}),a",  Size = 4 }, // fd cb 97
-            new Opcode{ Extension = null, DisasmFormat = "res 3,(iy+${0:x2}),b",  Size = 4 }, // fd cb 98
-            new Opcode{ Extension = null, DisasmFormat = "res 3,(iy+${0:x2}),c",  Size = 4 }, // fd cb 99
-            new Opcode{ Extension = null, DisasmFormat = "res 3,(iy+${0:x2}),d",  Size = 4 }, // fd cb 9a
-            new Opcode{ Extension = null, DisasmFormat = "res 3,(iy+${0:x2}),e",  Size = 4 }, // fd cb 9b
-            new Opcode{ Extension = null, DisasmFormat = "res 3,(iy+${0:x2}),h",  Size = 4 }, // fd cb 9c
-            new Opcode{ Extension = null, DisasmFormat = "res 3,(iy+${0:x2}),l",  Size = 4 }, // fd cb 9d
-            new Opcode{ Extension = null, DisasmFormat = "res 3,(iy+${0:x2})",    Size = 4 }, // fd cb 9e
-            new Opcode{ Extension = null, DisasmFormat = "res 3,(iy+${0:x2}),a",  Size = 4 }, // fd cb 9f
-            new Opcode{ Extension = null, DisasmFormat = "res 4,(iy+${0:x2}),b",  Size = 4 }, // fd cb a0
-            new Opcode{ Extension = null, DisasmFormat = "res 4,(iy+${0:x2}),c",  Size = 4 }, // fd cb a1
-            new Opcode{ Extension = null, DisasmFormat = "res 4,(iy+${0:x2}),d",  Size = 4 }, // fd cb a2
-            new Opcode{ Extension = null, DisasmFormat = "res 4,(iy+${0:x2}),e",  Size = 4 }, // fd cb a3
-            new Opcode{ Extension = null, DisasmFormat = "res 4,(iy+${0:x2}),h",  Size = 4 }, // fd cb a4
-            new Opcode{ Extension = null, DisasmFormat = "res 4,(iy+${0:x2}),l",  Size = 4 }, // fd cb a5
-            new Opcode{ Extension = null, DisasmFormat = "res 4,(iy+${0:x2})",    Size = 4 }, // fd cb a6
-            new Opcode{ Extension = null, DisasmFormat = "res 4,(iy+${0:x2}),a",  Size = 4 }, // fd cb a7
-            new Opcode{ Extension = null, DisasmFormat = "res 5,(iy+${0:x2}),b",  Size = 4 }, // fd cb a8
-            new Opcode{ Extension = null, DisasmFormat = "res 5,(iy+${0:x2}),c",  Size = 4 }, // fd cb a9
-            new Opcode{ Extension = null, DisasmFormat = "res 5,(iy+${0:x2}),d",  Size = 4 }, // fd cb aa
-            new Opcode{ Extension = null, DisasmFormat = "res 5,(iy+${0:x2}),e",  Size = 4 }, // fd cb ab
-            new Opcode{ Extension = null, DisasmFormat = "res 5,(iy+${0:x2}),h",  Size = 4 }, // fd cb ac
-            new Opcode{ Extension = null, DisasmFormat = "res 5,(iy+${0:x2}),l",  Size = 4 }, // fd cb ad
-            new Opcode{ Extension = null, DisasmFormat = "res 5,(iy+${0:x2})",    Size = 4 }, // fd cb ae
-            new Opcode{ Extension = null, DisasmFormat = "res 5,(iy+${0:x2}),a",  Size = 4 }, // fd cb af
-            new Opcode{ Extension = null, DisasmFormat = "res 6,(iy+${0:x2}),b",  Size = 4 }, // fd cb b0
-            new Opcode{ Extension = null, DisasmFormat = "res 6,(iy+${0:x2}),c",  Size = 4 }, // fd cb b1
-            new Opcode{ Extension = null, DisasmFormat = "res 6,(iy+${0:x2}),d",  Size = 4 }, // fd cb b2
-            new Opcode{ Extension = null, DisasmFormat = "res 6,(iy+${0:x2}),e",  Size = 4 }, // fd cb b3
-            new Opcode{ Extension = null, DisasmFormat = "res 6,(iy+${0:x2}),h",  Size = 4 }, // fd cb b4
-            new Opcode{ Extension = null, DisasmFormat = "res 6,(iy+${0:x2}),l",  Size = 4 }, // fd cb b5
-            new Opcode{ Extension = null, DisasmFormat = "res 6,(iy+${0:x2})",    Size = 4 }, // fd cb b6
-            new Opcode{ Extension = null, DisasmFormat = "res 6,(iy+${0:x2}),a",  Size = 4 }, // fd cb b7
-            new Opcode{ Extension = null, DisasmFormat = "res 7,(iy+${0:x2}),b",  Size = 4 }, // fd cb b8
-            new Opcode{ Extension = null, DisasmFormat = "res 7,(iy+${0:x2}),c",  Size = 4 }, // fd cb b9
-            new Opcode{ Extension = null, DisasmFormat = "res 7,(iy+${0:x2}),d",  Size = 4 }, // fd cb ba
-            new Opcode{ Extension = null, DisasmFormat = "res 7,(iy+${0:x2}),e",  Size = 4 }, // fd cb bb
-            new Opcode{ Extension = null, DisasmFormat = "res 7,(iy+${0:x2}),h",  Size = 4 }, // fd cb bc
-            new Opcode{ Extension = null, DisasmFormat = "res 7,(iy+${0:x2}),l",  Size = 4 }, // fd cb bd
-            new Opcode{ Extension = null, DisasmFormat = "res 7,(iy+${0:x2})",    Size = 4 }, // fd cb be
-            new Opcode{ Extension = null, DisasmFormat = "res 7,(iy+${0:x2}),a",  Size = 4 }, // fd cb bf
-            new Opcode{ Extension = null, DisasmFormat = "set 0,(iy+${0:x2}),b",  Size = 4 }, // fd cb c0
-            new Opcode{ Extension = null, DisasmFormat = "set 0,(iy+${0:x2}),c",  Size = 4 }, // fd cb c1
-            new Opcode{ Extension = null, DisasmFormat = "set 0,(iy+${0:x2}),d",  Size = 4 }, // fd cb c2
-            new Opcode{ Extension = null, DisasmFormat = "set 0,(iy+${0:x2}),e",  Size = 4 }, // fd cb c3
-            new Opcode{ Extension = null, DisasmFormat = "set 0,(iy+${0:x2}),h",  Size = 4 }, // fd cb c4
-            new Opcode{ Extension = null, DisasmFormat = "set 0,(iy+${0:x2}),l",  Size = 4 }, // fd cb c5
-            new Opcode{ Extension = null, DisasmFormat = "set 0,(iy+${0:x2})",    Size = 4 }, // fd cb c6
-            new Opcode{ Extension = null, DisasmFormat = "set 0,(iy+${0:x2}),a",  Size = 4 }, // fd cb c7
-            new Opcode{ Extension = null, DisasmFormat = "set 1,(iy+${0:x2}),b",  Size = 4 }, // fd cb c8
-            new Opcode{ Extension = null, DisasmFormat = "set 1,(iy+${0:x2}),c",  Size = 4 }, // fd cb c9
-            new Opcode{ Extension = null, DisasmFormat = "set 1,(iy+${0:x2}),d",  Size = 4 }, // fd cb ca
-            new Opcode{ Extension = null, DisasmFormat = "set 1,(iy+${0:x2}),e",  Size = 4 }, // fd cb cb
-            new Opcode{ Extension = null, DisasmFormat = "set 1,(iy+${0:x2}),h",  Size = 4 }, // fd cb cc
-            new Opcode{ Extension = null, DisasmFormat = "set 1,(iy+${0:x2}),l",  Size = 4 }, // fd cb cd
-            new Opcode{ Extension = null, DisasmFormat = "set 1,(iy+${0:x2})",    Size = 4 }, // fd cb ce
-            new Opcode{ Extension = null, DisasmFormat = "set 1,(iy+${0:x2}),a",  Size = 4 }, // fd cb cf
-            new Opcode{ Extension = null, DisasmFormat = "set 2,(iy+${0:x2}),b",  Size = 4 }, // fd cb d0
-            new Opcode{ Extension = null, DisasmFormat = "set 2,(iy+${0:x2}),c",  Size = 4 }, // fd cb d1
-            new Opcode{ Extension = null, DisasmFormat = "set 2,(iy+${0:x2}),d",  Size = 4 }, // fd cb d2
-            new Opcode{ Extension = null, DisasmFormat = "set 2,(iy+${0:x2}),e",  Size = 4 }, // fd cb d3
-            new Opcode{ Extension = null, DisasmFormat = "set 2,(iy+${0:x2}),h",  Size = 4 }, // fd cb d4
-            new Opcode{ Extension = null, DisasmFormat = "set 2,(iy+${0:x2}),l",  Size = 4 }, // fd cb d5
-            new Opcode{ Extension = null, DisasmFormat = "set 2,(iy+${0:x2})",    Size = 4 }, // fd cb d6
-            new Opcode{ Extension = null, DisasmFormat = "set 2,(iy+${0:x2}),a",  Size = 4 }, // fd cb d7
-            new Opcode{ Extension = null, DisasmFormat = "set 3,(iy+${0:x2}),b",  Size = 4 }, // fd cb d8
-            new Opcode{ Extension = null, DisasmFormat = "set 3,(iy+${0:x2}),c",  Size = 4 }, // fd cb d9
-            new Opcode{ Extension = null, DisasmFormat = "set 3,(iy+${0:x2}),d",  Size = 4 }, // fd cb da
-            new Opcode{ Extension = null, DisasmFormat = "set 3,(iy+${0:x2}),e",  Size = 4 }, // fd cb db
-            new Opcode{ Extension = null, DisasmFormat = "set 3,(iy+${0:x2}),h",  Size = 4 }, // fd cb dc
-            new Opcode{ Extension = null, DisasmFormat = "set 3,(iy+${0:x2}),l",  Size = 4 }, // fd cb dd
-            new Opcode{ Extension = null, DisasmFormat = "set 3,(iy+${0:x2})",    Size = 4 }, // fd cb de
-            new Opcode{ Extension = null, DisasmFormat = "set 3,(iy+${0:x2}),a",  Size = 4 }, // fd cb df
-            new Opcode{ Extension = null, DisasmFormat = "set 4,(iy+${0:x2}),b",  Size = 4 }, // fd cb e0
-            new Opcode{ Extension = null, DisasmFormat = "set 4,(iy+${0:x2}),c",  Size = 4 }, // fd cb e1
-            new Opcode{ Extension = null, DisasmFormat = "set 4,(iy+${0:x2}),d",  Size = 4 }, // fd cb e2
-            new Opcode{ Extension = null, DisasmFormat = "set 4,(iy+${0:x2}),e",  Size = 4 }, // fd cb e3
-            new Opcode{ Extension = null, DisasmFormat = "set 4,(iy+${0:x2}),h",  Size = 4 }, // fd cb e4
-            new Opcode{ Extension = null, DisasmFormat = "set 4,(iy+${0:x2}),l",  Size = 4 }, // fd cb e5
-            new Opcode{ Extension = null, DisasmFormat = "set 4,(iy+${0:x2})",    Size = 4 }, // fd cb e6
-            new Opcode{ Extension = null, DisasmFormat = "set 4,(iy+${0:x2}),a",  Size = 4 }, // fd cb e7
-            new Opcode{ Extension = null, DisasmFormat = "set 5,(iy+${0:x2}),b",  Size = 4 }, // fd cb e8
-            new Opcode{ Extension = null, DisasmFormat = "set 5,(iy+${0:x2}),c",  Size = 4 }, // fd cb e9
-            new Opcode{ Extension = null, DisasmFormat = "set 5,(iy+${0:x2}),d",  Size = 4 }, // fd cb ea
-            new Opcode{ Extension = null, DisasmFormat = "set 5,(iy+${0:x2}),e",  Size = 4 }, // fd cb eb
-            new Opcode{ Extension = null, DisasmFormat = "set 5,(iy+${0:x2}),h",  Size = 4 }, // fd cb ec
-            new Opcode{ Extension = null, DisasmFormat = "set 5,(iy+${0:x2}),l",  Size = 4 }, // fd cb ed
-            new Opcode{ Extension = null, DisasmFormat = "set 5,(iy+${0:x2})",    Size = 4 }, // fd cb ee
-            new Opcode{ Extension = null, DisasmFormat = "set 5,(iy+${0:x2}),a",  Size = 4 }, // fd cb ef
-            new Opcode{ Extension = null, DisasmFormat = "set 6,(iy+${0:x2}),b",  Size = 4 }, // fd cb f0
-            new Opcode{ Extension = null, DisasmFormat = "set 6,(iy+${0:x2}),c",  Size = 4 }, // fd cb f1
-            new Opcode{ Extension = null, DisasmFormat = "set 6,(iy+${0:x2}),d",  Size = 4 }, // fd cb f2
-            new Opcode{ Extension = null, DisasmFormat = "set 6,(iy+${0:x2}),e",  Size = 4 }, // fd cb f3
-            new Opcode{ Extension = null, DisasmFormat = "set 6,(iy+${0:x2}),h",  Size = 4 }, // fd cb f4
-            new Opcode{ Extension = null, DisasmFormat = "set 6,(iy+${0:x2}),l",  Size = 4 }, // fd cb f5
-            new Opcode{ Extension = null, DisasmFormat = "set 6,(iy+${0:x2})",    Size = 4 }, // fd cb f6
-            new Opcode{ Extension = null, DisasmFormat = "set 6,(iy+${0:x2}),a",  Size = 4 }, // fd cb f7
-            new Opcode{ Extension = null, DisasmFormat = "set 7,(iy+${0:x2}),b",  Size = 4 }, // fd cb f8
-            new Opcode{ Extension = null, DisasmFormat = "set 7,(iy+${0:x2}),c",  Size = 4 }, // fd cb f9
-            new Opcode{ Extension = null, DisasmFormat = "set 7,(iy+${0:x2}),d",  Size = 4 }, // fd cb fa
-            new Opcode{ Extension = null, DisasmFormat = "set 7,(iy+${0:x2}),e",  Size = 4 }, // fd cb fb
-            new Opcode{ Extension = null, DisasmFormat = "set 7,(iy+${0:x2}),h",  Size = 4 }, // fd cb fc
-            new Opcode{ Extension = null, DisasmFormat = "set 7,(iy+${0:x2}),l",  Size = 4 }, // fd cb fd
-            new Opcode{ Extension = null, DisasmFormat = "set 7,(iy+${0:x2})",    Size = 4 }, // fd cb fe
-            new Opcode{ Extension = null, DisasmFormat = "set 7,(iy+${0:x2}),a",  Size = 4 }  // fd cb ff
-        };
-
-        Opcode[] _ixOpcodes = 
-        {
-            null,                                                                                   // dd 00
-            null,                                                                                   // dd 01
-            null,                                                                                   // dd 02
-            null,                                                                                   // dd 03
-            null,                                                                                   // dd 04
-            null,                                                                                   // dd 05
-            null,                                                                                   // dd 06
-            null,                                                                                   // dd 07
-            null,                                                                                   // dd 08
-            new Opcode{ Extension = null, DisasmFormat = "add ix,bc",                 Size = 2 }, // dd 09
-            null,                                                                                   // dd 0a
-            null,                                                                                   // dd 0b
-            null,                                                                                   // dd 0c
-            null,                                                                                   // dd 0d
-            null,                                                                                   // dd 0e
-            null,                                                                                   // dd 0f
-            null,                                                                                   // dd 10
-            null,                                                                                   // dd 11
-            null,                                                                                   // dd 12
-            null,                                                                                   // dd 13
-            null,                                                                                   // dd 14
-            null,                                                                                   // dd 15
-            null,                                                                                   // dd 16
-            null,                                                                                   // dd 17
-            null,                                                                                   // dd 18
-            new Opcode{ Extension = null, DisasmFormat = "add ix,de",                 Size = 2 }, // dd 19
-            null,                                                                                   // dd 1a
-            null,                                                                                   // dd 1b
-            null,                                                                                   // dd 1c
-            null,                                                                                   // dd 1d
-            null,                                                                                   // dd 1e
-            null,                                                                                   // dd 1f
-            null,                                                                                   // dd 20
-            new Opcode{ Extension = null, DisasmFormat = "ld ix,${0:x4}",             Size = 4 }, // dd 21
-            new Opcode{ Extension = null, DisasmFormat = "ld (${0:x4}),ix",           Size = 4 }, // dd 22
-            new Opcode{ Extension = null, DisasmFormat = "inc ix",                    Size = 2 }, // dd 23
-            new Opcode{ Extension = null, DisasmFormat = "inc ixh",                   Size = 2 }, // dd 24
-            new Opcode{ Extension = null, DisasmFormat = "dec ixh",                   Size = 2 }, // dd 25
-            new Opcode{ Extension = null, DisasmFormat = "ld ixh,${0:x2}",            Size = 3 }, // dd 26
-            null,                                                                                   // dd 27
-            null,                                                                                   // dd 28
-            new Opcode{ Extension = null, DisasmFormat = "add ix,ix",                 Size = 2 }, // dd 29
-            new Opcode{ Extension = null, DisasmFormat = "ld ix,(${0:x4})",           Size = 4 }, // dd 2a
-            new Opcode{ Extension = null, DisasmFormat = "dec ix",                    Size = 2 }, // dd 2b
-            new Opcode{ Extension = null, DisasmFormat = "inc ixl",                   Size = 2 }, // dd 2c
-            new Opcode{ Extension = null, DisasmFormat = "dec ixl",                   Size = 2 }, // dd 2d
-            new Opcode{ Extension = null, DisasmFormat = "ld ixl,${0:x2}",            Size = 3 }, // dd 2e
-            null,                                                                                   // dd 2f
-            null,                                                                                   // dd 30
-            null,                                                                                   // dd 31
-            null,                                                                                   // dd 32
-            null,                                                                                   // dd 33
-            new Opcode{ Extension = null, DisasmFormat = "inc (ix+${0:x2})",          Size = 3 }, // dd 34
-            new Opcode{ Extension = null, DisasmFormat = "dec (ix+${0:x2})",          Size = 3 }, // dd 35
-            new Opcode{ Extension = null, DisasmFormat = "ld (ix+${0:x2}),${1:x2}",   Size = 4 }, // dd 36
-            null,                                                                                   // dd 37
-            null,                                                                                   // dd 38
-            new Opcode{ Extension = null, DisasmFormat = "add ix,sp",                 Size = 2 }, // dd 39
-            null,                                                                                   // dd 3a
-            null,                                                                                   // dd 3b
-            null,                                                                                   // dd 3c
-            null,                                                                                   // dd 3d
-            null,                                                                                   // dd 3e
-            null,                                                                                   // dd 3f
-            null,                                                                                   // dd 40
-            null,                                                                                   // dd 41
-            null,                                                                                   // dd 42
-            null,                                                                                   // dd 43
-            new Opcode{ Extension = null, DisasmFormat = "ld b,ixh",                  Size = 2 }, // dd 44
-            new Opcode{ Extension = null, DisasmFormat = "ld b,ixl",                  Size = 2 }, // dd 45
-            new Opcode{ Extension = null, DisasmFormat = "ld b,(ix+${0:x2})",         Size = 3 }, // dd 46
-            null,                                                                                   // dd 47
-            null,                                                                                   // dd 48
-            null,                                                                                   // dd 49
-            null,                                                                                   // dd 4a
-            null,                                                                                   // dd 4b
-            new Opcode{ Extension = null, DisasmFormat = "ld c,ixh",                  Size = 2 }, // dd 4c
-            new Opcode{ Extension = null, DisasmFormat = "ld c,ixl",                  Size = 2 }, // dd 4d
-            new Opcode{ Extension = null, DisasmFormat = "ld c,(ix+${0:x2})",         Size = 3 }, // dd 4e
-            null,                                                                                   // dd 4f
-            null,                                                                                   // dd 50
-            null,                                                                                   // dd 51
-            null,                                                                                   // dd 52
-            null,                                                                                   // dd 53
-            new Opcode{ Extension = null, DisasmFormat = "ld d,ixh",                  Size = 2 }, // dd 54
-            new Opcode{ Extension = null, DisasmFormat = "ld d,ixl",                  Size = 2 }, // dd 55
-            new Opcode{ Extension = null, DisasmFormat = "ld d,(ix+${0:x2})",         Size = 3 }, // dd 56
-            null,                                                                                   // dd 57
-            null,                                                                                   // dd 58
-            null,                                                                                   // dd 59
-            null,                                                                                   // dd 5a
-            null,                                                                                   // dd 5b
-            new Opcode{ Extension = null, DisasmFormat = "ld e,ixh",                  Size = 2 }, // dd 5c
-            new Opcode{ Extension = null, DisasmFormat = "ld e,ixl",                  Size = 2 }, // dd 5d
-            new Opcode{ Extension = null, DisasmFormat = "ld e,(ix+${0:x2})",         Size = 3 }, // dd 5e
-            null,                                                                                   // dd 5f
-            new Opcode{ Extension = null, DisasmFormat = "ld ixh,b",                  Size = 2 }, // dd 60
-            new Opcode{ Extension = null, DisasmFormat = "ld ixh,c",                  Size = 2 }, // dd 61
-            new Opcode{ Extension = null, DisasmFormat = "ld ixh,d",                  Size = 2 }, // dd 62
-            new Opcode{ Extension = null, DisasmFormat = "ld ixh,e",                  Size = 2 }, // dd 63
-            new Opcode{ Extension = null, DisasmFormat = "ld ixh,ixh",                  Size = 2 }, // dd 64
-            new Opcode{ Extension = null, DisasmFormat = "ld ixh,ixl",                  Size = 2 }, // dd 65
-            new Opcode{ Extension = null, DisasmFormat = "ld h,(ix+${0:x2})",         Size = 3 }, // dd 66
-            new Opcode{ Extension = null, DisasmFormat = "ld ixh,a",                  Size = 2 }, // dd 67
-            new Opcode{ Extension = null, DisasmFormat = "ld ixl,b",                  Size = 2 }, // dd 68
-            new Opcode{ Extension = null, DisasmFormat = "ld ixl,c",                  Size = 2 }, // dd 69
-            new Opcode{ Extension = null, DisasmFormat = "ld ixl,d",                  Size = 2 }, // dd 6a
-            new Opcode{ Extension = null, DisasmFormat = "ld ixl,e",                  Size = 2 }, // dd 6b
-            new Opcode{ Extension = null, DisasmFormat = "ld ixl,ixh",                  Size = 2 }, // dd 6c
-            new Opcode{ Extension = null, DisasmFormat = "ld ixl,ixl",                  Size = 2 }, // dd 6d
-            new Opcode{ Extension = null, DisasmFormat = "ld l,(ix+${0:x2})",         Size = 3 }, // dd 6e
-            new Opcode{ Extension = null, DisasmFormat = "ld ixl,a",                  Size = 2 }, // dd 6f
-            new Opcode{ Extension = null, DisasmFormat = "ld (ix+${0:x2}),b",         Size = 3 }, // dd 70
-            new Opcode{ Extension = null, DisasmFormat = "ld (ix+${0:x2}),c",         Size = 3 }, // dd 71
-            new Opcode{ Extension = null, DisasmFormat = "ld (ix+${0:x2}),d",         Size = 3 }, // dd 72
-            new Opcode{ Extension = null, DisasmFormat = "ld (ix+${0:x2}),e",         Size = 3 }, // dd 73
-            new Opcode{ Extension = null, DisasmFormat = "ld (ix+${0:x2}),h",         Size = 3 }, // dd 74
-            new Opcode{ Extension = null, DisasmFormat = "ld (ix+${0:x2}),l",         Size = 3 }, // dd 75
-            null,                                                                                   // dd 76
-            new Opcode{ Extension = null, DisasmFormat = "ld (ix+${0:x2}),a",         Size = 3 }, // dd 77
-            null,                                                                                   // dd 78
-            null,                                                                                   // dd 79
-            null,                                                                                   // dd 7a
-            null,                                                                                   // dd 7b
-            new Opcode{ Extension = null, DisasmFormat = "ld a,ixh",                  Size = 2 }, // dd 7c
-            new Opcode{ Extension = null, DisasmFormat = "ld a,ixl",                  Size = 2 }, // dd 7d
-            new Opcode{ Extension = null, DisasmFormat = "ld a,(ix+${0:x2})",         Size = 3 }, // dd 7e
-            null,                                                                                   // dd 7f
-            null,                                                                                   // dd 80
-            null,                                                                                   // dd 81
-            null,                                                                                   // dd 82
-            null,                                                                                   // dd 83
-            new Opcode{ Extension = null, DisasmFormat = "add a,ixh",                 Size = 2 }, // dd 84
-            new Opcode{ Extension = null, DisasmFormat = "add a,ixl",                 Size = 2 }, // dd 85
-            new Opcode{ Extension = null, DisasmFormat = "add a,(ix+${0:x2})",        Size = 3 }, // dd 86
-            null,                                                                                   // dd 87
-            null,                                                                                   // dd 88
-            null,                                                                                   // dd 89
-            null,                                                                                   // dd 8a
-            null,                                                                                   // dd 8b
-            new Opcode{ Extension = null, DisasmFormat = "adc a,ixh",                 Size = 2 }, // dd 8c
-            new Opcode{ Extension = null, DisasmFormat = "adc a,ixl",                 Size = 2 }, // dd 8d
-            new Opcode{ Extension = null, DisasmFormat = "adc a,(ix+${0:x2})",        Size = 3 }, // dd 8e
-            null,                                                                                   // dd 8f
-            null,                                                                                   // dd 90
-            null,                                                                                   // dd 91
-            null,                                                                                   // dd 92
-            null,                                                                                   // dd 93
-            new Opcode{ Extension = null, DisasmFormat = "sub ixh",                   Size = 2 }, // dd 94
-            new Opcode{ Extension = null, DisasmFormat = "sub ixl",                   Size = 2 }, // dd 95
-            new Opcode{ Extension = null, DisasmFormat = "sub (ix+${0:x2})",          Size = 3 }, // dd 96
-            null,                                                                                   // dd 97
-            null,                                                                                   // dd 98
-            null,                                                                                   // dd 99
-            null,                                                                                   // dd 9a
-            null,                                                                                   // dd 9b
-            new Opcode{ Extension = null, DisasmFormat = "sbc a,ixh",                 Size = 2 }, // dd 9c
-            new Opcode{ Extension = null, DisasmFormat = "sbc a,ixl",                 Size = 2 }, // dd 9d
-            new Opcode{ Extension = null, DisasmFormat = "sbc a,(ix+${0:x2})",        Size = 3 }, // dd 9e
-            null,                                                                                   // dd 9f
-            null,                                                                                   // dd a0
-            null,                                                                                   // dd a1
-            null,                                                                                   // dd a2
-            null,                                                                                   // dd a3
-            new Opcode{ Extension = null, DisasmFormat = "and ixh",                   Size = 2 }, // dd a4
-            new Opcode{ Extension = null, DisasmFormat = "and ixl",                   Size = 2 }, // dd a5
-            new Opcode{ Extension = null, DisasmFormat = "and (ix+${0:x2})",          Size = 3 }, // dd a6
-            null,                                                                                   // dd a7
-            null,                                                                                   // dd a8
-            null,                                                                                   // dd a9
-            null,                                                                                   // dd aa
-            null,                                                                                   // dd ab
-            new Opcode{ Extension = null, DisasmFormat = "xor ixh",                   Size = 2 }, // dd ac
-            new Opcode{ Extension = null, DisasmFormat = "xor ixl",                   Size = 2 }, // dd ad
-            new Opcode{ Extension = null, DisasmFormat = "xor (ix+${0:x2})",          Size = 3 }, // dd ae            
-            null,                                                                                   // dd af
-            null,                                                                                   // dd b0
-            null,                                                                                   // dd b1
-            null,                                                                                   // dd b2
-            null,                                                                                   // dd b3
-            new Opcode{ Extension = null, DisasmFormat = "or ixh",                    Size = 2 }, // dd b4
-            new Opcode{ Extension = null, DisasmFormat = "or ixl",                    Size = 2 }, // dd b5
-            new Opcode{ Extension = null, DisasmFormat = "or (ix+${0:x2})",           Size = 3 }, // dd b6
-            null,                                                                                   // dd b7
-            null,                                                                                   // dd b8
-            null,                                                                                   // dd b9
-            null,                                                                                   // dd ba
-            null,                                                                                   // dd bb
-            new Opcode{ Extension = null, DisasmFormat = "cp ixh",                    Size = 2 }, // dd bc
-            new Opcode{ Extension = null, DisasmFormat = "cp ixl",                    Size = 2 }, // dd bd
-            new Opcode{ Extension = null, DisasmFormat = "cp (ix+${0:x2})",           Size = 3 }, // dd be
-            null,                                                                                   // dd bf
-            null,                                                                                   // dd c0
-            null,                                                                                   // dd c1
-            null,                                                                                   // dd c2
-            null,                                                                                   // dd c3
-            null,                                                                                   // dd c4
-            null,                                                                                   // dd c5
-            null,                                                                                   // dd c6
-            null,                                                                                   // dd c7
-            null,                                                                                   // dd c8
-            null,                                                                                   // dd c9
-            null,                                                                                   // dd ca
-            new Opcode{ Extension = null, DisasmFormat = null,                        Size = 3 }, // dd cb
-            null,                                                                                   // dd cc
-            null,                                                                                   // dd cd
-            null,                                                                                   // dd ce
-            null,                                                                                   // dd cf
-            null,                                                                                   // dd d0
-            null,                                                                                   // dd d1
-            null,                                                                                   // dd d2
-            null,                                                                                   // dd d3
-            null,                                                                                   // dd d4
-            null,                                                                                   // dd d5
-            null,                                                                                   // dd d6
-            null,                                                                                   // dd d7
-            null,                                                                                   // dd d8
-            null,                                                                                   // dd d9
-            null,                                                                                   // dd da
-            null,                                                                                   // dd db
-            null,                                                                                   // dd dc
-            null,                                                                                   // dd dd
-            null,                                                                                   // dd de
-            null,                                                                                   // dd df
-            null,                                                                                   // dd e0
-            new Opcode{ Extension = null, DisasmFormat = "pop ix",                    Size = 2 }, // dd e1
-            null,                                                                                   // dd e2
-            new Opcode{ Extension = null, DisasmFormat = "ex (sp),ix",                Size = 2 }, // dd e3
-            null,                                                                                   // dd e4
-            new Opcode{ Extension = null, DisasmFormat = "push ix",                   Size = 2 }, // dd e5
-            null,                                                                                   // dd e6
-            null,                                                                                   // dd e7
-            null,                                                                                   // dd e8
-            new Opcode{ Extension = null, DisasmFormat = "jp (ix)",                   Size = 2 }, // dd e9
-            null,                                                                                   // dd ea
-            null,                                                                                   // dd eb
-            null,                                                                                   // dd ec
-            null,                                                                                   // dd ed
-            null,                                                                                   // dd ee
-            null,                                                                                   // dd ef
-            null,                                                                                   // dd f0
-            null,                                                                                   // dd f1
-            null,                                                                                   // dd f2
-            null,                                                                                   // dd f3
-            null,                                                                                   // dd f4
-            null,                                                                                   // dd f5
-            null,                                                                                   // dd f6
-            null,                                                                                   // dd f7
-            null,                                                                                   // dd f8
-            new Opcode{ Extension = null, DisasmFormat = "ld sp,ix",                  Size = 2 }, // dd f9
-            null,                                                                                   // dd fa
-            null,                                                                                   // dd fb
-            null,                                                                                   // dd fc
-            null,                                                                                   // dd fd
-            null,                                                                                   // dd fe
-            null,                                                                                   // dd ff
-        };
-
-        Opcode[] _iyOpcodes = 
-        {
-            null,                                                                                   // fd 00
-            null,                                                                                   // fd 01
-            null,                                                                                   // fd 02
-            null,                                                                                   // fd 03
-            null,                                                                                   // fd 04
-            null,                                                                                   // fd 05
-            null,                                                                                   // fd 06
-            null,                                                                                   // fd 07
-            null,                                                                                   // fd 08
-            new Opcode{ Extension = null, DisasmFormat = "add iy,bc",                 Size = 2 }, // fd 09
-            null,                                                                                   // fd 0a
-            null,                                                                                   // fd 0b
-            null,                                                                                   // fd 0c
-            null,                                                                                   // fd 0d
-            null,                                                                                   // fd 0e
-            null,                                                                                   // fd 0f
-            null,                                                                                   // fd 10
-            null,                                                                                   // fd 11
-            null,                                                                                   // fd 12
-            null,                                                                                   // fd 13
-            null,                                                                                   // fd 14
-            null,                                                                                   // fd 15
-            null,                                                                                   // fd 16
-            null,                                                                                   // fd 17
-            null,                                                                                   // fd 18
-            new Opcode{ Extension = null, DisasmFormat = "add iy,de",                 Size = 2 }, // fd 19
-            null,                                                                                   // fd 1a
-            null,                                                                                   // fd 1b
-            null,                                                                                   // fd 1c
-            null,                                                                                   // fd 1d
-            null,                                                                                   // fd 1e
-            null,                                                                                   // fd 1f
-            null,                                                                                   // fd 20
-            new Opcode{ Extension = null, DisasmFormat = "ld iy,${0:x4}",             Size = 4 }, // fd 21
-            new Opcode{ Extension = null, DisasmFormat = "ld (${0:x4}),iy",           Size = 4 }, // fd 22
-            new Opcode{ Extension = null, DisasmFormat = "inc iy",                    Size = 2 }, // fd 23
-            new Opcode{ Extension = null, DisasmFormat = "inc iyh",                   Size = 2 }, // fd 24
-            new Opcode{ Extension = null, DisasmFormat = "dec iyh",                   Size = 2 }, // fd 25
-            new Opcode{ Extension = null, DisasmFormat = "ld iyh,${0:x2}",            Size = 3 }, // fd 26
-            null,                                                                                   // fd 27
-            null,                                                                                   // fd 28
-            new Opcode{ Extension = null, DisasmFormat = "add iy,iy",                 Size = 2 }, // fd 29
-            new Opcode{ Extension = null, DisasmFormat = "ld iy,(${0:x4})",           Size = 4 }, // fd 2a
-            new Opcode{ Extension = null, DisasmFormat = "dec iy",                    Size = 2 }, // fd 2b
-            new Opcode{ Extension = null, DisasmFormat = "inc iyl",                   Size = 2 }, // fd 2c
-            new Opcode{ Extension = null, DisasmFormat = "dec iyl",                   Size = 2 }, // fd 2d
-            new Opcode{ Extension = null, DisasmFormat = "ld iyl,${0:x2}",            Size = 3 }, // fd 2e
-            null,                                                                                   // fd 2f
-            null,                                                                                   // fd 30
-            null,                                                                                   // fd 31
-            null,                                                                                   // fd 32
-            null,                                                                                   // fd 33
-            new Opcode{ Extension = null, DisasmFormat = "inc (iy+${0:x2})",          Size = 3 }, // fd 34
-            new Opcode{ Extension = null, DisasmFormat = "dec (iy+${0:x2})",          Size = 3 }, // fd 35
-            new Opcode{ Extension = null, DisasmFormat = "ld (iy+${0:x2}),${1:x2}",   Size = 4 }, // fd 36
-            null,                                                                                   // fd 37
-            null,                                                                                   // fd 38
-            new Opcode{ Extension = null, DisasmFormat = "add iy,sp",                 Size = 2 }, // fd 39
-            null,                                                                                   // fd 3a
-            null,                                                                                   // fd 3b
-            null,                                                                                   // fd 3c
-            null,                                                                                   // fd 3d
-            null,                                                                                   // fd 3e
-            null,                                                                                   // fd 3f
-            null,                                                                                   // fd 40
-            null,                                                                                   // fd 41
-            null,                                                                                   // fd 42
-            null,                                                                                   // fd 43
-            new Opcode{ Extension = null, DisasmFormat = "ld b,iyh",                  Size = 2 }, // fd 44
-            new Opcode{ Extension = null, DisasmFormat = "ld b,iyl",                  Size = 2 }, // fd 45
-            new Opcode{ Extension = null, DisasmFormat = "ld b,(iy+${0:x2})",         Size = 3 }, // fd 46
-            null,                                                                                   // fd 47
-            null,                                                                                   // fd 48
-            null,                                                                                   // fd 49
-            null,                                                                                   // fd 4a
-            null,                                                                                   // fd 4b
-            new Opcode{ Extension = null, DisasmFormat = "ld c,iyh",                  Size = 2 }, // fd 4c
-            new Opcode{ Extension = null, DisasmFormat = "ld c,iyl",                  Size = 2 }, // fd 4d
-            new Opcode{ Extension = null, DisasmFormat = "ld c,(iy+${0:x2})",         Size = 3 }, // fd 4e
-            null,                                                                                   // fd 4f
-            null,                                                                                   // fd 50
-            null,                                                                                   // fd 51
-            null,                                                                                   // fd 52
-            null,                                                                                   // fd 53
-            new Opcode{ Extension = null, DisasmFormat = "ld d,iyh",                  Size = 2 }, // fd 54
-            new Opcode{ Extension = null, DisasmFormat = "ld d,iyl",                  Size = 2 }, // fd 55
-            new Opcode{ Extension = null, DisasmFormat = "ld d,(iy+${0:x2})",         Size = 3 }, // fd 56
-            null,                                                                                   // fd 57
-            null,                                                                                   // fd 58
-            null,                                                                                   // fd 59
-            null,                                                                                   // fd 5a
-            null,                                                                                   // fd 5b
-            new Opcode{ Extension = null, DisasmFormat = "ld e,iyh",                  Size = 2 }, // fd 5c
-            new Opcode{ Extension = null, DisasmFormat = "ld e,iyl",                  Size = 2 }, // fd 5d
-            new Opcode{ Extension = null, DisasmFormat = "ld e,(iy+${0:x2})",         Size = 3 }, // fd 5e
-            null,                                                                                   // fd 5f
-            new Opcode{ Extension = null, DisasmFormat = "ld iyh,b",                  Size = 2 }, // fd 60
-            new Opcode{ Extension = null, DisasmFormat = "ld iyh,c",                  Size = 2 }, // fd 61
-            new Opcode{ Extension = null, DisasmFormat = "ld iyh,d",                  Size = 2 }, // fd 62
-            new Opcode{ Extension = null, DisasmFormat = "ld iyh,e",                  Size = 2 }, // fd 63
-            new Opcode{ Extension = null, DisasmFormat = "ld iyh,iyh",                  Size = 2 }, // fd 64
-            new Opcode{ Extension = null, DisasmFormat = "ld iyh,iyl",                  Size = 2 }, // fd 65
-            new Opcode{ Extension = null, DisasmFormat = "ld h,(iy+${0:x2})",         Size = 3 }, // fd 66
-            new Opcode{ Extension = null, DisasmFormat = "ld iyh,a",                  Size = 2 }, // fd 67
-            new Opcode{ Extension = null, DisasmFormat = "ld iyl,b",                  Size = 2 }, // fd 68
-            new Opcode{ Extension = null, DisasmFormat = "ld iyl,c",                  Size = 2 }, // fd 69
-            new Opcode{ Extension = null, DisasmFormat = "ld iyl,d",                  Size = 2 }, // fd 6a
-            new Opcode{ Extension = null, DisasmFormat = "ld iyl,e",                  Size = 2 }, // fd 6b
-            new Opcode{ Extension = null, DisasmFormat = "ld iyl,iyh",                Size = 2 }, // fd 6c
-            new Opcode{ Extension = null, DisasmFormat = "ld iyl,iyl",                Size = 2 }, // fd 6d
-            new Opcode{ Extension = null, DisasmFormat = "ld l,(iy+${0:x2})",         Size = 3 }, // fd 6e
-            new Opcode{ Extension = null, DisasmFormat = "ld iyl,a",                  Size = 2 }, // fd 6f
-            new Opcode{ Extension = null, DisasmFormat = "ld (iy+${0:x2}),b",         Size = 3 }, // fd 70
-            new Opcode{ Extension = null, DisasmFormat = "ld (iy+${0:x2}),c",         Size = 3 }, // fd 71
-            new Opcode{ Extension = null, DisasmFormat = "ld (iy+${0:x2}),d",         Size = 3 }, // fd 72
-            new Opcode{ Extension = null, DisasmFormat = "ld (iy+${0:x2}),e",         Size = 3 }, // fd 73
-            new Opcode{ Extension = null, DisasmFormat = "ld (iy+${0:x2}),h",         Size = 3 }, // fd 74
-            new Opcode{ Extension = null, DisasmFormat = "ld (iy+${0:x2}),l",         Size = 3 }, // fd 75
-            null,                                                                                   // fd 76
-            new Opcode{ Extension = null, DisasmFormat = "ld (iy+${0:x2}),a",         Size = 3 }, // fd 77
-            null,                                                                                   // fd 78
-            null,                                                                                   // fd 79
-            null,                                                                                   // fd 7a
-            null,                                                                                   // fd 7b
-            new Opcode{ Extension = null, DisasmFormat = "ld a,iyh",                  Size = 2 }, // fd 7c
-            new Opcode{ Extension = null, DisasmFormat = "ld a,iyl",                  Size = 2 }, // fd 7d
-            new Opcode{ Extension = null, DisasmFormat = "ld a,(iy+${0:x2})",         Size = 3 }, // fd 7e
-            null,                                                                                   // fd 7f
-            null,                                                                                   // fd 80
-            null,                                                                                   // fd 81
-            null,                                                                                   // fd 82
-            null,                                                                                   // fd 83
-            new Opcode{ Extension = null, DisasmFormat = "add a,iyh",                 Size = 2 }, // fd 84
-            new Opcode{ Extension = null, DisasmFormat = "add a,iyl",                 Size = 2 }, // fd 85
-            new Opcode{ Extension = null, DisasmFormat = "add a,(iy+${0:x2})",        Size = 3 }, // fd 86
-            null,                                                                                   // fd 87
-            null,                                                                                   // fd 88
-            null,                                                                                   // fd 89
-            null,                                                                                   // fd 8a
-            null,                                                                                   // fd 8b
-            new Opcode{ Extension = null, DisasmFormat = "adc a,iyh",                 Size = 2 }, // fd 8c
-            new Opcode{ Extension = null, DisasmFormat = "adc a,iyl",                 Size = 2 }, // fd 8d
-            new Opcode{ Extension = null, DisasmFormat = "adc a,(iy+${0:x2})",        Size = 3 }, // fd 8e
-            null,                                                                                   // fd 8f
-            null,                                                                                   // fd 90
-            null,                                                                                   // fd 91
-            null,                                                                                   // fd 92
-            null,                                                                                   // fd 93
-            new Opcode{ Extension = null, DisasmFormat = "sub iyh",                   Size = 2 }, // fd 94
-            new Opcode{ Extension = null, DisasmFormat = "sub iyl",                   Size = 2 }, // fd 95
-            new Opcode{ Extension = null, DisasmFormat = "sub (iy+${0:x2})",          Size = 3 }, // fd 96
-            null,                                                                                   // fd 97
-            null,                                                                                   // fd 98
-            null,                                                                                   // fd 99
-            null,                                                                                   // fd 9a
-            null,                                                                                   // fd 9b
-            new Opcode{ Extension = null, DisasmFormat = "sbc a,iyh",                 Size = 2 }, // fd 9c
-            new Opcode{ Extension = null, DisasmFormat = "sbc a,iyl",                 Size = 2 }, // fd 9d
-            new Opcode{ Extension = null, DisasmFormat = "sbc a,(iy+${0:x2})",        Size = 3 }, // fd 9e
-            null,                                                                                   // fd 9f
-            null,                                                                                   // fd a0
-            null,                                                                                   // fd a1
-            null,                                                                                   // fd a2
-            null,                                                                                   // fd a3
-            new Opcode{ Extension = null, DisasmFormat = "and iyh",                   Size = 2 }, // fd a4
-            new Opcode{ Extension = null, DisasmFormat = "and iyl",                   Size = 2 }, // fd a5
-            new Opcode{ Extension = null, DisasmFormat = "and (iy+${0:x2})",          Size = 3 }, // fd a6
-            null,                                                                                   // fd a7
-            null,                                                                                   // fd a8
-            null,                                                                                   // fd a9
-            null,                                                                                   // fd aa
-            null,                                                                                   // fd ab
-            new Opcode{ Extension = null, DisasmFormat = "xor iyh",                   Size = 2 }, // fd ac
-            new Opcode{ Extension = null, DisasmFormat = "xor iyl",                   Size = 2 }, // fd ad
-            new Opcode{ Extension = null, DisasmFormat = "xor (iy+${0:x2})",          Size = 3 }, // fd ae            
-            null,                                                                                   // fd af
-            null,                                                                                   // fd b0
-            null,                                                                                   // fd b1
-            null,                                                                                   // fd b2
-            null,                                                                                   // fd b3
-            new Opcode{ Extension = null, DisasmFormat = "or iyh",                    Size = 2 }, // fd b4
-            new Opcode{ Extension = null, DisasmFormat = "or iyl",                    Size = 2 }, // fd b5
-            new Opcode{ Extension = null, DisasmFormat = "or (iy+${0:x2})",           Size = 3 }, // fd b6
-            null,                                                                                   // fd b7
-            null,                                                                                   // fd b8
-            null,                                                                                   // fd b9
-            null,                                                                                   // fd ba
-            null,                                                                                   // fd bb
-            new Opcode{ Extension = null, DisasmFormat = "cp iyh",                    Size = 2 }, // fd bc
-            new Opcode{ Extension = null, DisasmFormat = "cp iyl",                    Size = 2 }, // fd bd
-            new Opcode{ Extension = null, DisasmFormat = "cp (iy+${0:x2})",           Size = 3 }, // fd be
-            null,                                                                                   // fd bf
-            null,                                                                                   // fd c0
-            null,                                                                                   // fd c1
-            null,                                                                                   // fd c2
-            null,                                                                                   // fd c3
-            null,                                                                                   // fd c4
-            null,                                                                                   // fd c5
-            null,                                                                                   // fd c6
-            null,                                                                                   // fd c7
-            null,                                                                                   // fd c8
-            null,                                                                                   // fd c9
-            null,                                                                                   // fd ca
-            new Opcode{ Extension = null, DisasmFormat = null,                        Size = 3 }, // fd cb
-            null,                                                                                   // fd cc
-            null,                                                                                   // fd cd
-            null,                                                                                   // fd ce
-            null,                                                                                   // fd cf
-            null,                                                                                   // fd d0
-            null,                                                                                   // fd d1
-            null,                                                                                   // fd d2
-            null,                                                                                   // fd d3
-            null,                                                                                   // fd d4
-            null,                                                                                   // fd d5
-            null,                                                                                   // fd d6
-            null,                                                                                   // fd d7
-            null,                                                                                   // fd d8
-            null,                                                                                   // fd d9
-            null,                                                                                   // fd da
-            null,                                                                                   // fd db
-            null,                                                                                   // fd dc
-            null,                                                                                   // fd dd
-            null,                                                                                   // fd de
-            null,                                                                                   // fd df
-            null,                                                                                   // fd e0
-            new Opcode{ Extension = null, DisasmFormat = "pop iy",                    Size = 2 }, // fd e1
-            null,                                                                                   // fd e2
-            new Opcode{ Extension = null, DisasmFormat = "ex (sp),iy",                Size = 2 }, // fd e3
-            null,                                                                                   // fd e4
-            new Opcode{ Extension = null, DisasmFormat = "push iy",                   Size = 2 }, // fd e5
-            null,                                                                                   // fd e6
-            null,                                                                                   // fd e7
-            null,                                                                                   // fd e8
-            new Opcode{ Extension = null, DisasmFormat = "jp (iy)",                   Size = 2 }, // fd e9
-            null,                                                                                   // fd ea
-            null,                                                                                   // fd eb
-            null,                                                                                   // fd ec
-            null,                                                                                   // fd ed
-            null,                                                                                   // fd ee
-            null,                                                                                   // fd ef
-            null,                                                                                   // fd f0
-            null,                                                                                   // fd f1
-            null,                                                                                   // fd f2
-            null,                                                                                   // fd f3
-            null,                                                                                   // fd f4
-            null,                                                                                   // fd f5
-            null,                                                                                   // fd f6
-            null,                                                                                   // fd f7
-            null,                                                                                   // fd f8
-            new Opcode{ Extension = null, DisasmFormat = "ld sp,iy",                  Size = 2 }, // fd f9
-            null,                                                                                   // fd fa
-            null,                                                                                   // fd fb
-            null,                                                                                   // fd fc
-            null,                                                                                   // fd fd
-            null,                                                                                   // fd fe
-            null,                                                                                   // fd ff
-        };
-
         Opcode[] _opcodes = 
         {
-            new Opcode{ Extension = null, DisasmFormat = "nop",               Size = 1 }, // 00
-            new Opcode{ Extension = null, DisasmFormat = "ld bc,${0:x4}",     Size = 3 }, // 01
-            new Opcode{ Extension = null, DisasmFormat = "ld (bc),a",         Size = 1 }, // 02
-            new Opcode{ Extension = null, DisasmFormat = "inc bc",            Size = 1 }, // 03
-            new Opcode{ Extension = null, DisasmFormat = "inc b",             Size = 1 }, // 04
-            new Opcode{ Extension = null, DisasmFormat = "dec b",             Size = 1 }, // 05
-            new Opcode{ Extension = null, DisasmFormat = "ld b,${0:x2}",      Size = 2 }, // 06
-            new Opcode{ Extension = null, DisasmFormat = "rlca",              Size = 1 }, // 07
-            new Opcode{ Extension = null, DisasmFormat = "ex af,af'",         Size = 1 }, // 08
-            new Opcode{ Extension = null, DisasmFormat = "add hl,bc",         Size = 1 }, // 09
-            new Opcode{ Extension = null, DisasmFormat = "ld a,(bc)",         Size = 1 }, // 0a
-            new Opcode{ Extension = null, DisasmFormat = "dec bc",            Size = 1 }, // 0b
-            new Opcode{ Extension = null, DisasmFormat = "inc c",             Size = 1 }, // 0c
-            new Opcode{ Extension = null, DisasmFormat = "dec c",             Size = 1 }, // 0d
-            new Opcode{ Extension = null, DisasmFormat = "ld c,${0:x2}",      Size = 2 }, // 0e
-            new Opcode{ Extension = null, DisasmFormat = "rrca",              Size = 1 }, // 0f
-            new Opcode{ Extension = null, DisasmFormat = "djnz ${0:x4}",      Size = 2 }, // 10
-            new Opcode{ Extension = null, DisasmFormat = "ld de,${0:x4}",     Size = 3 }, // 11
-            new Opcode{ Extension = null, DisasmFormat = "ld (de),a",         Size = 1 }, // 12
-            new Opcode{ Extension = null, DisasmFormat = "inc de",            Size = 1 }, // 13
-            new Opcode{ Extension = null, DisasmFormat = "inc d",             Size = 1 }, // 14
-            new Opcode{ Extension = null, DisasmFormat = "dec d",             Size = 1 }, // 15
-            new Opcode{ Extension = null, DisasmFormat = "ld d,${0:x2}",      Size = 2 }, // 16
-            new Opcode{ Extension = null, DisasmFormat = "rla",               Size = 1 }, // 17
-            new Opcode{ Extension = null, DisasmFormat = "jr ${0:x4}",        Size = 2 }, // 18
-            new Opcode{ Extension = null, DisasmFormat = "add hl,de",         Size = 1 }, // 19
-            new Opcode{ Extension = null, DisasmFormat = "ld a,(de)",         Size = 1 }, // 1a
-            new Opcode{ Extension = null, DisasmFormat = "dec de",            Size = 1 }, // 1b
-            new Opcode{ Extension = null, DisasmFormat = "inc e",             Size = 1 }, // 1c
-            new Opcode{ Extension = null, DisasmFormat = "dec e",             Size = 1 }, // 1d
-            new Opcode{ Extension = null, DisasmFormat = "ld e,${0:x2}",      Size = 2 }, // 1e
-            new Opcode{ Extension = null, DisasmFormat = "rra",               Size = 1 }, // 1f
-            new Opcode{ Extension = null, DisasmFormat = "jr nz,${0:x4}",     Size = 2 }, // 20
-            new Opcode{ Extension = null, DisasmFormat = "ld hl,${0:x4}",     Size = 3 }, // 21
-            new Opcode{ Extension = null, DisasmFormat = "ld (${0:x4}),hl",   Size = 3 }, // 22
-            new Opcode{ Extension = null, DisasmFormat = "inc hl",            Size = 1 }, // 23
-            new Opcode{ Extension = null, DisasmFormat = "inc h",             Size = 1 }, // 24
-            new Opcode{ Extension = null, DisasmFormat = "dec h",             Size = 1 }, // 25
-            new Opcode{ Extension = null, DisasmFormat = "ld h,${0:x2}",      Size = 2 }, // 26
-            new Opcode{ Extension = null, DisasmFormat = "daa",               Size = 1 }, // 27
-            new Opcode{ Extension = null, DisasmFormat = "jr z,${0:x4}",      Size = 2 }, // 28
-            new Opcode{ Extension = null, DisasmFormat = "add hl,hl",         Size = 1 }, // 29
-            new Opcode{ Extension = null, DisasmFormat = "ld hl,(${0:x4})",   Size = 3 }, // 2a
-            new Opcode{ Extension = null, DisasmFormat = "dec hl",            Size = 1 }, // 2b
-            new Opcode{ Extension = null, DisasmFormat = "inc l",             Size = 1 }, // 2c
-            new Opcode{ Extension = null, DisasmFormat = "dec l",             Size = 1 }, // 2d
-            new Opcode{ Extension = null, DisasmFormat = "ld l,${0:x2}",      Size = 2 }, // 2e
-            new Opcode{ Extension = null, DisasmFormat = "cpl",               Size = 1 }, // 2f
-            new Opcode{ Extension = null, DisasmFormat = "jr nc,${0:x4}",     Size = 2 }, // 30
-            new Opcode{ Extension = null, DisasmFormat = "ld sp,${0:x4}",     Size = 3 }, // 31
-            new Opcode{ Extension = null, DisasmFormat = "ld (${0:x4}),a",    Size = 3 }, // 32
-            new Opcode{ Extension = null, DisasmFormat = "inc sp",            Size = 1 }, // 33
-            new Opcode{ Extension = null, DisasmFormat = "inc (hl)",          Size = 1 }, // 34
-            new Opcode{ Extension = null, DisasmFormat = "dec (hl)",          Size = 1 }, // 35
-            new Opcode{ Extension = null, DisasmFormat = "ld (hl),${0:x2}",   Size = 2 }, // 36
-            new Opcode{ Extension = null, DisasmFormat = "scf",               Size = 1 }, // 37
-            new Opcode{ Extension = null, DisasmFormat = "jr c,${0:x4}",      Size = 2 }, // 38
-            new Opcode{ Extension = null, DisasmFormat = "add hl,sp",         Size = 1 }, // 39
-            new Opcode{ Extension = null, DisasmFormat = "ld a,(${0:x4})",    Size = 3 }, // 3a
-            new Opcode{ Extension = null, DisasmFormat = "dec sp",            Size = 1 }, // 3b
-            new Opcode{ Extension = null, DisasmFormat = "inc a",             Size = 1 }, // 3c
-            new Opcode{ Extension = null, DisasmFormat = "dec a",             Size = 1 }, // 3d
-            new Opcode{ Extension = null, DisasmFormat = "ld a,${0:x2}",      Size = 2 }, // 3e
-            new Opcode{ Extension = null, DisasmFormat = "ccf",               Size = 1 }, // 3f
-            new Opcode{ Extension = null, DisasmFormat = "ld b,b",            Size = 1 }, // 40
-            new Opcode{ Extension = null, DisasmFormat = "ld b,c",            Size = 1 }, // 41
-            new Opcode{ Extension = null, DisasmFormat = "ld b,d",            Size = 1 }, // 42
-            new Opcode{ Extension = null, DisasmFormat = "ld b,e",            Size = 1 }, // 43
-            new Opcode{ Extension = null, DisasmFormat = "ld b,h",            Size = 1 }, // 44
-            new Opcode{ Extension = null, DisasmFormat = "ld b,l",            Size = 1 }, // 45
-            new Opcode{ Extension = null, DisasmFormat = "ld b,(hl)",         Size = 1 }, // 46
-            new Opcode{ Extension = null, DisasmFormat = "ld b,a",            Size = 1 }, // 47
-            new Opcode{ Extension = null, DisasmFormat = "ld c,b",            Size = 1 }, // 48
-            new Opcode{ Extension = null, DisasmFormat = "ld c,c",            Size = 1 }, // 49
-            new Opcode{ Extension = null, DisasmFormat = "ld c,d",            Size = 1 }, // 4a
-            new Opcode{ Extension = null, DisasmFormat = "ld c,e",            Size = 1 }, // 4b
-            new Opcode{ Extension = null, DisasmFormat = "ld c,h",            Size = 1 }, // 4c
-            new Opcode{ Extension = null, DisasmFormat = "ld c,l",            Size = 1 }, // 4d
-            new Opcode{ Extension = null, DisasmFormat = "ld c,(hl)",         Size = 1 }, // 4e
-            new Opcode{ Extension = null, DisasmFormat = "ld c,a",            Size = 1 }, // 4f
-            new Opcode{ Extension = null, DisasmFormat = "ld d,b",            Size = 1 }, // 50
-            new Opcode{ Extension = null, DisasmFormat = "ld d,c",            Size = 1 }, // 51
-            new Opcode{ Extension = null, DisasmFormat = "ld d,d",            Size = 1 }, // 52
-            new Opcode{ Extension = null, DisasmFormat = "ld d,e",            Size = 1 }, // 53
-            new Opcode{ Extension = null, DisasmFormat = "ld d,h",            Size = 1 }, // 54
-            new Opcode{ Extension = null, DisasmFormat = "ld d,l",            Size = 1 }, // 55
-            new Opcode{ Extension = null, DisasmFormat = "ld d,(hl)",         Size = 1 }, // 56
-            new Opcode{ Extension = null, DisasmFormat = "ld d,a",            Size = 1 }, // 57
-            new Opcode{ Extension = null, DisasmFormat = "ld e,b",            Size = 1 }, // 58
-            new Opcode{ Extension = null, DisasmFormat = "ld e,c",            Size = 1 }, // 59
-            new Opcode{ Extension = null, DisasmFormat = "ld e,d",            Size = 1 }, // 5a
-            new Opcode{ Extension = null, DisasmFormat = "ld e,e",            Size = 1 }, // 5b
-            new Opcode{ Extension = null, DisasmFormat = "ld e,h",            Size = 1 }, // 5c
-            new Opcode{ Extension = null, DisasmFormat = "ld e,l",            Size = 1 }, // 5d
-            new Opcode{ Extension = null, DisasmFormat = "ld e,(hl)",         Size = 1 }, // 5e
-            new Opcode{ Extension = null, DisasmFormat = "ld e,a",            Size = 1 }, // 5f
-            new Opcode{ Extension = null, DisasmFormat = "ld h,b",            Size = 1 }, // 60
-            new Opcode{ Extension = null, DisasmFormat = "ld h,c",            Size = 1 }, // 61
-            new Opcode{ Extension = null, DisasmFormat = "ld h,d",            Size = 1 }, // 62
-            new Opcode{ Extension = null, DisasmFormat = "ld h,e",            Size = 1 }, // 63
-            new Opcode{ Extension = null, DisasmFormat = "ld h,h",            Size = 1 }, // 64
-            new Opcode{ Extension = null, DisasmFormat = "ld h,l",            Size = 1 }, // 65
-            new Opcode{ Extension = null, DisasmFormat = "ld h,(hl)",         Size = 1 }, // 66
-            new Opcode{ Extension = null, DisasmFormat = "ld h,a",            Size = 1 }, // 67
-            new Opcode{ Extension = null, DisasmFormat = "ld l,b",            Size = 1 }, // 68
-            new Opcode{ Extension = null, DisasmFormat = "ld l,c",            Size = 1 }, // 69
-            new Opcode{ Extension = null, DisasmFormat = "ld l,d",            Size = 1 }, // 6a
-            new Opcode{ Extension = null, DisasmFormat = "ld l,e",            Size = 1 }, // 6b
-            new Opcode{ Extension = null, DisasmFormat = "ld l,h",            Size = 1 }, // 6c
-            new Opcode{ Extension = null, DisasmFormat = "ld l,l",            Size = 1 }, // 6d
-            new Opcode{ Extension = null, DisasmFormat = "ld l,(hl)",         Size = 1 }, // 6e
-            new Opcode{ Extension = null, DisasmFormat = "ld l,a",            Size = 1 }, // 6f
-            new Opcode{ Extension = null, DisasmFormat = "ld (hl),b",         Size = 1 }, // 70
-            new Opcode{ Extension = null, DisasmFormat = "ld (hl),c",         Size = 1 }, // 71
-            new Opcode{ Extension = null, DisasmFormat = "ld (hl),d",         Size = 1 }, // 72
-            new Opcode{ Extension = null, DisasmFormat = "ld (hl),e",         Size = 1 }, // 73
-            new Opcode{ Extension = null, DisasmFormat = "ld (hl),h",         Size = 1 }, // 74
-            new Opcode{ Extension = null, DisasmFormat = "ld (hl),l",         Size = 1 }, // 75
-            new Opcode{ Extension = null, DisasmFormat = "halt",              Size = 1 }, // 76
-            new Opcode{ Extension = null, DisasmFormat = "ld (hl),a",         Size = 1 }, // 77
-            new Opcode{ Extension = null, DisasmFormat = "ld a,b",            Size = 1 }, // 78
-            new Opcode{ Extension = null, DisasmFormat = "ld a,c",            Size = 1 }, // 79
-            new Opcode{ Extension = null, DisasmFormat = "ld a,d",            Size = 1 }, // 7a
-            new Opcode{ Extension = null, DisasmFormat = "ld a,e",            Size = 1 }, // 7b
-            new Opcode{ Extension = null, DisasmFormat = "ld a,h",            Size = 1 }, // 7c
-            new Opcode{ Extension = null, DisasmFormat = "ld a,l",            Size = 1 }, // 7d
-            new Opcode{ Extension = null, DisasmFormat = "ld a,(hl)",         Size = 1 }, // 7e
-            new Opcode{ Extension = null, DisasmFormat = "ld a,a",            Size = 1 }, // 7f
-            new Opcode{ Extension = null, DisasmFormat = "add a,b",           Size = 1 }, // 80
-            new Opcode{ Extension = null, DisasmFormat = "add a,c",           Size = 1 }, // 81
-            new Opcode{ Extension = null, DisasmFormat = "add a,d",           Size = 1 }, // 82
-            new Opcode{ Extension = null, DisasmFormat = "add a,e",           Size = 1 }, // 83
-            new Opcode{ Extension = null, DisasmFormat = "add a,h",           Size = 1 }, // 84
-            new Opcode{ Extension = null, DisasmFormat = "add a,l",           Size = 1 }, // 85
-            new Opcode{ Extension = null, DisasmFormat = "add a,(hl)",        Size = 1 }, // 86
-            new Opcode{ Extension = null, DisasmFormat = "add a,a",           Size = 1 }, // 87
-            new Opcode{ Extension = null, DisasmFormat = "adc a,b",           Size = 1 }, // 88
-            new Opcode{ Extension = null, DisasmFormat = "adc a,c",           Size = 1 }, // 89
-            new Opcode{ Extension = null, DisasmFormat = "adc a,d",           Size = 1 }, // 8a
-            new Opcode{ Extension = null, DisasmFormat = "adc a,e",           Size = 1 }, // 8b
-            new Opcode{ Extension = null, DisasmFormat = "adc a,h",           Size = 1 }, // 8c
-            new Opcode{ Extension = null, DisasmFormat = "adc a,l",           Size = 1 }, // 8d
-            new Opcode{ Extension = null, DisasmFormat = "adc a,(hl)",        Size = 1 }, // 8e
-            new Opcode{ Extension = null, DisasmFormat = "adc a,a",           Size = 1 }, // 8f
-            new Opcode{ Extension = null, DisasmFormat = "sub b",             Size = 1 }, // 90
-            new Opcode{ Extension = null, DisasmFormat = "sub c",             Size = 1 }, // 91
-            new Opcode{ Extension = null, DisasmFormat = "sub d",             Size = 1 }, // 92
-            new Opcode{ Extension = null, DisasmFormat = "sub e",             Size = 1 }, // 93
-            new Opcode{ Extension = null, DisasmFormat = "sub h",             Size = 1 }, // 94
-            new Opcode{ Extension = null, DisasmFormat = "sub l",             Size = 1 }, // 95
-            new Opcode{ Extension = null, DisasmFormat = "sub (hl)",          Size = 1 }, // 96
-            new Opcode{ Extension = null, DisasmFormat = "sub a",             Size = 1 }, // 97
-            new Opcode{ Extension = null, DisasmFormat = "sbc a,b",           Size = 1 }, // 98
-            new Opcode{ Extension = null, DisasmFormat = "sbc a,c",           Size = 1 }, // 99
-            new Opcode{ Extension = null, DisasmFormat = "sbc a,d",           Size = 1 }, // 9a
-            new Opcode{ Extension = null, DisasmFormat = "sbc a,e",           Size = 1 }, // 9b
-            new Opcode{ Extension = null, DisasmFormat = "sbc a,h",           Size = 1 }, // 9c
-            new Opcode{ Extension = null, DisasmFormat = "sbc a,l",           Size = 1 }, // 9d
-            new Opcode{ Extension = null, DisasmFormat = "sbc a,(hl)",        Size = 1 }, // 9e
-            new Opcode{ Extension = null, DisasmFormat = "sbc a,a",           Size = 1 }, // 9f
-            new Opcode{ Extension = null, DisasmFormat = "and b",             Size = 1 }, // a0
-            new Opcode{ Extension = null, DisasmFormat = "and c",             Size = 1 }, // a1
-            new Opcode{ Extension = null, DisasmFormat = "and d",             Size = 1 }, // a2
-            new Opcode{ Extension = null, DisasmFormat = "and e",             Size = 1 }, // a3
-            new Opcode{ Extension = null, DisasmFormat = "and h",             Size = 1 }, // a4
-            new Opcode{ Extension = null, DisasmFormat = "and l",             Size = 1 }, // a5
-            new Opcode{ Extension = null, DisasmFormat = "and (hl)",          Size = 1 }, // a6
-            new Opcode{ Extension = null, DisasmFormat = "and a",             Size = 1 }, // a7
-            new Opcode{ Extension = null, DisasmFormat = "xor b",             Size = 1 }, // a8
-            new Opcode{ Extension = null, DisasmFormat = "xor c",             Size = 1 }, // a9
-            new Opcode{ Extension = null, DisasmFormat = "xor d",             Size = 1 }, // aa
-            new Opcode{ Extension = null, DisasmFormat = "xor e",             Size = 1 }, // ab
-            new Opcode{ Extension = null, DisasmFormat = "xor h",             Size = 1 }, // ac
-            new Opcode{ Extension = null, DisasmFormat = "xor l",             Size = 1 }, // ad
-            new Opcode{ Extension = null, DisasmFormat = "xor (hl)",          Size = 1 }, // ae
-            new Opcode{ Extension = null, DisasmFormat = "xor a",             Size = 1 }, // af
-            new Opcode{ Extension = null, DisasmFormat = "or b",              Size = 1 }, // b0
-            new Opcode{ Extension = null, DisasmFormat = "or c",              Size = 1 }, // b1
-            new Opcode{ Extension = null, DisasmFormat = "or d",              Size = 1 }, // b2
-            new Opcode{ Extension = null, DisasmFormat = "or e",              Size = 1 }, // b3
-            new Opcode{ Extension = null, DisasmFormat = "or h",              Size = 1 }, // b4
-            new Opcode{ Extension = null, DisasmFormat = "or l",              Size = 1 }, // b5
-            new Opcode{ Extension = null, DisasmFormat = "or (hl)",           Size = 1 }, // b6
-            new Opcode{ Extension = null, DisasmFormat = "or a",              Size = 1 }, // b7
-            new Opcode{ Extension = null, DisasmFormat = "cp b",              Size = 1 }, // b8
-            new Opcode{ Extension = null, DisasmFormat = "cp c",              Size = 1 }, // b9
-            new Opcode{ Extension = null, DisasmFormat = "cp d",              Size = 1 }, // ba
-            new Opcode{ Extension = null, DisasmFormat = "cp e",              Size = 1 }, // bb
-            new Opcode{ Extension = null, DisasmFormat = "cp h",              Size = 1 }, // bc
-            new Opcode{ Extension = null, DisasmFormat = "cp l",              Size = 1 }, // bd
-            new Opcode{ Extension = null, DisasmFormat = "cp (hl)",           Size = 1 }, // be
-            new Opcode{ Extension = null, DisasmFormat = "cp a",              Size = 1 }, // bf
-            new Opcode{ Extension = null, DisasmFormat = "ret nz",            Size = 1 }, // c0
-            new Opcode{ Extension = null, DisasmFormat = "pop bc",            Size = 1 }, // c1
-            new Opcode{ Extension = null, DisasmFormat = "jp nz,${0:x4}",     Size = 3 }, // c2
-            new Opcode{ Extension = null, DisasmFormat = "jp ${0:x4}",        Size = 3 }, // c3
-            new Opcode{ Extension = null, DisasmFormat = "call nz,${0:x4}",   Size = 3 }, // c4
-            new Opcode{ Extension = null, DisasmFormat = "push bc",           Size = 1 }, // c5
-            new Opcode{ Extension = null, DisasmFormat = "add a,${0:x2}",     Size = 2 }, // c6
-            new Opcode{ Extension = null, DisasmFormat = "rst $00",           Size = 1 }, // c7
-            new Opcode{ Extension = null, DisasmFormat = "ret z",             Size = 1 }, // c8
-            new Opcode{ Extension = null, DisasmFormat = "ret",               Size = 1 }, // c9
-            new Opcode{ Extension = null, DisasmFormat = "jp z,${0:x4}",      Size = 3 }, // ca
-            new Opcode{ Extension = null, DisasmFormat = null,                Size = 2 }, // cb
-            new Opcode{ Extension = null, DisasmFormat = "call z,${0:x4}",    Size = 3 }, // cc
-            new Opcode{ Extension = null, DisasmFormat = "call ${0:x4}",      Size = 3 }, // cd
-            new Opcode{ Extension = null, DisasmFormat = "adc a,${0:x2}",     Size = 2 }, // ce
-            new Opcode{ Extension = null, DisasmFormat = "rst $08",           Size = 1 }, // cf
-            new Opcode{ Extension = null, DisasmFormat = "ret nc",            Size = 1 }, // d0
-            new Opcode{ Extension = null, DisasmFormat = "pop de",            Size = 1 }, // d1
-            new Opcode{ Extension = null, DisasmFormat = "jp nc,${0:x4}",     Size = 3 }, // d2
-            new Opcode{ Extension = null, DisasmFormat = "out (${0:x2}),a",   Size = 2 }, // d3
-            new Opcode{ Extension = null, DisasmFormat = "call nc,${0:x4}",   Size = 3 }, // d4
-            new Opcode{ Extension = null, DisasmFormat = "push de",           Size = 1 }, // d5
-            new Opcode{ Extension = null, DisasmFormat = "sub ${0:x2}",       Size = 2 }, // d6
-            new Opcode{ Extension = null, DisasmFormat = "rst $10",           Size = 1 }, // d7
-            new Opcode{ Extension = null, DisasmFormat = "ret c",             Size = 1 }, // d8
-            new Opcode{ Extension = null, DisasmFormat = "exx",               Size = 1 }, // d9
-            new Opcode{ Extension = null, DisasmFormat = "jp c,${0:x4}",      Size = 3 }, // da
-            new Opcode{ Extension = null, DisasmFormat = "in a,(${0:x2})",    Size = 2 }, // db
-            new Opcode{ Extension = null, DisasmFormat = "call c,${0:x4}",    Size = 3 }, // dc
-            new Opcode{ Extension = null, DisasmFormat = null,                Size = 2 }, // dd
-            new Opcode{ Extension = null, DisasmFormat = "sbc a,${0:x2}",     Size = 2 }, // de
-            new Opcode{ Extension = null, DisasmFormat = "rst $18",           Size = 1 }, // df
-            new Opcode{ Extension = null, DisasmFormat = "ret po",            Size = 1 }, // e0
-            new Opcode{ Extension = null, DisasmFormat = "pop hl",            Size = 1 }, // e1
-            new Opcode{ Extension = null, DisasmFormat = "jp po,${0:x4}",     Size = 3 }, // e2
-            new Opcode{ Extension = null, DisasmFormat = "ex (sp),hl",        Size = 1 }, // e3
-            new Opcode{ Extension = null, DisasmFormat = "call po,${0:x4}",   Size = 3 }, // e4
-            new Opcode{ Extension = null, DisasmFormat = "push hl",           Size = 1 }, // e5
-            new Opcode{ Extension = null, DisasmFormat = "and ${0:x2}",       Size = 2 }, // e6
-            new Opcode{ Extension = null, DisasmFormat = "rst $20",           Size = 1 }, // e7
-            new Opcode{ Extension = null, DisasmFormat = "ret pe",            Size = 1 }, // e8
-            new Opcode{ Extension = null, DisasmFormat = "jp (hl)",           Size = 1 }, // e9
-            new Opcode{ Extension = null, DisasmFormat = "jp pe,${0:x4}",     Size = 3 }, // ea
-            new Opcode{ Extension = null, DisasmFormat = "ex de,hl",          Size = 1 }, // eb
-            new Opcode{ Extension = null, DisasmFormat = "call pe,${0:x4}",   Size = 3 }, // ec
-            new Opcode{ Extension = null, DisasmFormat = null,                Size = 2 }, // ed
-            new Opcode{ Extension = null, DisasmFormat = "xor ${0:x2}",       Size = 2 }, // ee
-            new Opcode{ Extension = null, DisasmFormat = "rst $28",           Size = 1 }, // ef
-            new Opcode{ Extension = null, DisasmFormat = "ret p",             Size = 1 }, // f0
-            new Opcode{ Extension = null, DisasmFormat = "pop af",            Size = 1 }, // f1
-            new Opcode{ Extension = null, DisasmFormat = "jp p,${0:x4}",      Size = 3 }, // f2
-            new Opcode{ Extension = null, DisasmFormat = "di",                Size = 1 }, // f3
-            new Opcode{ Extension = null, DisasmFormat = "call p,${0:x4}",    Size = 3 }, // f4
-            new Opcode{ Extension = null, DisasmFormat = "push af",           Size = 1 }, // f5
-            new Opcode{ Extension = null, DisasmFormat = "or ${0:x2}",        Size = 2 }, // f6
-            new Opcode{ Extension = null, DisasmFormat = "rst $30",           Size = 1 }, // f7
-            new Opcode{ Extension = null, DisasmFormat = "ret m",             Size = 1 }, // f8
-            new Opcode{ Extension = null, DisasmFormat = "ld sp,hl",          Size = 1 }, // f9
-            new Opcode{ Extension = null, DisasmFormat = "jp m,${0:x4}",      Size = 3 }, // fa
-            new Opcode{ Extension = null, DisasmFormat = "ei",                Size = 1 }, // fb
-            new Opcode{ Extension = null, DisasmFormat = "call m,${0:x4}",    Size = 3 }, // fc
-            new Opcode{ Extension = null, DisasmFormat = null,                Size = 2 }, // fd
-            new Opcode{ Extension = null, DisasmFormat = "cp ${0:x2}",        Size = 2 }, // fe
-            new Opcode{ Extension = null, DisasmFormat = "rst $38",           Size = 1 }  // ff
+            new Opcode{ CPU = "z80", DisasmFormat = "nop",               Size = 1, Index = 0x00 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld bc,${0:x4}",     Size = 3, Index = 0x01 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (bc),a",         Size = 1, Index = 0x02 },
+            new Opcode{ CPU = "z80", DisasmFormat = "inc bc",            Size = 1, Index = 0x03 },
+            new Opcode{ CPU = "z80", DisasmFormat = "inc b",             Size = 1, Index = 0x04 },
+            new Opcode{ CPU = "z80", DisasmFormat = "dec b",             Size = 1, Index = 0x05 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld b,${0:x2}",      Size = 2, Index = 0x06 },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlca",              Size = 1, Index = 0x07 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ex af,af'",         Size = 1, Index = 0x08 },
+            new Opcode{ CPU = "z80", DisasmFormat = "add hl,bc",         Size = 1, Index = 0x09 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld a,(bc)",         Size = 1, Index = 0x0a },
+            new Opcode{ CPU = "z80", DisasmFormat = "dec bc",            Size = 1, Index = 0x0b },
+            new Opcode{ CPU = "z80", DisasmFormat = "inc c",             Size = 1, Index = 0x0c },
+            new Opcode{ CPU = "z80", DisasmFormat = "dec c",             Size = 1, Index = 0x0d },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld c,${0:x2}",      Size = 2, Index = 0x0e },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrca",              Size = 1, Index = 0x0f },
+            new Opcode{ CPU = "z80", DisasmFormat = "djnz ${0:x4}",      Size = 2, Index = 0x10 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld de,${0:x4}",     Size = 3, Index = 0x11 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (de),a",         Size = 1, Index = 0x12 },
+            new Opcode{ CPU = "z80", DisasmFormat = "inc de",            Size = 1, Index = 0x13 },
+            new Opcode{ CPU = "z80", DisasmFormat = "inc d",             Size = 1, Index = 0x14 },
+            new Opcode{ CPU = "z80", DisasmFormat = "dec d",             Size = 1, Index = 0x15 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld d,${0:x2}",      Size = 2, Index = 0x16 },
+            new Opcode{ CPU = "z80", DisasmFormat = "rla",               Size = 1, Index = 0x17 },
+            new Opcode{ CPU = "z80", DisasmFormat = "jr ${0:x4}",        Size = 2, Index = 0x18 },
+            new Opcode{ CPU = "z80", DisasmFormat = "add hl,de",         Size = 1, Index = 0x19 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld a,(de)",         Size = 1, Index = 0x1a },
+            new Opcode{ CPU = "z80", DisasmFormat = "dec de",            Size = 1, Index = 0x1b },
+            new Opcode{ CPU = "z80", DisasmFormat = "inc e",             Size = 1, Index = 0x1c },
+            new Opcode{ CPU = "z80", DisasmFormat = "dec e",             Size = 1, Index = 0x1d },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld e,${0:x2}",      Size = 2, Index = 0x1e },
+            new Opcode{ CPU = "z80", DisasmFormat = "rra",               Size = 1, Index = 0x1f },
+            new Opcode{ CPU = "z80", DisasmFormat = "jr nz,${0:x4}",     Size = 2, Index = 0x20 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld hl,${0:x4}",     Size = 3, Index = 0x21 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (${0:x4}),hl",   Size = 3, Index = 0x22 },
+            new Opcode{ CPU = "z80", DisasmFormat = "inc hl",            Size = 1, Index = 0x23 },
+            new Opcode{ CPU = "z80", DisasmFormat = "inc h",             Size = 1, Index = 0x24 },
+            new Opcode{ CPU = "z80", DisasmFormat = "dec h",             Size = 1, Index = 0x25 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld h,${0:x2}",      Size = 2, Index = 0x26 },
+            new Opcode{ CPU = "z80", DisasmFormat = "daa",               Size = 1, Index = 0x27 },
+            new Opcode{ CPU = "z80", DisasmFormat = "jr z,${0:x4}",      Size = 2, Index = 0x28 },
+            new Opcode{ CPU = "z80", DisasmFormat = "add hl,hl",         Size = 1, Index = 0x29 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld hl,(${0:x4})",   Size = 3, Index = 0x2a },
+            new Opcode{ CPU = "z80", DisasmFormat = "dec hl",            Size = 1, Index = 0x2b },
+            new Opcode{ CPU = "z80", DisasmFormat = "inc l",             Size = 1, Index = 0x2c },
+            new Opcode{ CPU = "z80", DisasmFormat = "dec l",             Size = 1, Index = 0x2d },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld l,${0:x2}",      Size = 2, Index = 0x2e },
+            new Opcode{ CPU = "z80", DisasmFormat = "cpl",               Size = 1, Index = 0x2f },
+            new Opcode{ CPU = "z80", DisasmFormat = "jr nc,${0:x4}",     Size = 2, Index = 0x30 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld sp,${0:x4}",     Size = 3, Index = 0x31 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (${0:x4}),a",    Size = 3, Index = 0x32 },
+            new Opcode{ CPU = "z80", DisasmFormat = "inc sp",            Size = 1, Index = 0x33 },
+            new Opcode{ CPU = "z80", DisasmFormat = "inc (hl)",          Size = 1, Index = 0x34 },
+            new Opcode{ CPU = "z80", DisasmFormat = "dec (hl)",          Size = 1, Index = 0x35 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (hl),${0:x2}",   Size = 2, Index = 0x36 },
+            new Opcode{ CPU = "z80", DisasmFormat = "scf",               Size = 1, Index = 0x37 },
+            new Opcode{ CPU = "z80", DisasmFormat = "jr c,${0:x4}",      Size = 2, Index = 0x38 },
+            new Opcode{ CPU = "z80", DisasmFormat = "add hl,sp",         Size = 1, Index = 0x39 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld a,(${0:x4})",    Size = 3, Index = 0x3a },
+            new Opcode{ CPU = "z80", DisasmFormat = "dec sp",            Size = 1, Index = 0x3b },
+            new Opcode{ CPU = "z80", DisasmFormat = "inc a",             Size = 1, Index = 0x3c },
+            new Opcode{ CPU = "z80", DisasmFormat = "dec a",             Size = 1, Index = 0x3d },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld a,${0:x2}",      Size = 2, Index = 0x3e },
+            new Opcode{ CPU = "z80", DisasmFormat = "ccf",               Size = 1, Index = 0x3f },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld b,b",            Size = 1, Index = 0x40 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld b,c",            Size = 1, Index = 0x41 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld b,d",            Size = 1, Index = 0x42 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld b,e",            Size = 1, Index = 0x43 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld b,h",            Size = 1, Index = 0x44 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld b,l",            Size = 1, Index = 0x45 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld b,(hl)",         Size = 1, Index = 0x46 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld b,a",            Size = 1, Index = 0x47 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld c,b",            Size = 1, Index = 0x48 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld c,c",            Size = 1, Index = 0x49 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld c,d",            Size = 1, Index = 0x4a },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld c,e",            Size = 1, Index = 0x4b },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld c,h",            Size = 1, Index = 0x4c },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld c,l",            Size = 1, Index = 0x4d },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld c,(hl)",         Size = 1, Index = 0x4e },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld c,a",            Size = 1, Index = 0x4f },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld d,b",            Size = 1, Index = 0x50 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld d,c",            Size = 1, Index = 0x51 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld d,d",            Size = 1, Index = 0x52 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld d,e",            Size = 1, Index = 0x53 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld d,h",            Size = 1, Index = 0x54 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld d,l",            Size = 1, Index = 0x55 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld d,(hl)",         Size = 1, Index = 0x56 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld d,a",            Size = 1, Index = 0x57 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld e,b",            Size = 1, Index = 0x58 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld e,c",            Size = 1, Index = 0x59 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld e,d",            Size = 1, Index = 0x5a },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld e,e",            Size = 1, Index = 0x5b },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld e,h",            Size = 1, Index = 0x5c },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld e,l",            Size = 1, Index = 0x5d },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld e,(hl)",         Size = 1, Index = 0x5e },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld e,a",            Size = 1, Index = 0x5f },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld h,b",            Size = 1, Index = 0x60 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld h,c",            Size = 1, Index = 0x61 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld h,d",            Size = 1, Index = 0x62 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld h,e",            Size = 1, Index = 0x63 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld h,h",            Size = 1, Index = 0x64 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld h,l",            Size = 1, Index = 0x65 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld h,(hl)",         Size = 1, Index = 0x66 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld h,a",            Size = 1, Index = 0x67 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld l,b",            Size = 1, Index = 0x68 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld l,c",            Size = 1, Index = 0x69 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld l,d",            Size = 1, Index = 0x6a },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld l,e",            Size = 1, Index = 0x6b },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld l,h",            Size = 1, Index = 0x6c },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld l,l",            Size = 1, Index = 0x6d },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld l,(hl)",         Size = 1, Index = 0x6e },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld l,a",            Size = 1, Index = 0x6f },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (hl),b",         Size = 1, Index = 0x70 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (hl),c",         Size = 1, Index = 0x71 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (hl),d",         Size = 1, Index = 0x72 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (hl),e",         Size = 1, Index = 0x73 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (hl),h",         Size = 1, Index = 0x74 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (hl),l",         Size = 1, Index = 0x75 },
+            new Opcode{ CPU = "z80", DisasmFormat = "halt",              Size = 1, Index = 0x76 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (hl),a",         Size = 1, Index = 0x77 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld a,b",            Size = 1, Index = 0x78 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld a,c",            Size = 1, Index = 0x79 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld a,d",            Size = 1, Index = 0x7a },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld a,e",            Size = 1, Index = 0x7b },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld a,h",            Size = 1, Index = 0x7c },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld a,l",            Size = 1, Index = 0x7d },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld a,(hl)",         Size = 1, Index = 0x7e },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld a,a",            Size = 1, Index = 0x7f },
+            new Opcode{ CPU = "z80", DisasmFormat = "add a,b",           Size = 1, Index = 0x80 },
+            new Opcode{ CPU = "z80", DisasmFormat = "add a,c",           Size = 1, Index = 0x81 },
+            new Opcode{ CPU = "z80", DisasmFormat = "add a,d",           Size = 1, Index = 0x82 },
+            new Opcode{ CPU = "z80", DisasmFormat = "add a,e",           Size = 1, Index = 0x83 },
+            new Opcode{ CPU = "z80", DisasmFormat = "add a,h",           Size = 1, Index = 0x84 },
+            new Opcode{ CPU = "z80", DisasmFormat = "add a,l",           Size = 1, Index = 0x85 },
+            new Opcode{ CPU = "z80", DisasmFormat = "add a,(hl)",        Size = 1, Index = 0x86 },
+            new Opcode{ CPU = "z80", DisasmFormat = "add a,a",           Size = 1, Index = 0x87 },
+            new Opcode{ CPU = "z80", DisasmFormat = "adc a,b",           Size = 1, Index = 0x88 },
+            new Opcode{ CPU = "z80", DisasmFormat = "adc a,c",           Size = 1, Index = 0x89 },
+            new Opcode{ CPU = "z80", DisasmFormat = "adc a,d",           Size = 1, Index = 0x8a },
+            new Opcode{ CPU = "z80", DisasmFormat = "adc a,e",           Size = 1, Index = 0x8b },
+            new Opcode{ CPU = "z80", DisasmFormat = "adc a,h",           Size = 1, Index = 0x8c },
+            new Opcode{ CPU = "z80", DisasmFormat = "adc a,l",           Size = 1, Index = 0x8d },
+            new Opcode{ CPU = "z80", DisasmFormat = "adc a,(hl)",        Size = 1, Index = 0x8e },
+            new Opcode{ CPU = "z80", DisasmFormat = "adc a,a",           Size = 1, Index = 0x8f },
+            new Opcode{ CPU = "z80", DisasmFormat = "sub b",             Size = 1, Index = 0x90 },
+            new Opcode{ CPU = "z80", DisasmFormat = "sub c",             Size = 1, Index = 0x91 },
+            new Opcode{ CPU = "z80", DisasmFormat = "sub d",             Size = 1, Index = 0x92 },
+            new Opcode{ CPU = "z80", DisasmFormat = "sub e",             Size = 1, Index = 0x93 },
+            new Opcode{ CPU = "z80", DisasmFormat = "sub h",             Size = 1, Index = 0x94 },
+            new Opcode{ CPU = "z80", DisasmFormat = "sub l",             Size = 1, Index = 0x95 },
+            new Opcode{ CPU = "z80", DisasmFormat = "sub (hl)",          Size = 1, Index = 0x96 },
+            new Opcode{ CPU = "z80", DisasmFormat = "sub a",             Size = 1, Index = 0x97 },
+            new Opcode{ CPU = "z80", DisasmFormat = "sbc a,b",           Size = 1, Index = 0x98 },
+            new Opcode{ CPU = "z80", DisasmFormat = "sbc a,c",           Size = 1, Index = 0x99 },
+            new Opcode{ CPU = "z80", DisasmFormat = "sbc a,d",           Size = 1, Index = 0x9a },
+            new Opcode{ CPU = "z80", DisasmFormat = "sbc a,e",           Size = 1, Index = 0x9b },
+            new Opcode{ CPU = "z80", DisasmFormat = "sbc a,h",           Size = 1, Index = 0x9c },
+            new Opcode{ CPU = "z80", DisasmFormat = "sbc a,l",           Size = 1, Index = 0x9d },
+            new Opcode{ CPU = "z80", DisasmFormat = "sbc a,(hl)",        Size = 1, Index = 0x9e },
+            new Opcode{ CPU = "z80", DisasmFormat = "sbc a,a",           Size = 1, Index = 0x9f },
+            new Opcode{ CPU = "z80", DisasmFormat = "and b",             Size = 1, Index = 0xa0 },
+            new Opcode{ CPU = "z80", DisasmFormat = "and c",             Size = 1, Index = 0xa1 },
+            new Opcode{ CPU = "z80", DisasmFormat = "and d",             Size = 1, Index = 0xa2 },
+            new Opcode{ CPU = "z80", DisasmFormat = "and e",             Size = 1, Index = 0xa3 },
+            new Opcode{ CPU = "z80", DisasmFormat = "and h",             Size = 1, Index = 0xa4 },
+            new Opcode{ CPU = "z80", DisasmFormat = "and l",             Size = 1, Index = 0xa5 },
+            new Opcode{ CPU = "z80", DisasmFormat = "and (hl)",          Size = 1, Index = 0xa6 },
+            new Opcode{ CPU = "z80", DisasmFormat = "and a",             Size = 1, Index = 0xa7 },
+            new Opcode{ CPU = "z80", DisasmFormat = "xor b",             Size = 1, Index = 0xa8 },
+            new Opcode{ CPU = "z80", DisasmFormat = "xor c",             Size = 1, Index = 0xa9 },
+            new Opcode{ CPU = "z80", DisasmFormat = "xor d",             Size = 1, Index = 0xaa },
+            new Opcode{ CPU = "z80", DisasmFormat = "xor e",             Size = 1, Index = 0xab },
+            new Opcode{ CPU = "z80", DisasmFormat = "xor h",             Size = 1, Index = 0xac },
+            new Opcode{ CPU = "z80", DisasmFormat = "xor l",             Size = 1, Index = 0xad },
+            new Opcode{ CPU = "z80", DisasmFormat = "xor (hl)",          Size = 1, Index = 0xae },
+            new Opcode{ CPU = "z80", DisasmFormat = "xor a",             Size = 1, Index = 0xaf },
+            new Opcode{ CPU = "z80", DisasmFormat = "or b",              Size = 1, Index = 0xb0 },
+            new Opcode{ CPU = "z80", DisasmFormat = "or c",              Size = 1, Index = 0xb1 },
+            new Opcode{ CPU = "z80", DisasmFormat = "or d",              Size = 1, Index = 0xb2 },
+            new Opcode{ CPU = "z80", DisasmFormat = "or e",              Size = 1, Index = 0xb3 },
+            new Opcode{ CPU = "z80", DisasmFormat = "or h",              Size = 1, Index = 0xb4 },
+            new Opcode{ CPU = "z80", DisasmFormat = "or l",              Size = 1, Index = 0xb5 },
+            new Opcode{ CPU = "z80", DisasmFormat = "or (hl)",           Size = 1, Index = 0xb6 },
+            new Opcode{ CPU = "z80", DisasmFormat = "or a",              Size = 1, Index = 0xb7 },
+            new Opcode{ CPU = "z80", DisasmFormat = "cp b",              Size = 1, Index = 0xb8 },
+            new Opcode{ CPU = "z80", DisasmFormat = "cp c",              Size = 1, Index = 0xb9 },
+            new Opcode{ CPU = "z80", DisasmFormat = "cp d",              Size = 1, Index = 0xba },
+            new Opcode{ CPU = "z80", DisasmFormat = "cp e",              Size = 1, Index = 0xbb },
+            new Opcode{ CPU = "z80", DisasmFormat = "cp h",              Size = 1, Index = 0xbc },
+            new Opcode{ CPU = "z80", DisasmFormat = "cp l",              Size = 1, Index = 0xbd },
+            new Opcode{ CPU = "z80", DisasmFormat = "cp (hl)",           Size = 1, Index = 0xbe },
+            new Opcode{ CPU = "z80", DisasmFormat = "cp a",              Size = 1, Index = 0xbf },
+            new Opcode{ CPU = "z80", DisasmFormat = "ret nz",            Size = 1, Index = 0xc0 },
+            new Opcode{ CPU = "z80", DisasmFormat = "pop bc",            Size = 1, Index = 0xc1 },
+            new Opcode{ CPU = "z80", DisasmFormat = "jp nz,${0:x4}",     Size = 3, Index = 0xc2 },
+            new Opcode{ CPU = "z80", DisasmFormat = "jp ${0:x4}",        Size = 3, Index = 0xc3 },
+            new Opcode{ CPU = "z80", DisasmFormat = "call nz,${0:x4}",   Size = 3, Index = 0xc4 },
+            new Opcode{ CPU = "z80", DisasmFormat = "push bc",           Size = 1, Index = 0xc5 },
+            new Opcode{ CPU = "z80", DisasmFormat = "add a,${0:x2}",     Size = 2, Index = 0xc6 },
+            new Opcode{ CPU = "z80", DisasmFormat = "rst $00",           Size = 1, Index = 0xc7 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ret z",             Size = 1, Index = 0xc8 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ret",               Size = 1, Index = 0xc9 },
+            new Opcode{ CPU = "z80", DisasmFormat = "jp z,${0:x4}",      Size = 3, Index = 0xca },
+            new Opcode{ CPU = "z80", DisasmFormat = "call z,${0:x4}",    Size = 3, Index = 0xcc },
+            new Opcode{ CPU = "z80", DisasmFormat = "call ${0:x4}",      Size = 3, Index = 0xcd },
+            new Opcode{ CPU = "z80", DisasmFormat = "adc a,${0:x2}",     Size = 2, Index = 0xce },
+            new Opcode{ CPU = "z80", DisasmFormat = "rst $08",           Size = 1, Index = 0xcf },
+            new Opcode{ CPU = "z80", DisasmFormat = "ret nc",            Size = 1, Index = 0xd0 },
+            new Opcode{ CPU = "z80", DisasmFormat = "pop de",            Size = 1, Index = 0xd1 },
+            new Opcode{ CPU = "z80", DisasmFormat = "jp nc,${0:x4}",     Size = 3, Index = 0xd2 },
+            new Opcode{ CPU = "z80", DisasmFormat = "out (${0:x2}),a",   Size = 2, Index = 0xd3 },
+            new Opcode{ CPU = "z80", DisasmFormat = "call nc,${0:x4}",   Size = 3, Index = 0xd4 },
+            new Opcode{ CPU = "z80", DisasmFormat = "push de",           Size = 1, Index = 0xd5 },
+            new Opcode{ CPU = "z80", DisasmFormat = "sub ${0:x2}",       Size = 2, Index = 0xd6 },
+            new Opcode{ CPU = "z80", DisasmFormat = "rst $10",           Size = 1, Index = 0xd7 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ret c",             Size = 1, Index = 0xd8 },
+            new Opcode{ CPU = "z80", DisasmFormat = "exx",               Size = 1, Index = 0xd9 },
+            new Opcode{ CPU = "z80", DisasmFormat = "jp c,${0:x4}",      Size = 3, Index = 0xda },
+            new Opcode{ CPU = "z80", DisasmFormat = "in a,(${0:x2})",    Size = 2, Index = 0xdb },
+            new Opcode{ CPU = "z80", DisasmFormat = "call c,${0:x4}",    Size = 3, Index = 0xdc },
+            new Opcode{ CPU = "z80", DisasmFormat = "sbc a,${0:x2}",     Size = 2, Index = 0xde },
+            new Opcode{ CPU = "z80", DisasmFormat = "rst $18",           Size = 1, Index = 0xdf },
+            new Opcode{ CPU = "z80", DisasmFormat = "ret po",            Size = 1, Index = 0xe0 },
+            new Opcode{ CPU = "z80", DisasmFormat = "pop hl",            Size = 1, Index = 0xe1 },
+            new Opcode{ CPU = "z80", DisasmFormat = "jp po,${0:x4}",     Size = 3, Index = 0xe2 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ex (sp),hl",        Size = 1, Index = 0xe3 },
+            new Opcode{ CPU = "z80", DisasmFormat = "call po,${0:x4}",   Size = 3, Index = 0xe4 },
+            new Opcode{ CPU = "z80", DisasmFormat = "push hl",           Size = 1, Index = 0xe5 },
+            new Opcode{ CPU = "z80", DisasmFormat = "and ${0:x2}",       Size = 2, Index = 0xe6 },
+            new Opcode{ CPU = "z80", DisasmFormat = "rst $20",           Size = 1, Index = 0xe7 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ret pe",            Size = 1, Index = 0xe8 },
+            new Opcode{ CPU = "z80", DisasmFormat = "jp (hl)",           Size = 1, Index = 0xe9 },
+            new Opcode{ CPU = "z80", DisasmFormat = "jp pe,${0:x4}",     Size = 3, Index = 0xea },
+            new Opcode{ CPU = "z80", DisasmFormat = "ex de,hl",          Size = 1, Index = 0xeb },
+            new Opcode{ CPU = "z80", DisasmFormat = "call pe,${0:x4}",   Size = 3, Index = 0xec },
+            new Opcode{ CPU = "z80", DisasmFormat = "xor ${0:x2}",       Size = 2, Index = 0xee },
+            new Opcode{ CPU = "z80", DisasmFormat = "rst $28",           Size = 1, Index = 0xef },
+            new Opcode{ CPU = "z80", DisasmFormat = "ret p",             Size = 1, Index = 0xf0 },
+            new Opcode{ CPU = "z80", DisasmFormat = "pop af",            Size = 1, Index = 0xf1 },
+            new Opcode{ CPU = "z80", DisasmFormat = "jp p,${0:x4}",      Size = 3, Index = 0xf2 },
+            new Opcode{ CPU = "z80", DisasmFormat = "di",                Size = 1, Index = 0xf3 },
+            new Opcode{ CPU = "z80", DisasmFormat = "call p,${0:x4}",    Size = 3, Index = 0xf4 },
+            new Opcode{ CPU = "z80", DisasmFormat = "push af",           Size = 1, Index = 0xf5 },
+            new Opcode{ CPU = "z80", DisasmFormat = "or ${0:x2}",        Size = 2, Index = 0xf6 },
+            new Opcode{ CPU = "z80", DisasmFormat = "rst $30",           Size = 1, Index = 0xf7 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ret m",             Size = 1, Index = 0xf8 },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld sp,hl",          Size = 1, Index = 0xf9 },
+            new Opcode{ CPU = "z80", DisasmFormat = "jp m,${0:x4}",      Size = 3, Index = 0xfa },
+            new Opcode{ CPU = "z80", DisasmFormat = "ei",                Size = 1, Index = 0xfb },
+            new Opcode{ CPU = "z80", DisasmFormat = "call m,${0:x4}",    Size = 3, Index = 0xfc },
+            new Opcode{ CPU = "z80", DisasmFormat = "cp ${0:x2}",        Size = 2, Index = 0xfe },
+            new Opcode{ CPU = "z80", DisasmFormat = "rst $38",           Size = 1, Index = 0xff },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc b",             Size = 2, Index = 0x00cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc c",             Size = 2, Index = 0x01cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc d",             Size = 2, Index = 0x02cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc e",             Size = 2, Index = 0x03cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc h",             Size = 2, Index = 0x04cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc l",             Size = 2, Index = 0x05cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc (hl)",          Size = 2, Index = 0x06cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc a",             Size = 2, Index = 0x07cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc b",             Size = 2, Index = 0x08cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc c",             Size = 2, Index = 0x09cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc d",             Size = 2, Index = 0x0acb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc e",             Size = 2, Index = 0x0bcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc h",             Size = 2, Index = 0x0ccb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc l",             Size = 2, Index = 0x0dcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc (hl)",          Size = 2, Index = 0x0ecb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc a",             Size = 2, Index = 0x0fcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl b",              Size = 2, Index = 0x10cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl c",              Size = 2, Index = 0x11cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl d",              Size = 2, Index = 0x12cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl e",              Size = 2, Index = 0x13cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl h",              Size = 2, Index = 0x14cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl l",              Size = 2, Index = 0x15cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl (hl)",           Size = 2, Index = 0x16cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl a",              Size = 2, Index = 0x17cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr b",              Size = 2, Index = 0x18cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr c",              Size = 2, Index = 0x19cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr d",              Size = 2, Index = 0x1acb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr e",              Size = 2, Index = 0x1bcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr h",              Size = 2, Index = 0x1ccb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr l",              Size = 2, Index = 0x1dcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr (hl)",           Size = 2, Index = 0x1ecb },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr a",              Size = 2, Index = 0x1fcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla b",             Size = 2, Index = 0x20cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla c",             Size = 2, Index = 0x21cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla d",             Size = 2, Index = 0x22cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla e",             Size = 2, Index = 0x23cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla h",             Size = 2, Index = 0x24cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla l",             Size = 2, Index = 0x25cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla (hl)",          Size = 2, Index = 0x26cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla a",             Size = 2, Index = 0x27cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra b",             Size = 2, Index = 0x28cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra c",             Size = 2, Index = 0x29cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra d",             Size = 2, Index = 0x2acb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra e",             Size = 2, Index = 0x2bcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra h",             Size = 2, Index = 0x2ccb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra l",             Size = 2, Index = 0x2dcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra (hl)",          Size = 2, Index = 0x2ecb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra a",             Size = 2, Index = 0x2fcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll b",             Size = 2, Index = 0x30cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll c",             Size = 2, Index = 0x31cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll d",             Size = 2, Index = 0x32cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll e",             Size = 2, Index = 0x33cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll h",             Size = 2, Index = 0x34cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll l",             Size = 2, Index = 0x35cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll (hl)",          Size = 2, Index = 0x36cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll a",             Size = 2, Index = 0x37cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl b",             Size = 2, Index = 0x38cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl c",             Size = 2, Index = 0x39cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl d",             Size = 2, Index = 0x3acb },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl e",             Size = 2, Index = 0x3bcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl h",             Size = 2, Index = 0x3ccb },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl l",             Size = 2, Index = 0x3dcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl (hl)",          Size = 2, Index = 0x3ecb },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl a",             Size = 2, Index = 0x3fcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,b",           Size = 2, Index = 0x40cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,c",           Size = 2, Index = 0x41cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,d",           Size = 2, Index = 0x42cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,e",           Size = 2, Index = 0x43cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,h",           Size = 2, Index = 0x44cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,l",           Size = 2, Index = 0x45cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,(hl)",        Size = 2, Index = 0x46cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,a",           Size = 2, Index = 0x47cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,b",           Size = 2, Index = 0x48cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,c",           Size = 2, Index = 0x49cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,d",           Size = 2, Index = 0x4acb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,e",           Size = 2, Index = 0x4bcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,h",           Size = 2, Index = 0x4ccb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,l",           Size = 2, Index = 0x4dcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,(hl)",        Size = 2, Index = 0x4ecb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,a",           Size = 2, Index = 0x4fcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,b",           Size = 2, Index = 0x50cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,c",           Size = 2, Index = 0x51cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,d",           Size = 2, Index = 0x52cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,e",           Size = 2, Index = 0x53cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,h",           Size = 2, Index = 0x54cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,l",           Size = 2, Index = 0x55cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,(hl)",        Size = 2, Index = 0x56cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,a",           Size = 2, Index = 0x57cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,b",           Size = 2, Index = 0x58cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,c",           Size = 2, Index = 0x59cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,d",           Size = 2, Index = 0x5acb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,e",           Size = 2, Index = 0x5bcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,h",           Size = 2, Index = 0x5ccb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,l",           Size = 2, Index = 0x5dcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,(hl)",        Size = 2, Index = 0x5ecb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,a",           Size = 2, Index = 0x5fcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,b",           Size = 2, Index = 0x60cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,c",           Size = 2, Index = 0x61cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,d",           Size = 2, Index = 0x62cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,e",           Size = 2, Index = 0x63cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,h",           Size = 2, Index = 0x64cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,l",           Size = 2, Index = 0x65cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,(hl)",        Size = 2, Index = 0x66cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,a",           Size = 2, Index = 0x67cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,b",           Size = 2, Index = 0x68cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,c",           Size = 2, Index = 0x69cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,d",           Size = 2, Index = 0x6acb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,e",           Size = 2, Index = 0x6bcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,h",           Size = 2, Index = 0x6ccb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,l",           Size = 2, Index = 0x6dcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,(hl)",        Size = 2, Index = 0x6ecb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,a",           Size = 2, Index = 0x6fcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,b",           Size = 2, Index = 0x70cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,c",           Size = 2, Index = 0x71cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,d",           Size = 2, Index = 0x72cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,e",           Size = 2, Index = 0x73cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,h",           Size = 2, Index = 0x74cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,l",           Size = 2, Index = 0x75cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,(hl)",        Size = 2, Index = 0x76cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,a",           Size = 2, Index = 0x77cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,b",           Size = 2, Index = 0x78cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,c",           Size = 2, Index = 0x79cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,d",           Size = 2, Index = 0x7acb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,e",           Size = 2, Index = 0x7bcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,h",           Size = 2, Index = 0x7ccb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,l",           Size = 2, Index = 0x7dcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,(hl)",        Size = 2, Index = 0x7ecb },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,a",           Size = 2, Index = 0x7fcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,b",           Size = 2, Index = 0x80cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,c",           Size = 2, Index = 0x81cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,d",           Size = 2, Index = 0x82cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,e",           Size = 2, Index = 0x83cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,h",           Size = 2, Index = 0x84cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,l",           Size = 2, Index = 0x85cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,(hl)",        Size = 2, Index = 0x86cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,a",           Size = 2, Index = 0x87cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,b",           Size = 2, Index = 0x88cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,c",           Size = 2, Index = 0x89cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,d",           Size = 2, Index = 0x8acb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,e",           Size = 2, Index = 0x8bcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,h",           Size = 2, Index = 0x8ccb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,l",           Size = 2, Index = 0x8dcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,(hl)",        Size = 2, Index = 0x8ecb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,a",           Size = 2, Index = 0x8fcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,b",           Size = 2, Index = 0x90cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,c",           Size = 2, Index = 0x91cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,d",           Size = 2, Index = 0x92cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,e",           Size = 2, Index = 0x93cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,h",           Size = 2, Index = 0x94cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,l",           Size = 2, Index = 0x95cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,(hl)",        Size = 2, Index = 0x96cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,a",           Size = 2, Index = 0x97cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,b",           Size = 2, Index = 0x98cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,c",           Size = 2, Index = 0x99cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,d",           Size = 2, Index = 0x9acb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,e",           Size = 2, Index = 0x9bcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,h",           Size = 2, Index = 0x9ccb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,l",           Size = 2, Index = 0x9dcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,(hl)",        Size = 2, Index = 0x9ecb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,a",           Size = 2, Index = 0x9fcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,b",           Size = 2, Index = 0xa0cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,c",           Size = 2, Index = 0xa1cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,d",           Size = 2, Index = 0xa2cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,e",           Size = 2, Index = 0xa3cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,h",           Size = 2, Index = 0xa4cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,l",           Size = 2, Index = 0xa5cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,(hl)",        Size = 2, Index = 0xa6cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,a",           Size = 2, Index = 0xa7cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,b",           Size = 2, Index = 0xa8cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,c",           Size = 2, Index = 0xa9cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,d",           Size = 2, Index = 0xaacb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,e",           Size = 2, Index = 0xabcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,h",           Size = 2, Index = 0xaccb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,l",           Size = 2, Index = 0xadcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,(hl)",        Size = 2, Index = 0xaecb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,a",           Size = 2, Index = 0xafcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,b",           Size = 2, Index = 0xb0cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,c",           Size = 2, Index = 0xb1cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,d",           Size = 2, Index = 0xb2cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,e",           Size = 2, Index = 0xb3cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,h",           Size = 2, Index = 0xb4cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,l",           Size = 2, Index = 0xb5cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,(hl)",        Size = 2, Index = 0xb6cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,a",           Size = 2, Index = 0xb7cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,b",           Size = 2, Index = 0xb8cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,c",           Size = 2, Index = 0xb9cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,d",           Size = 2, Index = 0xbacb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,e",           Size = 2, Index = 0xbbcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,h",           Size = 2, Index = 0xbccb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,l",           Size = 2, Index = 0xbdcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,(hl)",        Size = 2, Index = 0xbecb },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,a",           Size = 2, Index = 0xbfcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,b",           Size = 2, Index = 0xc0cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,c",           Size = 2, Index = 0xc1cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,d",           Size = 2, Index = 0xc2cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,e",           Size = 2, Index = 0xc3cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,h",           Size = 2, Index = 0xc4cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,l",           Size = 2, Index = 0xc5cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,(hl)",        Size = 2, Index = 0xc6cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,a",           Size = 2, Index = 0xc7cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,b",           Size = 2, Index = 0xc8cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,c",           Size = 2, Index = 0xc9cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,d",           Size = 2, Index = 0xcacb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,e",           Size = 2, Index = 0xcbcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,h",           Size = 2, Index = 0xcccb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,l",           Size = 2, Index = 0xcdcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,(hl)",        Size = 2, Index = 0xcecb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,a",           Size = 2, Index = 0xcfcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,b",           Size = 2, Index = 0xd0cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,c",           Size = 2, Index = 0xd1cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,d",           Size = 2, Index = 0xd2cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,e",           Size = 2, Index = 0xd3cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,h",           Size = 2, Index = 0xd4cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,l",           Size = 2, Index = 0xd5cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,(hl)",        Size = 2, Index = 0xd6cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,a",           Size = 2, Index = 0xd7cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,b",           Size = 2, Index = 0xd8cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,c",           Size = 2, Index = 0xd9cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,d",           Size = 2, Index = 0xdacb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,e",           Size = 2, Index = 0xdbcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,h",           Size = 2, Index = 0xdccb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,l",           Size = 2, Index = 0xddcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,(hl)",        Size = 2, Index = 0xdecb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,a",           Size = 2, Index = 0xdfcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,b",           Size = 2, Index = 0xe0cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,c",           Size = 2, Index = 0xe1cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,d",           Size = 2, Index = 0xe2cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,e",           Size = 2, Index = 0xe3cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,h",           Size = 2, Index = 0xe4cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,l",           Size = 2, Index = 0xe5cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,(hl)",        Size = 2, Index = 0xe6cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,a",           Size = 2, Index = 0xe7cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,b",           Size = 2, Index = 0xe8cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,c",           Size = 2, Index = 0xe9cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,d",           Size = 2, Index = 0xeacb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,e",           Size = 2, Index = 0xebcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,h",           Size = 2, Index = 0xeccb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,l",           Size = 2, Index = 0xedcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,(hl)",        Size = 2, Index = 0xeecb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,a",           Size = 2, Index = 0xefcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,b",           Size = 2, Index = 0xf0cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,c",           Size = 2, Index = 0xf1cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,d",           Size = 2, Index = 0xf2cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,e",           Size = 2, Index = 0xf3cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,h",           Size = 2, Index = 0xf4cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,l",           Size = 2, Index = 0xf5cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,(hl)",        Size = 2, Index = 0xf6cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,a",           Size = 2, Index = 0xf7cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,b",           Size = 2, Index = 0xf8cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,c",           Size = 2, Index = 0xf9cb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,d",           Size = 2, Index = 0xfacb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,e",           Size = 2, Index = 0xfbcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,h",           Size = 2, Index = 0xfccb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,l",           Size = 2, Index = 0xfdcb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,(hl)",        Size = 2, Index = 0xfecb },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,a",           Size = 2, Index = 0xffcb },  
+            new Opcode{ CPU = "z80", DisasmFormat = "in b,(c)",          Size = 2, Index = 0x40ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "out (c),b",         Size = 2, Index = 0x41ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "sbc hl,bc",         Size = 2, Index = 0x42ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (${0:x4}),bc",   Size = 4, Index = 0x43ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "neg",               Size = 2, Index = 0x44ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "retn",              Size = 2, Index = 0x45ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "im 0",              Size = 2, Index = 0x46ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld i,a",            Size = 2, Index = 0x47ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "in c,(c)",          Size = 2, Index = 0x48ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "out (c),c",         Size = 2, Index = 0x49ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "adc hl,bc",         Size = 2, Index = 0x4aed },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld bc,(${0:x4})",   Size = 4, Index = 0x4bed },
+            new Opcode{ CPU = "z80", DisasmFormat = "neg",               Size = 2, Index = 0x4ced },
+            new Opcode{ CPU = "z80", DisasmFormat = "reti",              Size = 2, Index = 0x4ded },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld r,a",            Size = 2, Index = 0x4fed },
+            new Opcode{ CPU = "z80", DisasmFormat = "in d,(c)",          Size = 2, Index = 0x50ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "out (c),d",         Size = 2, Index = 0x51ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "sbc hl,de",         Size = 2, Index = 0x52ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (${0:x4}),de",   Size = 4, Index = 0x53ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "neg",               Size = 2, Index = 0x54ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "retn",              Size = 2, Index = 0x55ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "im 1",              Size = 2, Index = 0x56ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld a,i",            Size = 2, Index = 0x57ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "in e,(c)",          Size = 2, Index = 0x58ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "out (c),e",         Size = 2, Index = 0x59ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "adc hl,de",         Size = 2, Index = 0x5aed },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld de,(${0:x4})",   Size = 4, Index = 0x5bed },
+            new Opcode{ CPU = "z80", DisasmFormat = "neg",               Size = 2, Index = 0x5ced },
+            new Opcode{ CPU = "z80", DisasmFormat = "retn",              Size = 2, Index = 0x5ded },
+            new Opcode{ CPU = "z80", DisasmFormat = "im 2",              Size = 2, Index = 0x5eed },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld a,r",            Size = 2, Index = 0x5fed },
+            new Opcode{ CPU = "z80", DisasmFormat = "in h,(c)",          Size = 2, Index = 0x60ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "out (c),h",         Size = 2, Index = 0x61ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "sbc hl,hl",         Size = 2, Index = 0x62ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (${0:x4}),hl",   Size = 4, Index = 0x63ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "neg",               Size = 2, Index = 0x64ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "retn",              Size = 2, Index = 0x65ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "im 0",              Size = 2, Index = 0x66ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrd",               Size = 2, Index = 0x67ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "in l,(c)",          Size = 2, Index = 0x68ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "out (c),l",         Size = 2, Index = 0x69ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "adc hl,hl",         Size = 2, Index = 0x6aed },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld hl,(${0:x4})",   Size = 4, Index = 0x6bed },
+            new Opcode{ CPU = "z80", DisasmFormat = "neg",               Size = 2, Index = 0x6ced },
+            new Opcode{ CPU = "z80", DisasmFormat = "retn",              Size = 2, Index = 0x6ded },
+            new Opcode{ CPU = "z80", DisasmFormat = "rld",               Size = 2, Index = 0x6fed },
+            new Opcode{ CPU = "z80", DisasmFormat = "in (c)",            Size = 2, Index = 0x70ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "out (c),0",         Size = 2, Index = 0x71ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "sbc hl,sp",         Size = 2, Index = 0x72ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (${0:x4}),sp",   Size = 4, Index = 0x73ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "neg",               Size = 2, Index = 0x74ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "retn",              Size = 2, Index = 0x75ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "im 1",              Size = 2, Index = 0x76ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "in a,(c)",          Size = 2, Index = 0x78ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "out (c),a",         Size = 2, Index = 0x79ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "adc hl,sp",         Size = 2, Index = 0x7aed },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld sp,(${0:x4})",   Size = 4, Index = 0x7bed },
+            new Opcode{ CPU = "z80", DisasmFormat = "neg",               Size = 2, Index = 0x7ced },
+            new Opcode{ CPU = "z80", DisasmFormat = "retn",              Size = 2, Index = 0x7ded },
+            new Opcode{ CPU = "z80", DisasmFormat = "im 2",              Size = 2, Index = 0x7eed },
+            new Opcode{ CPU = "z80", DisasmFormat = "ldi",               Size = 2, Index = 0xa0ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "cpi",               Size = 2, Index = 0xa1ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "ini",               Size = 2, Index = 0xa2ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "outi",              Size = 2, Index = 0xa3ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "ldd",               Size = 2, Index = 0xa8ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "cpd",               Size = 2, Index = 0xa9ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "ind",               Size = 2, Index = 0xaaed },
+            new Opcode{ CPU = "z80", DisasmFormat = "outd",              Size = 2, Index = 0xabed },
+            new Opcode{ CPU = "z80", DisasmFormat = "ldir",              Size = 2, Index = 0xb0ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "cpir",              Size = 2, Index = 0xb1ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "inir",              Size = 2, Index = 0xb2ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "otir",              Size = 2, Index = 0xb3ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "lddr",              Size = 2, Index = 0xb8ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "cpdr",              Size = 2, Index = 0xb9ed },
+            new Opcode{ CPU = "z80", DisasmFormat = "indr",              Size = 2, Index = 0xbaed },
+            new Opcode{ CPU = "z80", DisasmFormat = "otdr",              Size = 2, Index = 0xbbed },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc (ix+${0:x2}),b",    Size = 4, Index = 0x00cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc (ix+${0:x2}),c",    Size = 4, Index = 0x01cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc (ix+${0:x2}),d",    Size = 4, Index = 0x02cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc (ix+${0:x2}),e",    Size = 4, Index = 0x03cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc (ix+${0:x2}),h",    Size = 4, Index = 0x04cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc (ix+${0:x2}),l",    Size = 4, Index = 0x05cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc (ix+${0:x2})",      Size = 4, Index = 0x06cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc (ix+${0:x2}),a",    Size = 4, Index = 0x07cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc (ix+${0:x2}),b",    Size = 4, Index = 0x08cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc (ix+${0:x2}),c",    Size = 4, Index = 0x09cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc (ix+${0:x2}),d",    Size = 4, Index = 0x0acbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc (ix+${0:x2}),e",    Size = 4, Index = 0x0bcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc (ix+${0:x2}),h",    Size = 4, Index = 0x0ccbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc (ix+${0:x2}),l",    Size = 4, Index = 0x0dcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc (ix+${0:x2})",      Size = 4, Index = 0x0ecbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc (ix+${0:x2}),a",    Size = 4, Index = 0x0fcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl (ix+${0:x2}),b",     Size = 4, Index = 0x10cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl (ix+${0:x2}),c",     Size = 4, Index = 0x11cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl (ix+${0:x2}),d",     Size = 4, Index = 0x12cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl (ix+${0:x2}),e",     Size = 4, Index = 0x13cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl (ix+${0:x2}),h",     Size = 4, Index = 0x14cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl (ix+${0:x2}),l",     Size = 4, Index = 0x15cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl (ix+${0:x2})",       Size = 4, Index = 0x16cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl (ix+${0:x2}),a",     Size = 4, Index = 0x17cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr (ix+${0:x2}),b",     Size = 4, Index = 0x18cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr (ix+${0:x2}),c",     Size = 4, Index = 0x19cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr (ix+${0:x2}),d",     Size = 4, Index = 0x1acbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr (ix+${0:x2}),e",     Size = 4, Index = 0x1bcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr (ix+${0:x2}),h",     Size = 4, Index = 0x1ccbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr (ix+${0:x2}),l",     Size = 4, Index = 0x1dcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr (ix+${0:x2})",       Size = 4, Index = 0x1ecbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr (ix+${0:x2}),a",     Size = 4, Index = 0x1fcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla (ix+${0:x2}),b",    Size = 4, Index = 0x20cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla (ix+${0:x2}),c",    Size = 4, Index = 0x21cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla (ix+${0:x2}),d",    Size = 4, Index = 0x22cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla (ix+${0:x2}),e",    Size = 4, Index = 0x23cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla (ix+${0:x2}),h",    Size = 4, Index = 0x24cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla (ix+${0:x2}),l",    Size = 4, Index = 0x25cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla (ix+${0:x2})",      Size = 4, Index = 0x26cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla (ix+${0:x2}),a",    Size = 4, Index = 0x27cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra (ix+${0:x2}),b",    Size = 4, Index = 0x28cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra (ix+${0:x2}),c",    Size = 4, Index = 0x29cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra (ix+${0:x2}),d",    Size = 4, Index = 0x2acbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra (ix+${0:x2}),e",    Size = 4, Index = 0x2bcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra (ix+${0:x2}),h",    Size = 4, Index = 0x2ccbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra (ix+${0:x2}),l",    Size = 4, Index = 0x2dcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra (ix+${0:x2})",      Size = 4, Index = 0x2ecbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra (ix+${0:x2}),a",    Size = 4, Index = 0x2fcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll (ix+${0:x2}),b",    Size = 4, Index = 0x30cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll (ix+${0:x2}),c",    Size = 4, Index = 0x31cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll (ix+${0:x2}),d",    Size = 4, Index = 0x32cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll (ix+${0:x2}),e",    Size = 4, Index = 0x33cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll (ix+${0:x2}),h",    Size = 4, Index = 0x34cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll (ix+${0:x2}),l",    Size = 4, Index = 0x35cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll (ix+${0:x2})",      Size = 4, Index = 0x36cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll (ix+${0:x2}),a",    Size = 4, Index = 0x37cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl (ix+${0:x2}),b",    Size = 4, Index = 0x38cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl (ix+${0:x2}),c",    Size = 4, Index = 0x39cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl (ix+${0:x2}),d",    Size = 4, Index = 0x3acbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl (ix+${0:x2}),e",    Size = 4, Index = 0x3bcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl (ix+${0:x2}),h",    Size = 4, Index = 0x3ccbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl (ix+${0:x2}),l",    Size = 4, Index = 0x3dcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl (ix+${0:x2})",      Size = 4, Index = 0x3ecbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl (ix+${0:x2}),a",    Size = 4, Index = 0x3fcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,(ix+${0:x2}),b",  Size = 4, Index = 0x40cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,(ix+${0:x2}),c",  Size = 4, Index = 0x41cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,(ix+${0:x2}),d",  Size = 4, Index = 0x42cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,(ix+${0:x2}),e",  Size = 4, Index = 0x43cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,(ix+${0:x2}),h",  Size = 4, Index = 0x44cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,(ix+${0:x2}),l",  Size = 4, Index = 0x45cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,(ix+${0:x2})",    Size = 4, Index = 0x46cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,(ix+${0:x2}),a",  Size = 4, Index = 0x47cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,(ix+${0:x2}),b",  Size = 4, Index = 0x48cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,(ix+${0:x2}),c",  Size = 4, Index = 0x49cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,(ix+${0:x2}),d",  Size = 4, Index = 0x4acbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,(ix+${0:x2}),e",  Size = 4, Index = 0x4bcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,(ix+${0:x2}),h",  Size = 4, Index = 0x4ccbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,(ix+${0:x2}),l",  Size = 4, Index = 0x4dcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,(ix+${0:x2})",    Size = 4, Index = 0x4ecbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,(ix+${0:x2}),a",  Size = 4, Index = 0x4fcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,(ix+${0:x2}),b",  Size = 4, Index = 0x50cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,(ix+${0:x2}),c",  Size = 4, Index = 0x51cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,(ix+${0:x2}),d",  Size = 4, Index = 0x52cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,(ix+${0:x2}),e",  Size = 4, Index = 0x53cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,(ix+${0:x2}),h",  Size = 4, Index = 0x54cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,(ix+${0:x2}),l",  Size = 4, Index = 0x55cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,(ix+${0:x2})",    Size = 4, Index = 0x56cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,(ix+${0:x2}),a",  Size = 4, Index = 0x57cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,(ix+${0:x2}),b",  Size = 4, Index = 0x58cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,(ix+${0:x2}),c",  Size = 4, Index = 0x59cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,(ix+${0:x2}),d",  Size = 4, Index = 0x5acbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,(ix+${0:x2}),e",  Size = 4, Index = 0x5bcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,(ix+${0:x2}),h",  Size = 4, Index = 0x5ccbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,(ix+${0:x2}),l",  Size = 4, Index = 0x5dcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,(ix+${0:x2})",    Size = 4, Index = 0x5ecbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,(ix+${0:x2}),a",  Size = 4, Index = 0x5fcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,(ix+${0:x2}),b",  Size = 4, Index = 0x60cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,(ix+${0:x2}),c",  Size = 4, Index = 0x61cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,(ix+${0:x2}),d",  Size = 4, Index = 0x62cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,(ix+${0:x2}),e",  Size = 4, Index = 0x63cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,(ix+${0:x2}),h",  Size = 4, Index = 0x64cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,(ix+${0:x2}),l",  Size = 4, Index = 0x65cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,(ix+${0:x2})",    Size = 4, Index = 0x66cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,(ix+${0:x2}),a",  Size = 4, Index = 0x67cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,(ix+${0:x2}),b",  Size = 4, Index = 0x68cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,(ix+${0:x2}),c",  Size = 4, Index = 0x69cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,(ix+${0:x2}),d",  Size = 4, Index = 0x6acbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,(ix+${0:x2}),e",  Size = 4, Index = 0x6bcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,(ix+${0:x2}),h",  Size = 4, Index = 0x6ccbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,(ix+${0:x2}),l",  Size = 4, Index = 0x6dcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,(ix+${0:x2})",    Size = 4, Index = 0x6ecbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,(ix+${0:x2}),a",  Size = 4, Index = 0x6fcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,(ix+${0:x2}),b",  Size = 4, Index = 0x70cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,(ix+${0:x2}),c",  Size = 4, Index = 0x71cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,(ix+${0:x2}),d",  Size = 4, Index = 0x72cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,(ix+${0:x2}),e",  Size = 4, Index = 0x73cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,(ix+${0:x2}),h",  Size = 4, Index = 0x74cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,(ix+${0:x2}),l",  Size = 4, Index = 0x75cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,(ix+${0:x2})",    Size = 4, Index = 0x76cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,(ix+${0:x2}),a",  Size = 4, Index = 0x77cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,(ix+${0:x2}),b",  Size = 4, Index = 0x78cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,(ix+${0:x2}),c",  Size = 4, Index = 0x79cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,(ix+${0:x2}),d",  Size = 4, Index = 0x7acbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,(ix+${0:x2}),e",  Size = 4, Index = 0x7bcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,(ix+${0:x2}),h",  Size = 4, Index = 0x7ccbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,(ix+${0:x2}),l",  Size = 4, Index = 0x7dcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,(ix+${0:x2})",    Size = 4, Index = 0x7ecbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,(ix+${0:x2}),a",  Size = 4, Index = 0x7fcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,(ix+${0:x2}),b",  Size = 4, Index = 0x80cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,(ix+${0:x2}),c",  Size = 4, Index = 0x81cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,(ix+${0:x2}),d",  Size = 4, Index = 0x82cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,(ix+${0:x2}),e",  Size = 4, Index = 0x83cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,(ix+${0:x2}),h",  Size = 4, Index = 0x84cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,(ix+${0:x2}),l",  Size = 4, Index = 0x85cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,(ix+${0:x2})",    Size = 4, Index = 0x86cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,(ix+${0:x2}),a",  Size = 4, Index = 0x87cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,(ix+${0:x2}),b",  Size = 4, Index = 0x88cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,(ix+${0:x2}),c",  Size = 4, Index = 0x89cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,(ix+${0:x2}),d",  Size = 4, Index = 0x8acbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,(ix+${0:x2}),e",  Size = 4, Index = 0x8bcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,(ix+${0:x2}),h",  Size = 4, Index = 0x8ccbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,(ix+${0:x2}),l",  Size = 4, Index = 0x8dcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,(ix+${0:x2})",    Size = 4, Index = 0x8ecbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,(ix+${0:x2}),a",  Size = 4, Index = 0x8fcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,(ix+${0:x2}),b",  Size = 4, Index = 0x90cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,(ix+${0:x2}),c",  Size = 4, Index = 0x91cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,(ix+${0:x2}),d",  Size = 4, Index = 0x92cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,(ix+${0:x2}),e",  Size = 4, Index = 0x93cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,(ix+${0:x2}),h",  Size = 4, Index = 0x94cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,(ix+${0:x2}),l",  Size = 4, Index = 0x95cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,(ix+${0:x2})",    Size = 4, Index = 0x96cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,(ix+${0:x2}),a",  Size = 4, Index = 0x97cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,(ix+${0:x2}),b",  Size = 4, Index = 0x98cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,(ix+${0:x2}),c",  Size = 4, Index = 0x99cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,(ix+${0:x2}),d",  Size = 4, Index = 0x9acbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,(ix+${0:x2}),e",  Size = 4, Index = 0x9bcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,(ix+${0:x2}),h",  Size = 4, Index = 0x9ccbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,(ix+${0:x2}),l",  Size = 4, Index = 0x9dcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,(ix+${0:x2})",    Size = 4, Index = 0x9ecbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,(ix+${0:x2}),a",  Size = 4, Index = 0x9fcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,(ix+${0:x2}),b",  Size = 4, Index = 0xa0cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,(ix+${0:x2}),c",  Size = 4, Index = 0xa1cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,(ix+${0:x2}),d",  Size = 4, Index = 0xa2cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,(ix+${0:x2}),e",  Size = 4, Index = 0xa3cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,(ix+${0:x2}),h",  Size = 4, Index = 0xa4cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,(ix+${0:x2}),l",  Size = 4, Index = 0xa5cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,(ix+${0:x2})",    Size = 4, Index = 0xa6cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,(ix+${0:x2}),a",  Size = 4, Index = 0xa7cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,(ix+${0:x2}),b",  Size = 4, Index = 0xa8cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,(ix+${0:x2}),c",  Size = 4, Index = 0xa9cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,(ix+${0:x2}),d",  Size = 4, Index = 0xaacbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,(ix+${0:x2}),e",  Size = 4, Index = 0xabcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,(ix+${0:x2}),h",  Size = 4, Index = 0xaccbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,(ix+${0:x2}),l",  Size = 4, Index = 0xadcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,(ix+${0:x2})",    Size = 4, Index = 0xaecbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,(ix+${0:x2}),a",  Size = 4, Index = 0xafcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,(ix+${0:x2}),b",  Size = 4, Index = 0xb0cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,(ix+${0:x2}),c",  Size = 4, Index = 0xb1cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,(ix+${0:x2}),d",  Size = 4, Index = 0xb2cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,(ix+${0:x2}),e",  Size = 4, Index = 0xb3cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,(ix+${0:x2}),h",  Size = 4, Index = 0xb4cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,(ix+${0:x2}),l",  Size = 4, Index = 0xb5cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,(ix+${0:x2})",    Size = 4, Index = 0xb6cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,(ix+${0:x2}),a",  Size = 4, Index = 0xb7cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,(ix+${0:x2}),b",  Size = 4, Index = 0xb8cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,(ix+${0:x2}),c",  Size = 4, Index = 0xb9cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,(ix+${0:x2}),d",  Size = 4, Index = 0xbacbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,(ix+${0:x2}),e",  Size = 4, Index = 0xbbcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,(ix+${0:x2}),h",  Size = 4, Index = 0xbccbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,(ix+${0:x2}),l",  Size = 4, Index = 0xbdcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,(ix+${0:x2})",    Size = 4, Index = 0xbecbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,(ix+${0:x2}),a",  Size = 4, Index = 0xbfcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,(ix+${0:x2}),b",  Size = 4, Index = 0xc0cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,(ix+${0:x2}),c",  Size = 4, Index = 0xc1cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,(ix+${0:x2}),d",  Size = 4, Index = 0xc2cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,(ix+${0:x2}),e",  Size = 4, Index = 0xc3cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,(ix+${0:x2}),h",  Size = 4, Index = 0xc4cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,(ix+${0:x2}),l",  Size = 4, Index = 0xc5cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,(ix+${0:x2})",    Size = 4, Index = 0xc6cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,(ix+${0:x2}),a",  Size = 4, Index = 0xc7cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,(ix+${0:x2}),b",  Size = 4, Index = 0xc8cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,(ix+${0:x2}),c",  Size = 4, Index = 0xc9cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,(ix+${0:x2}),d",  Size = 4, Index = 0xcacbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,(ix+${0:x2}),e",  Size = 4, Index = 0xcbcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,(ix+${0:x2}),h",  Size = 4, Index = 0xcccbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,(ix+${0:x2}),l",  Size = 4, Index = 0xcdcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,(ix+${0:x2})",    Size = 4, Index = 0xcecbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,(ix+${0:x2}),a",  Size = 4, Index = 0xcfcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,(ix+${0:x2}),b",  Size = 4, Index = 0xd0cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,(ix+${0:x2}),c",  Size = 4, Index = 0xd1cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,(ix+${0:x2}),d",  Size = 4, Index = 0xd2cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,(ix+${0:x2}),e",  Size = 4, Index = 0xd3cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,(ix+${0:x2}),h",  Size = 4, Index = 0xd4cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,(ix+${0:x2}),l",  Size = 4, Index = 0xd5cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,(ix+${0:x2})",    Size = 4, Index = 0xd6cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,(ix+${0:x2}),a",  Size = 4, Index = 0xd7cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,(ix+${0:x2}),b",  Size = 4, Index = 0xd8cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,(ix+${0:x2}),c",  Size = 4, Index = 0xd9cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,(ix+${0:x2}),d",  Size = 4, Index = 0xdacbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,(ix+${0:x2}),e",  Size = 4, Index = 0xdbcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,(ix+${0:x2}),h",  Size = 4, Index = 0xdccbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,(ix+${0:x2}),l",  Size = 4, Index = 0xddcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,(ix+${0:x2})",    Size = 4, Index = 0xdecbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,(ix+${0:x2}),a",  Size = 4, Index = 0xdfcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,(ix+${0:x2}),b",  Size = 4, Index = 0xe0cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,(ix+${0:x2}),c",  Size = 4, Index = 0xe1cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,(ix+${0:x2}),d",  Size = 4, Index = 0xe2cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,(ix+${0:x2}),e",  Size = 4, Index = 0xe3cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,(ix+${0:x2}),h",  Size = 4, Index = 0xe4cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,(ix+${0:x2}),l",  Size = 4, Index = 0xe5cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,(ix+${0:x2})",    Size = 4, Index = 0xe6cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,(ix+${0:x2}),a",  Size = 4, Index = 0xe7cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,(ix+${0:x2}),b",  Size = 4, Index = 0xe8cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,(ix+${0:x2}),c",  Size = 4, Index = 0xe9cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,(ix+${0:x2}),d",  Size = 4, Index = 0xeacbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,(ix+${0:x2}),e",  Size = 4, Index = 0xebcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,(ix+${0:x2}),h",  Size = 4, Index = 0xeccbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,(ix+${0:x2}),l",  Size = 4, Index = 0xedcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,(ix+${0:x2})",    Size = 4, Index = 0xeecbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,(ix+${0:x2}),a",  Size = 4, Index = 0xefcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,(ix+${0:x2}),b",  Size = 4, Index = 0xf0cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,(ix+${0:x2}),c",  Size = 4, Index = 0xf1cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,(ix+${0:x2}),d",  Size = 4, Index = 0xf2cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,(ix+${0:x2}),e",  Size = 4, Index = 0xf3cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,(ix+${0:x2}),h",  Size = 4, Index = 0xf4cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,(ix+${0:x2}),l",  Size = 4, Index = 0xf5cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,(ix+${0:x2})",    Size = 4, Index = 0xf6cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,(ix+${0:x2}),a",  Size = 4, Index = 0xf7cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,(ix+${0:x2}),b",  Size = 4, Index = 0xf8cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,(ix+${0:x2}),c",  Size = 4, Index = 0xf9cbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,(ix+${0:x2}),d",  Size = 4, Index = 0xfacbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,(ix+${0:x2}),e",  Size = 4, Index = 0xfbcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,(ix+${0:x2}),h",  Size = 4, Index = 0xfccbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,(ix+${0:x2}),l",  Size = 4, Index = 0xfdcbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,(ix+${0:x2})",    Size = 4, Index = 0xfecbdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,(ix+${0:x2}),a",  Size = 4, Index = 0xffcbdd },  
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc (iy+${0:x2}),b",    Size = 4, Index = 0x00cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc (iy+${0:x2}),c",    Size = 4, Index = 0x01cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc (iy+${0:x2}),d",    Size = 4, Index = 0x02cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc (iy+${0:x2}),e",    Size = 4, Index = 0x03cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc (iy+${0:x2}),h",    Size = 4, Index = 0x04cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc (iy+${0:x2}),l",    Size = 4, Index = 0x05cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc (iy+${0:x2})",      Size = 4, Index = 0x06cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rlc (iy+${0:x2}),a",    Size = 4, Index = 0x07cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc (iy+${0:x2}),b",    Size = 4, Index = 0x08cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc (iy+${0:x2}),c",    Size = 4, Index = 0x09cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc (iy+${0:x2}),d",    Size = 4, Index = 0x0acbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc (iy+${0:x2}),e",    Size = 4, Index = 0x0bcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc (iy+${0:x2}),h",    Size = 4, Index = 0x0ccbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc (iy+${0:x2}),l",    Size = 4, Index = 0x0dcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc (iy+${0:x2})",      Size = 4, Index = 0x0ecbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rrc (iy+${0:x2}),a",    Size = 4, Index = 0x0fcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl (iy+${0:x2}),b",     Size = 4, Index = 0x10cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl (iy+${0:x2}),c",     Size = 4, Index = 0x11cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl (iy+${0:x2}),d",     Size = 4, Index = 0x12cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl (iy+${0:x2}),e",     Size = 4, Index = 0x13cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl (iy+${0:x2}),h",     Size = 4, Index = 0x14cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl (iy+${0:x2}),l",     Size = 4, Index = 0x15cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl (iy+${0:x2})",       Size = 4, Index = 0x16cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rl (iy+${0:x2}),a",     Size = 4, Index = 0x17cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr (iy+${0:x2}),b",     Size = 4, Index = 0x18cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr (iy+${0:x2}),c",     Size = 4, Index = 0x19cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr (iy+${0:x2}),d",     Size = 4, Index = 0x1acbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr (iy+${0:x2}),e",     Size = 4, Index = 0x1bcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr (iy+${0:x2}),h",     Size = 4, Index = 0x1ccbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr (iy+${0:x2}),l",     Size = 4, Index = 0x1dcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr (iy+${0:x2})",       Size = 4, Index = 0x1ecbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "rr (iy+${0:x2}),a",     Size = 4, Index = 0x1fcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla (iy+${0:x2}),b",    Size = 4, Index = 0x20cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla (iy+${0:x2}),c",    Size = 4, Index = 0x21cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla (iy+${0:x2}),d",    Size = 4, Index = 0x22cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla (iy+${0:x2}),e",    Size = 4, Index = 0x23cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla (iy+${0:x2}),h",    Size = 4, Index = 0x24cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla (iy+${0:x2}),l",    Size = 4, Index = 0x25cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla (iy+${0:x2})",      Size = 4, Index = 0x26cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sla (iy+${0:x2}),a",    Size = 4, Index = 0x27cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra (iy+${0:x2}),b",    Size = 4, Index = 0x28cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra (iy+${0:x2}),c",    Size = 4, Index = 0x29cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra (iy+${0:x2}),d",    Size = 4, Index = 0x2acbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra (iy+${0:x2}),e",    Size = 4, Index = 0x2bcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra (iy+${0:x2}),h",    Size = 4, Index = 0x2ccbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra (iy+${0:x2}),l",    Size = 4, Index = 0x2dcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra (iy+${0:x2})",      Size = 4, Index = 0x2ecbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sra (iy+${0:x2}),a",    Size = 4, Index = 0x2fcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll (iy+${0:x2}),b",    Size = 4, Index = 0x30cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll (iy+${0:x2}),c",    Size = 4, Index = 0x31cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll (iy+${0:x2}),d",    Size = 4, Index = 0x32cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll (iy+${0:x2}),e",    Size = 4, Index = 0x33cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll (iy+${0:x2}),h",    Size = 4, Index = 0x34cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll (iy+${0:x2}),l",    Size = 4, Index = 0x35cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll (iy+${0:x2})",      Size = 4, Index = 0x36cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sll (iy+${0:x2}),a",    Size = 4, Index = 0x37cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl (iy+${0:x2}),b",    Size = 4, Index = 0x38cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl (iy+${0:x2}),c",    Size = 4, Index = 0x39cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl (iy+${0:x2}),d",    Size = 4, Index = 0x3acbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl (iy+${0:x2}),e",    Size = 4, Index = 0x3bcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl (iy+${0:x2}),h",    Size = 4, Index = 0x3ccbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl (iy+${0:x2}),l",    Size = 4, Index = 0x3dcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl (iy+${0:x2})",      Size = 4, Index = 0x3ecbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "srl (iy+${0:x2}),a",    Size = 4, Index = 0x3fcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,(iy+${0:x2}),b",  Size = 4, Index = 0x40cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,(iy+${0:x2}),c",  Size = 4, Index = 0x41cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,(iy+${0:x2}),d",  Size = 4, Index = 0x42cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,(iy+${0:x2}),e",  Size = 4, Index = 0x43cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,(iy+${0:x2}),h",  Size = 4, Index = 0x44cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,(iy+${0:x2}),l",  Size = 4, Index = 0x45cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,(iy+${0:x2})",    Size = 4, Index = 0x46cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 0,(iy+${0:x2}),a",  Size = 4, Index = 0x47cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,(iy+${0:x2}),b",  Size = 4, Index = 0x48cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,(iy+${0:x2}),c",  Size = 4, Index = 0x49cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,(iy+${0:x2}),d",  Size = 4, Index = 0x4acbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,(iy+${0:x2}),e",  Size = 4, Index = 0x4bcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,(iy+${0:x2}),h",  Size = 4, Index = 0x4ccbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,(iy+${0:x2}),l",  Size = 4, Index = 0x4dcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,(iy+${0:x2})",    Size = 4, Index = 0x4ecbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 1,(iy+${0:x2}),a",  Size = 4, Index = 0x4fcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,(iy+${0:x2}),b",  Size = 4, Index = 0x50cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,(iy+${0:x2}),c",  Size = 4, Index = 0x51cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,(iy+${0:x2}),d",  Size = 4, Index = 0x52cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,(iy+${0:x2}),e",  Size = 4, Index = 0x53cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,(iy+${0:x2}),h",  Size = 4, Index = 0x54cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,(iy+${0:x2}),l",  Size = 4, Index = 0x55cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,(iy+${0:x2})",    Size = 4, Index = 0x56cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 2,(iy+${0:x2}),a",  Size = 4, Index = 0x57cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,(iy+${0:x2}),b",  Size = 4, Index = 0x58cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,(iy+${0:x2}),c",  Size = 4, Index = 0x59cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,(iy+${0:x2}),d",  Size = 4, Index = 0x5acbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,(iy+${0:x2}),e",  Size = 4, Index = 0x5bcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,(iy+${0:x2}),h",  Size = 4, Index = 0x5ccbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,(iy+${0:x2}),l",  Size = 4, Index = 0x5dcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,(iy+${0:x2})",    Size = 4, Index = 0x5ecbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 3,(iy+${0:x2}),a",  Size = 4, Index = 0x5fcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,(iy+${0:x2}),b",  Size = 4, Index = 0x60cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,(iy+${0:x2}),c",  Size = 4, Index = 0x61cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,(iy+${0:x2}),d",  Size = 4, Index = 0x62cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,(iy+${0:x2}),e",  Size = 4, Index = 0x63cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,(iy+${0:x2}),h",  Size = 4, Index = 0x64cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,(iy+${0:x2}),l",  Size = 4, Index = 0x65cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,(iy+${0:x2})",    Size = 4, Index = 0x66cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 4,(iy+${0:x2}),a",  Size = 4, Index = 0x67cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,(iy+${0:x2}),b",  Size = 4, Index = 0x68cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,(iy+${0:x2}),c",  Size = 4, Index = 0x69cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,(iy+${0:x2}),d",  Size = 4, Index = 0x6acbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,(iy+${0:x2}),e",  Size = 4, Index = 0x6bcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,(iy+${0:x2}),h",  Size = 4, Index = 0x6ccbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,(iy+${0:x2}),l",  Size = 4, Index = 0x6dcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,(iy+${0:x2})",    Size = 4, Index = 0x6ecbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 5,(iy+${0:x2}),a",  Size = 4, Index = 0x6fcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,(iy+${0:x2}),b",  Size = 4, Index = 0x70cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,(iy+${0:x2}),c",  Size = 4, Index = 0x71cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,(iy+${0:x2}),d",  Size = 4, Index = 0x72cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,(iy+${0:x2}),e",  Size = 4, Index = 0x73cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,(iy+${0:x2}),h",  Size = 4, Index = 0x74cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,(iy+${0:x2}),l",  Size = 4, Index = 0x75cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,(iy+${0:x2})",    Size = 4, Index = 0x76cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 6,(iy+${0:x2}),a",  Size = 4, Index = 0x77cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,(iy+${0:x2}),b",  Size = 4, Index = 0x78cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,(iy+${0:x2}),c",  Size = 4, Index = 0x79cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,(iy+${0:x2}),d",  Size = 4, Index = 0x7acbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,(iy+${0:x2}),e",  Size = 4, Index = 0x7bcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,(iy+${0:x2}),h",  Size = 4, Index = 0x7ccbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,(iy+${0:x2}),l",  Size = 4, Index = 0x7dcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,(iy+${0:x2})",    Size = 4, Index = 0x7ecbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "bit 7,(iy+${0:x2}),a",  Size = 4, Index = 0x7fcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,(iy+${0:x2}),b",  Size = 4, Index = 0x80cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,(iy+${0:x2}),c",  Size = 4, Index = 0x81cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,(iy+${0:x2}),d",  Size = 4, Index = 0x82cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,(iy+${0:x2}),e",  Size = 4, Index = 0x83cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,(iy+${0:x2}),h",  Size = 4, Index = 0x84cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,(iy+${0:x2}),l",  Size = 4, Index = 0x85cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,(iy+${0:x2})",    Size = 4, Index = 0x86cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 0,(iy+${0:x2}),a",  Size = 4, Index = 0x87cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,(iy+${0:x2}),b",  Size = 4, Index = 0x88cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,(iy+${0:x2}),c",  Size = 4, Index = 0x89cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,(iy+${0:x2}),d",  Size = 4, Index = 0x8acbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,(iy+${0:x2}),e",  Size = 4, Index = 0x8bcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,(iy+${0:x2}),h",  Size = 4, Index = 0x8ccbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,(iy+${0:x2}),l",  Size = 4, Index = 0x8dcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,(iy+${0:x2})",    Size = 4, Index = 0x8ecbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 1,(iy+${0:x2}),a",  Size = 4, Index = 0x8fcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,(iy+${0:x2}),b",  Size = 4, Index = 0x90cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,(iy+${0:x2}),c",  Size = 4, Index = 0x91cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,(iy+${0:x2}),d",  Size = 4, Index = 0x92cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,(iy+${0:x2}),e",  Size = 4, Index = 0x93cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,(iy+${0:x2}),h",  Size = 4, Index = 0x94cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,(iy+${0:x2}),l",  Size = 4, Index = 0x95cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,(iy+${0:x2})",    Size = 4, Index = 0x96cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 2,(iy+${0:x2}),a",  Size = 4, Index = 0x97cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,(iy+${0:x2}),b",  Size = 4, Index = 0x98cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,(iy+${0:x2}),c",  Size = 4, Index = 0x99cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,(iy+${0:x2}),d",  Size = 4, Index = 0x9acbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,(iy+${0:x2}),e",  Size = 4, Index = 0x9bcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,(iy+${0:x2}),h",  Size = 4, Index = 0x9ccbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,(iy+${0:x2}),l",  Size = 4, Index = 0x9dcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,(iy+${0:x2})",    Size = 4, Index = 0x9ecbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 3,(iy+${0:x2}),a",  Size = 4, Index = 0x9fcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,(iy+${0:x2}),b",  Size = 4, Index = 0xa0cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,(iy+${0:x2}),c",  Size = 4, Index = 0xa1cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,(iy+${0:x2}),d",  Size = 4, Index = 0xa2cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,(iy+${0:x2}),e",  Size = 4, Index = 0xa3cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,(iy+${0:x2}),h",  Size = 4, Index = 0xa4cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,(iy+${0:x2}),l",  Size = 4, Index = 0xa5cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,(iy+${0:x2})",    Size = 4, Index = 0xa6cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 4,(iy+${0:x2}),a",  Size = 4, Index = 0xa7cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,(iy+${0:x2}),b",  Size = 4, Index = 0xa8cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,(iy+${0:x2}),c",  Size = 4, Index = 0xa9cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,(iy+${0:x2}),d",  Size = 4, Index = 0xaacbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,(iy+${0:x2}),e",  Size = 4, Index = 0xabcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,(iy+${0:x2}),h",  Size = 4, Index = 0xaccbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,(iy+${0:x2}),l",  Size = 4, Index = 0xadcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,(iy+${0:x2})",    Size = 4, Index = 0xaecbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 5,(iy+${0:x2}),a",  Size = 4, Index = 0xafcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,(iy+${0:x2}),b",  Size = 4, Index = 0xb0cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,(iy+${0:x2}),c",  Size = 4, Index = 0xb1cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,(iy+${0:x2}),d",  Size = 4, Index = 0xb2cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,(iy+${0:x2}),e",  Size = 4, Index = 0xb3cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,(iy+${0:x2}),h",  Size = 4, Index = 0xb4cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,(iy+${0:x2}),l",  Size = 4, Index = 0xb5cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,(iy+${0:x2})",    Size = 4, Index = 0xb6cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 6,(iy+${0:x2}),a",  Size = 4, Index = 0xb7cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,(iy+${0:x2}),b",  Size = 4, Index = 0xb8cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,(iy+${0:x2}),c",  Size = 4, Index = 0xb9cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,(iy+${0:x2}),d",  Size = 4, Index = 0xbacbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,(iy+${0:x2}),e",  Size = 4, Index = 0xbbcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,(iy+${0:x2}),h",  Size = 4, Index = 0xbccbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,(iy+${0:x2}),l",  Size = 4, Index = 0xbdcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,(iy+${0:x2})",    Size = 4, Index = 0xbecbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "res 7,(iy+${0:x2}),a",  Size = 4, Index = 0xbfcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,(iy+${0:x2}),b",  Size = 4, Index = 0xc0cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,(iy+${0:x2}),c",  Size = 4, Index = 0xc1cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,(iy+${0:x2}),d",  Size = 4, Index = 0xc2cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,(iy+${0:x2}),e",  Size = 4, Index = 0xc3cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,(iy+${0:x2}),h",  Size = 4, Index = 0xc4cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,(iy+${0:x2}),l",  Size = 4, Index = 0xc5cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,(iy+${0:x2})",    Size = 4, Index = 0xc6cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 0,(iy+${0:x2}),a",  Size = 4, Index = 0xc7cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,(iy+${0:x2}),b",  Size = 4, Index = 0xc8cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,(iy+${0:x2}),c",  Size = 4, Index = 0xc9cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,(iy+${0:x2}),d",  Size = 4, Index = 0xcacbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,(iy+${0:x2}),e",  Size = 4, Index = 0xcbcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,(iy+${0:x2}),h",  Size = 4, Index = 0xcccbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,(iy+${0:x2}),l",  Size = 4, Index = 0xcdcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,(iy+${0:x2})",    Size = 4, Index = 0xcecbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 1,(iy+${0:x2}),a",  Size = 4, Index = 0xcfcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,(iy+${0:x2}),b",  Size = 4, Index = 0xd0cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,(iy+${0:x2}),c",  Size = 4, Index = 0xd1cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,(iy+${0:x2}),d",  Size = 4, Index = 0xd2cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,(iy+${0:x2}),e",  Size = 4, Index = 0xd3cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,(iy+${0:x2}),h",  Size = 4, Index = 0xd4cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,(iy+${0:x2}),l",  Size = 4, Index = 0xd5cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,(iy+${0:x2})",    Size = 4, Index = 0xd6cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 2,(iy+${0:x2}),a",  Size = 4, Index = 0xd7cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,(iy+${0:x2}),b",  Size = 4, Index = 0xd8cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,(iy+${0:x2}),c",  Size = 4, Index = 0xd9cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,(iy+${0:x2}),d",  Size = 4, Index = 0xdacbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,(iy+${0:x2}),e",  Size = 4, Index = 0xdbcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,(iy+${0:x2}),h",  Size = 4, Index = 0xdccbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,(iy+${0:x2}),l",  Size = 4, Index = 0xddcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,(iy+${0:x2})",    Size = 4, Index = 0xdecbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 3,(iy+${0:x2}),a",  Size = 4, Index = 0xdfcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,(iy+${0:x2}),b",  Size = 4, Index = 0xe0cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,(iy+${0:x2}),c",  Size = 4, Index = 0xe1cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,(iy+${0:x2}),d",  Size = 4, Index = 0xe2cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,(iy+${0:x2}),e",  Size = 4, Index = 0xe3cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,(iy+${0:x2}),h",  Size = 4, Index = 0xe4cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,(iy+${0:x2}),l",  Size = 4, Index = 0xe5cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,(iy+${0:x2})",    Size = 4, Index = 0xe6cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 4,(iy+${0:x2}),a",  Size = 4, Index = 0xe7cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,(iy+${0:x2}),b",  Size = 4, Index = 0xe8cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,(iy+${0:x2}),c",  Size = 4, Index = 0xe9cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,(iy+${0:x2}),d",  Size = 4, Index = 0xeacbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,(iy+${0:x2}),e",  Size = 4, Index = 0xebcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,(iy+${0:x2}),h",  Size = 4, Index = 0xeccbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,(iy+${0:x2}),l",  Size = 4, Index = 0xedcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,(iy+${0:x2})",    Size = 4, Index = 0xeecbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 5,(iy+${0:x2}),a",  Size = 4, Index = 0xefcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,(iy+${0:x2}),b",  Size = 4, Index = 0xf0cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,(iy+${0:x2}),c",  Size = 4, Index = 0xf1cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,(iy+${0:x2}),d",  Size = 4, Index = 0xf2cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,(iy+${0:x2}),e",  Size = 4, Index = 0xf3cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,(iy+${0:x2}),h",  Size = 4, Index = 0xf4cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,(iy+${0:x2}),l",  Size = 4, Index = 0xf5cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,(iy+${0:x2})",    Size = 4, Index = 0xf6cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 6,(iy+${0:x2}),a",  Size = 4, Index = 0xf7cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,(iy+${0:x2}),b",  Size = 4, Index = 0xf8cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,(iy+${0:x2}),c",  Size = 4, Index = 0xf9cbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,(iy+${0:x2}),d",  Size = 4, Index = 0xfacbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,(iy+${0:x2}),e",  Size = 4, Index = 0xfbcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,(iy+${0:x2}),h",  Size = 4, Index = 0xfccbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,(iy+${0:x2}),l",  Size = 4, Index = 0xfdcbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,(iy+${0:x2})",    Size = 4, Index = 0xfecbfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "set 7,(iy+${0:x2}),a",  Size = 4, Index = 0xffcbfd },  
+            new Opcode{ CPU = "z80", DisasmFormat = "add ix,bc",                 Size = 2, Index = 0x09dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "add ix,de",                 Size = 2, Index = 0x19dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld ix,${0:x4}",             Size = 4, Index = 0x21dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (${0:x4}),ix",           Size = 4, Index = 0x22dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "inc ix",                    Size = 2, Index = 0x23dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "inc ixh",                   Size = 2, Index = 0x24dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "dec ixh",                   Size = 2, Index = 0x25dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld ixh,${0:x2}",            Size = 3, Index = 0x26dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "add ix,ix",                 Size = 2, Index = 0x29dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld ix,(${0:x4})",           Size = 4, Index = 0x2add },
+            new Opcode{ CPU = "z80", DisasmFormat = "dec ix",                    Size = 2, Index = 0x2bdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "inc ixl",                   Size = 2, Index = 0x2cdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "dec ixl",                   Size = 2, Index = 0x2ddd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld ixl,${0:x2}",            Size = 3, Index = 0x2edd },
+            new Opcode{ CPU = "z80", DisasmFormat = "inc (ix+${0:x2})",          Size = 3, Index = 0x34dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "dec (ix+${0:x2})",          Size = 3, Index = 0x35dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (ix+${0:x2}),${1:x2}",   Size = 4, Index = 0x36dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "add ix,sp",                 Size = 2, Index = 0x39dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld b,ixh",                  Size = 2, Index = 0x44dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld b,ixl",                  Size = 2, Index = 0x45dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld b,(ix+${0:x2})",         Size = 3, Index = 0x46dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld c,ixh",                  Size = 2, Index = 0x4cdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld c,ixl",                  Size = 2, Index = 0x4ddd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld c,(ix+${0:x2})",         Size = 3, Index = 0x4edd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld d,ixh",                  Size = 2, Index = 0x54dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld d,ixl",                  Size = 2, Index = 0x55dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld d,(ix+${0:x2})",         Size = 3, Index = 0x56dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld e,ixh",                  Size = 2, Index = 0x5cdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld e,ixl",                  Size = 2, Index = 0x5ddd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld e,(ix+${0:x2})",         Size = 3, Index = 0x5edd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld ixh,b",                  Size = 2, Index = 0x60dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld ixh,c",                  Size = 2, Index = 0x61dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld ixh,d",                  Size = 2, Index = 0x62dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld ixh,e",                  Size = 2, Index = 0x63dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld ixh,ixh",                Size = 2, Index = 0x64dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld ixh,ixl",                Size = 2, Index = 0x65dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld h,(ix+${0:x2})",         Size = 3, Index = 0x66dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld ixh,a",                  Size = 2, Index = 0x67dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld ixl,b",                  Size = 2, Index = 0x68dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld ixl,c",                  Size = 2, Index = 0x69dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld ixl,d",                  Size = 2, Index = 0x6add },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld ixl,e",                  Size = 2, Index = 0x6bdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld ixl,ixh",                Size = 2, Index = 0x6cdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld ixl,ixl",                Size = 2, Index = 0x6ddd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld l,(ix+${0:x2})",         Size = 3, Index = 0x6edd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld ixl,a",                  Size = 2, Index = 0x6fdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (ix+${0:x2}),b",         Size = 3, Index = 0x70dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (ix+${0:x2}),c",         Size = 3, Index = 0x71dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (ix+${0:x2}),d",         Size = 3, Index = 0x72dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (ix+${0:x2}),e",         Size = 3, Index = 0x73dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (ix+${0:x2}),h",         Size = 3, Index = 0x74dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (ix+${0:x2}),l",         Size = 3, Index = 0x75dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (ix+${0:x2}),a",         Size = 3, Index = 0x77dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld a,ixh",                  Size = 2, Index = 0x7cdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld a,ixl",                  Size = 2, Index = 0x7ddd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld a,(ix+${0:x2})",         Size = 3, Index = 0x7edd },
+            new Opcode{ CPU = "z80", DisasmFormat = "add a,ixh",                 Size = 2, Index = 0x84dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "add a,ixl",                 Size = 2, Index = 0x85dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "add a,(ix+${0:x2})",        Size = 3, Index = 0x86dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "adc a,ixh",                 Size = 2, Index = 0x8cdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "adc a,ixl",                 Size = 2, Index = 0x8ddd },
+            new Opcode{ CPU = "z80", DisasmFormat = "adc a,(ix+${0:x2})",        Size = 3, Index = 0x8edd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sub ixh",                   Size = 2, Index = 0x94dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sub ixl",                   Size = 2, Index = 0x95dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sub (ix+${0:x2})",          Size = 3, Index = 0x96dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sbc a,ixh",                 Size = 2, Index = 0x9cdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sbc a,ixl",                 Size = 2, Index = 0x9ddd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sbc a,(ix+${0:x2})",        Size = 3, Index = 0x9edd },
+            new Opcode{ CPU = "z80", DisasmFormat = "and ixh",                   Size = 2, Index = 0xa4dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "and ixl",                   Size = 2, Index = 0xa5dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "and (ix+${0:x2})",          Size = 3, Index = 0xa6dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "xor ixh",                   Size = 2, Index = 0xacdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "xor ixl",                   Size = 2, Index = 0xaddd },
+            new Opcode{ CPU = "z80", DisasmFormat = "xor (ix+${0:x2})",          Size = 3, Index = 0xaedd },            
+            new Opcode{ CPU = "z80", DisasmFormat = "or ixh",                    Size = 2, Index = 0xb4dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "or ixl",                    Size = 2, Index = 0xb5dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "or (ix+${0:x2})",           Size = 3, Index = 0xb6dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "cp ixh",                    Size = 2, Index = 0xbcdd },
+            new Opcode{ CPU = "z80", DisasmFormat = "cp ixl",                    Size = 2, Index = 0xbddd },
+            new Opcode{ CPU = "z80", DisasmFormat = "cp (ix+${0:x2})",           Size = 3, Index = 0xbedd },
+            new Opcode{ CPU = "z80", DisasmFormat = "pop ix",                    Size = 2, Index = 0xe1dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ex (sp),ix",                Size = 2, Index = 0xe3dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "push ix",                   Size = 2, Index = 0xe5dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "jp (ix)",                   Size = 2, Index = 0xe9dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld sp,ix",                  Size = 2, Index = 0xf9dd },
+            new Opcode{ CPU = "z80", DisasmFormat = "add iy,bc",                 Size = 2, Index = 0x09fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "add iy,de",                 Size = 2, Index = 0x19fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld iy,${0:x4}",             Size = 4, Index = 0x21fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (${0:x4}),iy",           Size = 4, Index = 0x22fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "inc iy",                    Size = 2, Index = 0x23fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "inc iyh",                   Size = 2, Index = 0x24fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "dec iyh",                   Size = 2, Index = 0x25fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld iyh,${0:x2}",            Size = 3, Index = 0x26fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "add iy,iy",                 Size = 2, Index = 0x29fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld iy,(${0:x4})",           Size = 4, Index = 0x2afd },
+            new Opcode{ CPU = "z80", DisasmFormat = "dec iy",                    Size = 2, Index = 0x2bfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "inc iyl",                   Size = 2, Index = 0x2cfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "dec iyl",                   Size = 2, Index = 0x2dfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld iyl,${0:x2}",            Size = 3, Index = 0x2efd },
+            new Opcode{ CPU = "z80", DisasmFormat = "inc (iy+${0:x2})",          Size = 3, Index = 0x34fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "dec (iy+${0:x2})",          Size = 3, Index = 0x35fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (iy+${0:x2}),${1:x2}",   Size = 4, Index = 0x36fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "add iy,sp",                 Size = 2, Index = 0x39fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld b,iyh",                  Size = 2, Index = 0x44fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld b,iyl",                  Size = 2, Index = 0x45fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld b,(iy+${0:x2})",         Size = 3, Index = 0x46fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld c,iyh",                  Size = 2, Index = 0x4cfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld c,iyl",                  Size = 2, Index = 0x4dfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld c,(iy+${0:x2})",         Size = 3, Index = 0x4efd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld d,iyh",                  Size = 2, Index = 0x54fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld d,iyl",                  Size = 2, Index = 0x55fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld d,(iy+${0:x2})",         Size = 3, Index = 0x56fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld e,iyh",                  Size = 2, Index = 0x5cfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld e,iyl",                  Size = 2, Index = 0x5dfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld e,(iy+${0:x2})",         Size = 3, Index = 0x5efd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld iyh,b",                  Size = 2, Index = 0x60fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld iyh,c",                  Size = 2, Index = 0x61fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld iyh,d",                  Size = 2, Index = 0x62fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld iyh,e",                  Size = 2, Index = 0x63fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld iyh,iyh",                Size = 2, Index = 0x64fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld iyh,iyl",                Size = 2, Index = 0x65fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld h,(iy+${0:x2})",         Size = 3, Index = 0x66fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld iyh,a",                  Size = 2, Index = 0x67fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld iyl,b",                  Size = 2, Index = 0x68fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld iyl,c",                  Size = 2, Index = 0x69fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld iyl,d",                  Size = 2, Index = 0x6afd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld iyl,e",                  Size = 2, Index = 0x6bfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld iyl,iyh",                Size = 2, Index = 0x6cfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld iyl,iyl",                Size = 2, Index = 0x6dfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld l,(iy+${0:x2})",         Size = 3, Index = 0x6efd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld iyl,a",                  Size = 2, Index = 0x6ffd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (iy+${0:x2}),b",         Size = 3, Index = 0x70fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (iy+${0:x2}),c",         Size = 3, Index = 0x71fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (iy+${0:x2}),d",         Size = 3, Index = 0x72fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (iy+${0:x2}),e",         Size = 3, Index = 0x73fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (iy+${0:x2}),h",         Size = 3, Index = 0x74fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (iy+${0:x2}),l",         Size = 3, Index = 0x75fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld (iy+${0:x2}),a",         Size = 3, Index = 0x77fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld a,iyh",                  Size = 2, Index = 0x7cfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld a,iyl",                  Size = 2, Index = 0x7dfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld a,(iy+${0:x2})",         Size = 3, Index = 0x7efd },
+            new Opcode{ CPU = "z80", DisasmFormat = "add a,iyh",                 Size = 2, Index = 0x84fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "add a,iyl",                 Size = 2, Index = 0x85fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "add a,(iy+${0:x2})",        Size = 3, Index = 0x86fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "adc a,iyh",                 Size = 2, Index = 0x8cfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "adc a,iyl",                 Size = 2, Index = 0x8dfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "adc a,(iy+${0:x2})",        Size = 3, Index = 0x8efd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sub iyh",                   Size = 2, Index = 0x94fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sub iyl",                   Size = 2, Index = 0x95fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sub (iy+${0:x2})",          Size = 3, Index = 0x96fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sbc a,iyh",                 Size = 2, Index = 0x9cfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sbc a,iyl",                 Size = 2, Index = 0x9dfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "sbc a,(iy+${0:x2})",        Size = 3, Index = 0x9efd },
+            new Opcode{ CPU = "z80", DisasmFormat = "and iyh",                   Size = 2, Index = 0xa4fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "and iyl",                   Size = 2, Index = 0xa5fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "and (iy+${0:x2})",          Size = 3, Index = 0xa6fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "xor iyh",                   Size = 2, Index = 0xacfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "xor iyl",                   Size = 2, Index = 0xadfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "xor (iy+${0:x2})",          Size = 3, Index = 0xaefd },            
+            new Opcode{ CPU = "z80", DisasmFormat = "or iyh",                    Size = 2, Index = 0xb4fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "or iyl",                    Size = 2, Index = 0xb5fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "or (iy+${0:x2})",           Size = 3, Index = 0xb6fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "cp iyh",                    Size = 2, Index = 0xbcfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "cp iyl",                    Size = 2, Index = 0xbdfd },
+            new Opcode{ CPU = "z80", DisasmFormat = "cp (iy+${0:x2})",           Size = 3, Index = 0xbefd },
+            new Opcode{ CPU = "z80", DisasmFormat = "pop iy",                    Size = 2, Index = 0xe1fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ex (sp),iy",                Size = 2, Index = 0xe3fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "push iy",                   Size = 2, Index = 0xe5fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "jp (iy)",                   Size = 2, Index = 0xe9fd },
+            new Opcode{ CPU = "z80", DisasmFormat = "ld sp,iy",                  Size = 2, Index = 0xf9fd },
         };
 
         FormatBuilder[] _builders;

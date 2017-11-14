@@ -21,13 +21,12 @@
 //-----------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace DotNetAsm
 {
-    public class Disassembler: AssemblerBase, ILineDisassembler
+    public class Disassembler : AssemblerBase, ILineDisassembler
     {
         #region Constructors
 
@@ -39,10 +38,11 @@ namespace DotNetAsm
             : base(controller)
         {
             PrintingOn = true;
-            Reserved.DefineType("Blocks", ConstStrings.OPEN_SCOPE, ConstStrings.CLOSE_SCOPE );
+            Reserved.DefineType("Blocks", ConstStrings.OPEN_SCOPE, ConstStrings.CLOSE_SCOPE);
             Reserved.DefineType("Directives",
-                    ".elif", ".else", ".endif", ".eor", ".error", ".errorif", ".if", ".ifdef", 
-                    ".warnif", ".relocate", ".pseudopc", ".realpc", ".endrelocate", ".warn"
+                    ".cpu", ".elif", ".else", ".endif", ".eor", ".error", ".errorif", ".if", ".ifdef",
+                    ".warnif", ".relocate", ".pseudopc", ".realpc", ".endrelocate", ".warn",
+                    ".m16", ".m8", ".x16", ".x8", ".mx16", ".mx8"
                 );
         }
 
@@ -62,7 +62,7 @@ namespace DotNetAsm
             if (string.IsNullOrEmpty(lineinfo) == false)
             {
                 if (lineinfo.Length > 14)
-                lineinfo = lineinfo.Substring(0, 11) + "...";
+                    lineinfo = lineinfo.Substring(0, 11) + "...";
                 lineinfo += "(" + line.LineNumber.ToString() + ")";
             }
             return string.Format("{0,-20}:", lineinfo);
@@ -80,8 +80,8 @@ namespace DotNetAsm
                 Reserved.IsReserved(line.Instruction))) ||
                 line.DoNotAssemble)
                 return string.Empty;
-                      
-            if (line.Instruction == "=" || 
+
+            if (line.Instruction == "=" ||
                 line.Instruction.Equals(".equ", Controller.Options.StringComparison))
             {
                 Int64 value = 0;
@@ -118,7 +118,7 @@ namespace DotNetAsm
             if (sb.Length > 24)
             {
                 long pc = line.PC;
-                
+
                 var subdisasms = sb.ToString().SplitByLength(24).ToList();
                 sb.Clear();
 
@@ -156,10 +156,7 @@ namespace DotNetAsm
                     PrintingOn = true;
                 else PrintingOn &= !line.Instruction.Equals(".proff");
             }
-            if (!PrintingOn)
-                return;// printing has been suppressed
-
-            if (line.SourceString.Equals(ConstStrings.SHADOW_SOURCE))
+            if (!PrintingOn || line.SourceString.Equals(ConstStrings.SHADOW_SOURCE))
                 return;
 
             string sourcestr = line.SourceString;
@@ -206,7 +203,7 @@ namespace DotNetAsm
                 else
                     sb.AppendFormat("{0,-13}", asm);
             }
-            
+
             if (Controller.Options.NoDissasembly == false)
             {
                 if (string.IsNullOrEmpty(line.Disassembly) == false)
@@ -219,7 +216,7 @@ namespace DotNetAsm
                 sb.AppendFormat("{0,-10}", sourcestr);
             else if (string.IsNullOrEmpty(line.Disassembly) && line.Assembly.Count == 0)
                 sb.TrimEnd();
-            
+
             sb.AppendLine();
         }
 

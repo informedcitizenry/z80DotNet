@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------------
+﻿//-----------------------------------------------------------------------------
 // Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,35 +20,20 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+using System;
+
 namespace DotNetAsm
 {
     /// <summary>
-    /// Defines an interface for a line assembler.
+    /// Cpu changed event arguments.
     /// </summary>
-    public interface ILineAssembler
+    public class CpuChangedEventArgs : EventArgs
     {
-        /// <summary>
-        /// Assemble the line of source into output bytes of the
-        /// target architecture.
-        /// </summary>
-        /// <param name="line">The source line to assemble.</param>
-        void AssembleLine(SourceLine line);
-
-        /// <summary>
-        /// Gets the size of the instruction in the source line. This value might not be valid
-        /// on first pass, but is guaranteed to be valid before final pass.
-        /// </summary>
-        /// <param name="line">The source line to query.</param>
-        /// <returns>Returns the size in bytes of the instruction or directive.</returns>
-        int GetInstructionSize(SourceLine line);
-
-        /// <summary>
-        /// Indicates whether this line assembler will assemble the 
-        /// given instruction or directive.
-        /// </summary>
-        /// <param name="instruction">The instruction.</param>
-        /// <returns>True, if the line assembler can assemble the source, 
-        /// otherwise false.</returns>
-        bool AssemblesInstruction(string instruction);
+        public SourceLine Line { get; set; }
     }
+
+    /// <summary>
+    /// CPU change event handler delegate
+    /// </summary>
+    public delegate void CpuChangeEventHandler(CpuChangedEventArgs args);
 }

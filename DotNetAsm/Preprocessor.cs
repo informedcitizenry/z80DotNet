@@ -24,7 +24,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace DotNetAsm
 {
@@ -52,7 +51,7 @@ namespace DotNetAsm
         {
             FileRegistry = new HashSet<string>();
             _symbolNameFunc = checkSymbol;
-            Reserved.DefineType("Directives", ".binclude", ".include", ".comment",  ".endcomment");
+            Reserved.DefineType("Directives", ".binclude", ".include", ".comment", ".endcomment");
         }
 
         #endregion
@@ -97,7 +96,7 @@ namespace DotNetAsm
         /// <summary>
         /// Preprocess all comment blocks, macro and segment definitions.
         /// </summary>
-        /// <param name="sourcelines">The SourceLine list</param>
+        /// <param name="sourcelines">The <see cref="T:System.Collections.Generic.IEnumerable&lt;DotNetAsm.SourceLine&gt;"/>collection</param>
         /// <returns></returns>
         public IEnumerable<SourceLine> Preprocess(IEnumerable<SourceLine> sourcelines)
         {
@@ -178,11 +177,11 @@ namespace DotNetAsm
         void ProcessCommentBlocks(IEnumerable<SourceLine> source)
         {
             bool incomments = false;
-            foreach(var line in source)
+            foreach (var line in source)
             {
                 if (!incomments)
                     incomments = line.Instruction.Equals(".comment", Controller.Options.StringComparison);
-                
+
                 line.IsComment = incomments;
                 if (line.Instruction.Equals(".endcomment", Controller.Options.StringComparison))
                 {
@@ -190,7 +189,7 @@ namespace DotNetAsm
                         incomments = false;
                     else
                         Controller.Log.LogEntry(line, ErrorStrings.ClosureDoesNotCloseBlock, line.Instruction);
-                }   
+                }
             }
             if (incomments)
                 throw new Exception(ErrorStrings.MissingClosure);
@@ -200,7 +199,7 @@ namespace DotNetAsm
         /// Converts a file to a SourceLine list.
         /// </summary>
         /// <param name="file">The filename.</param>
-        /// <returns>A SourceLine list.</returns>
+        /// <returns>A <see cref="T:System.Collections.Generic.IEnumerable&lt;DotNetAsm.SourceLine&gt;"/> d.</returns>
         public IEnumerable<SourceLine> ConvertToSource(string file)
         {
             if (FileRegistry.Add(file) == false)
@@ -220,7 +219,7 @@ namespace DotNetAsm
                         {
                             var line = new SourceLine(file, currentline, unprocessedline);
                             line.Parse(
-                                delegate(string token)
+                                delegate (string token)
                                 {
                                     return Controller.IsInstruction(token) || Reserved.IsReserved(token) ||
                                         (token.StartsWith(".") && Macro.IsValidMacroName(token.Substring(1))) ||
