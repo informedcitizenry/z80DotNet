@@ -20,7 +20,10 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+<<<<<<< Updated upstream
 using System;
+=======
+>>>>>>> Stashed changes
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -49,6 +52,7 @@ namespace DotNetAsm
             _anon = 0;
         }
 
+<<<<<<< Updated upstream
         public IEnumerable<SourceLine> GetProcessedLines()
         {
             return _processedLines;
@@ -58,6 +62,11 @@ namespace DotNetAsm
         {
             return _scope.Count > 0;
         }
+=======
+        public IEnumerable<SourceLine> GetProcessedLines() => _processedLines;
+
+        public bool IsProcessing() => _scope.Count > 0;
+>>>>>>> Stashed changes
 
         public void Process(SourceLine line)
         {
@@ -94,10 +103,14 @@ namespace DotNetAsm
             _processedLines.Add(clone);
         }
 
+<<<<<<< Updated upstream
         public bool Processes(string token)
         {
             return Reserved.IsReserved(token);
         }
+=======
+        public bool Processes(string token) => Reserved.IsReserved(token);
+>>>>>>> Stashed changes
 
         public void Reset()
         {

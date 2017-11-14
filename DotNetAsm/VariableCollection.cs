@@ -93,12 +93,21 @@ namespace DotNetAsm
         }
 
         /// <summary>
+<<<<<<< Updated upstream
         /// Sets the variable according to the assignment expression.
+=======
+        /// Sets the variable according to the assignment expression &lt;var&gt; = &lt;operand&gt;.
+>>>>>>> Stashed changes
         /// </summary>
         /// <returns>The variable and its assignment as a 
         /// <see cref="T:System.Collections.Generic.KeyValuePair&lt;string, long&gt;"/>.</returns>
         /// <param name="expression">The assignment expression.</param>
         /// <param name="inScope">The current scope the expression is in.</param>
+<<<<<<< Updated upstream
+=======
+        /// <exception cref="T:DotNetAsm.ExpressionException">DotNetAsm.ExpressionException</exception>
+        /// <exception cref="T:DotNetAsm.SymbolCollectionException">DotNetAsm.SymbolCollectionException</exception>
+>>>>>>> Stashed changes
         public KeyValuePair<string, long> SetVariable(string expression, string inScope)
         {
             KeyValuePair<string, long> result = ParseExpression(expression, inScope);
