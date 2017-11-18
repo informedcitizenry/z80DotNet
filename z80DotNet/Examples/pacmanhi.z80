@@ -12,7 +12,7 @@
 ;; The software assumes the following memory map:
 ;;
 ;; ROM - $8000-$87ff (2KB eprom)
-;; RAM - $8800-$887f (128KB)
+;; RAM - $8800-$887f (128B)
 ;;
 ;; In addition, the original game ROMS will need to be patched as follows:
 ;;
@@ -48,6 +48,12 @@
             ROW_1_VRAM  = $4368
             P1_SCR_VRAM = $43f7
             HIGH_SCORE  = $4e88
+            
+            .encoding pacman
+            .map " ", "@"
+            .map "!", "["
+            .map ":", ";"
+            .map ".", "%"
             
             SCORETABLE_SIZ  = defaulthi_end - defaulthi
             
@@ -193,11 +199,11 @@ remain:
             ld a,(ix+0)         ; is highest digit of level zero?
             and a
             jr nz,setscor       ; no then set score, else...
-            ld (ix+0),'@'       ; blank out zero
+            ld (ix+0),' '       ; blank out zero
             ld a,(ix+1)         ; is second digit zero?
             and a
             jr nz,setscor       ; no set score
-            ld (ix+1),'@'       ; else blank out
+            ld (ix+1),' '       ; else blank out
 setscor:
             ld bc,8             ; advance ix 8 places to highest digit of score
             add ix,bc           
@@ -427,7 +433,7 @@ flashscore:
 checkflash:
             ld c,BLACK
             ld a,(hl)           ; read the "UP"
-            cp '@'            ; is it a blank space
+            cp ' '              ; is it a blank space
             jr z,doflash        ; yes do color score black
             ld c,WHITE          ; else color score white
 doflash:
@@ -498,7 +504,7 @@ setinlock:
                         
 setfinish:
             ;; clear instruction/time remaining messages
-            ld a,'@'            ; blank space
+            ld a,' '            ; blank space
             ld de,COLUMN_OFFS   ; column offset
             ld ix,$4055         ; last/first column of first rows
             ld c,4              ; for c = 1 to 4
@@ -534,7 +540,7 @@ rubchar:
 initdown:
             ld a,(hl)           ; read initial
             dec a               ; decrease
-            cp '@'              ; less than $40? (blank space)
+            cp ' '              ; less than $40? (blank space)
             jr nc,storeleft     ; no just store
             cp '?'              ; is it 1 < space?
             jr z,setspace       ; set space
@@ -543,7 +549,7 @@ storeleft:
             ld (hl),a           ; else store
             jr setinlock        ; set inputlock
 setspace:
-            ld a,'@'
+            ld a,' '
             jr storeleft        ; set lowest initial char to space
             
 initup:
@@ -551,16 +557,16 @@ initup:
             inc a
             cp '&'              ; is it one after '.'?
             jr nz,comparz       ; no, just compare to Z+1 
-            ld a,'%'
+            ld a,'.'
             jr storeleft        ;
 comparz:
             cp 'Z'+1            ; is it >'Z'
             jr c,storeleft      ; no store
-            ld a,'%'            ; else set rightmost initial to '.'
+            ld a,'.'            ; else set rightmost initial to '.'
             jr storeleft        ; and store
            
 clearini:
-            ld a,'@'            ; clear the initial
+            ld a,' '            ; clear the initial
             ld e,l              ; save l in e
             ld (hl),a         
             ld bc,COLUMN_OFFS   ; move initial back one column
@@ -658,20 +664,20 @@ times12     ld  b,a
             ret
             
 defaulthi:
-            .string "@@",1
-            .byte 0,5,6,7,'@','@'
+            .string "  ",1
+            .byte 0,5,6,7,' ',' '
             .string "ABC"
-            .string "@@",1
-            .byte 0,0,1,6,'@','@'
+            .string "  ",1
+            .byte 0,0,1,6,' ',' '
             .string "DEF"
-            .string "@@",1
-            .byte 0,5,9,5,'@','@'
+            .string "  ",1
+            .byte 0,5,9,5,' ',' '
             .string "GHI"
-            .string "@@",1
-            .byte 0,5,0,5,'@','@'
+            .string "  ",1
+            .byte 0,5,0,5,' ',' '
             .string "JKL"
-            .string "@@",1
-            .byte 0,0,3,4,'@','@'
+            .string "  ",1
+            .byte 0,0,3,4,' ',' '
             .string "MNO"
             
 defaulthi_end
@@ -691,32 +697,32 @@ rows:
     
 tableheader:
             .word $0385
-            .string "RANK@@LEVEL@@SCORE@@@NAME"
+            .string "RANK  LEVEL  SCORE   NAME"
             .byte $2f
             .byte ($80 | WHITE)
     
 congrats:
             .word $0315+$20
-            .string "YOU@GOT@A@HIGH@SCORE["
+            .string "YOU GOT A HIGH SCORE!"
             .byte $2f
             .byte ($80 | PEACH)
             
 instruct:
             .word $0317
-            .string "ENTER@YOUR@INITIALS"
+            .string "ENTER YOUR INITIALS"
             .byte $2f
             .byte ($80 | PEACH)
             
 timeremain:
             .word $031b
-            .string "TIME@REMAINING@;@"
+            .string "TIME REMAINING : "
             .byte $05,$00,$2f
             .byte ($80 | CYAN)
             
 nameregistered:
 
             .word $0315+$40
-            .string "YOUR@NAME@IS@REGISTERED"
+            .string "YOUR NAME IS REGISTERED"
             .byte $2f
             .byte ($80 | WHITE )
             

@@ -344,18 +344,14 @@ namespace z80DotNet
             }
 
             var opcbase = opcode & 0xFFFF;
+
             if (opcbase == 0xCBDD || opcbase == 0xCBFD)
-            {
                 opcode = opcbase | ((int)eval << 16) | ((opcode & 0xFF0000) << 8);
-            }
             else if (opcbase == 0x36DD || opcbase == 0x36FD)
-            {
                 opcode = opcbase | ((int)eval << 16) | ((int)eval2 << 24);
-            }
             else if (eval != long.MinValue)
-            {
                 opcode |= ((int)eval << (opcodesize * 8));
-            }
+            
             line.Assembly = Controller.Output.Add(opcode, opc.Size);
         }
 
@@ -368,15 +364,9 @@ namespace z80DotNet
             return 0;
         }
 
-        public bool AssemblesInstruction(string instruction)
-        {
-            return Reserved.IsReserved(instruction);
-        }
+        public bool AssemblesInstruction(string instruction) => Reserved.IsReserved(instruction);
 
-        public override bool IsReserved(string token)
-        {
-            return Reserved.IsReserved(token);
-        }
+        public override bool IsReserved(string token) => Reserved.IsReserved(token);
         #endregion
     }
 }
