@@ -1436,7 +1436,7 @@ glyph             ;12345678
 
 ### Command-line options
 
-z80DotNet accepts several arguments, requiring at least one. If no option flag precedes the argument, it is considered an input file. Multiple input files can be assembled. If no output file is specified, source is assembled to `a.out` within the current working directory. Below are the available option flags and their parameters.
+z80DotNet accepts several arguments, requiring at least one. If no option flag precedes the argument, it is considered an input file. Multiple input files can be assembled. If no output file is specified, source is assembled to `a.out` within the current working directory. Below are the available option flags and their parameters. Mono users note for the examples you must put `mono` in front of the executable.
 
 <table>
 <tr><td><b>Option</b></td><td><code>-o</code></td></tr>
@@ -1445,8 +1445,8 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 <tr><td><b>Parameter</b></td><td><code>filename</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
-/z80DotNet myasm.asm -o myoutput
-/z80DotNet myasm.asm -output=myoutput
+z80DotNet.exe myasm.asm -o myoutput
+z80DotNet.exe myasm.asm -output=myoutput
 </pre>
 </td></tr>
 </table>
@@ -1456,7 +1456,7 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 <tr><td><b>Definition</b></td><td>Specify the target architecture of the binary output. At this time, only two options are available, <code>flat</code> and <code>zx</code>. Use <code>zx</code> to output binary with a ZX Spectrum TAP header. If architecture not specified, output defaults to <code>flat</code>.</td></tr>
 <tr><td><b>Parameter</b></td><td><code>architecture</code></td></tr>
 <tr><td><b>Example</b></td><td>
-<pre>/z80DotNet myproggie.asm -b --arch=zx myproggie.prg</pre>
+<pre>z80DotNet.exe myproggie.asm -b --arch=zx myproggie.prg</pre>
 </td></tr>
 </table>
 <table>
@@ -1465,7 +1465,7 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 <tr><td><b>Definition</b></td><td>Assemble multi-byte values in big-endian order (highest order magnitude first).</td></tr>
 <tr><td><b>Parameter</b></td><td>None</td></tr>
 <tr><td><b>Example</b></td><td>
-<pre>/z80DotNet myasm.asm -b -o bigend.bin</pre>
+<pre>z80DotNet.exe myasm.asm -b -o bigend.bin</pre>
 </td></tr>
 </table>
 <table>
@@ -1475,8 +1475,8 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 <tr><td><b>Parameter</b></td><td>None</td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
-/z80DotNet mycsasm.asm -C
-/z80DotNet mycsasm.asm --case-sensitive
+z80DotNet.exe mycsasm.asm -C
+z80DotNet.exe mycsasm.asm --case-sensitive
 </pre>
 </td></tr>
 </table>
@@ -1486,7 +1486,7 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 <tr><td><b>Definition</b></td><td>Assign a global label a value. Note that within the source the label cannot be redefined again. The value can be any expression z80DotNet can evaluate at assembly time. If no value is given the default value is 1.</td></tr>
 <tr><td><b>Parameter</b></td><td><code>&lt;label&gt;=&lt;value&gt;</code></td></tr>
 <tr><td><b>Example</b></td><td>
-<pre>/z80DotNet -D chrout=$ffd2 myasm.asm -o myoutput</pre>
+<pre>z80DotNet.exe -D chrout=$ffd2 myasm.asm -o myoutput</pre>
 </td></tr>
 </table>
 <table>
@@ -1496,8 +1496,8 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 <tr><td><b>Parameter</b></td><td>None</td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
-/z80DotNet -h
-/z80DotNet --help
+z80DotNet.exe -h
+z80DotNet.exe --help
 </pre>
 </td></tr>
 </table>
@@ -1508,8 +1508,8 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 <tr><td><b>Parameter</b></td><td>None</td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
-/z80DotNet -q myasm.asm
-/z80DotNet --quiet myasm.asm
+z80DotNet.exe -q myasm.asm
+z80DotNet.exe --quiet myasm.asm
 </pre>
 </td></tr>
 </table>
@@ -1520,8 +1520,8 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 <tr><td><b>Parameter</b></td><td>None</td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
-/z80DotNet -w myasm.asm
-/z80DotNet --no-warn myasm.asm
+z80DotNet.exe -w myasm.asm
+z80DotNet.exe --no-warn myasm.asm
 </pre>
 </td></tr>
 </table>
@@ -1532,7 +1532,7 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 <tr><td><b>Parameter</b></td><td>None</td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
-/z80DotNet --werror myasm.asm
+z80DotNet.exe --werror myasm.asm
 </pre>
 </td></tr>
 </table>
@@ -1543,8 +1543,8 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 <tr><td><b>Parameter</b></td><td><code>filename</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
-/z80DotNet myasm.asm -l labels.asm
-/z80DotNet myasm.asm --labels=labels.asm
+z80DotNet.exe myasm.asm -l labels.asm
+z80DotNet.exe myasm.asm --labels=labels.asm
 </pre>
 </td></tr>
 </table>
@@ -1555,8 +1555,8 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 <tr><td><b>Parameter</b></td><td><code>filename</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
-/z80DotNet myasm.asm -L listing.asm
-/z80DotNet myasm.asm --list=listing.asm
+z80DotNet.exe myasm.asm -L listing.asm
+z80DotNet.exe myasm.asm --list=listing.asm
 </pre>
 </td></tr>
 </table>
@@ -1567,8 +1567,8 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 <tr><td><b>Parameter</b></td><td>None</td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
-/z80DotNet myasm.asm -a -L mylist.asm
-/z80DotNet myasm.asm --no-assembly --list=mylist.asm
+z80DotNet.exe myasm.asm -a -L mylist.asm
+z80DotNet.exe myasm.asm --no-assembly --list=mylist.asm
 </pre>
 </td></tr>
 </table>
@@ -1579,8 +1579,8 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 <tr><td><b>Parameter</b></td><td>None</td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
-/z80DotNet myasm.asm -d -L mylist.asm
-/z80DotNet myasm.asm --no-disassembly --list=mylist.asm
+z80DotNet.exe myasm.asm -d -L mylist.asm
+z80DotNet.exe myasm.asm --no-disassembly --list=mylist.asm
 </pre>
 </td></tr>
 </table>
@@ -1591,8 +1591,8 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 <tr><td><b>Parameter</b></td><td>None</td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
-/z80DotNet myasm.asm -s -L mylist.asm
-/z80DotNet myasm.asm --no-source --list=mylist.asm
+z80DotNet.exe myasm.asm -s -L mylist.asm
+z80DotNet.exe myasm.asm --no-source --list=mylist.asm
 </pre>
 </td></tr>
 </table>
@@ -1602,7 +1602,7 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 <tr><td><b>Definition</b></td><td>Make the assembly listing verbose. If the verbose option is set then all non-assembled lines are included, such as blocks and comment blocks.</td></tr>
 <tr><td><b>Parameter</b></td><td>None</td></tr>
 <tr><td><b>Example</b></td><td>
-<pre>/z80DotNet myasm.asm --verbose-asm -L myverboselist.asm</pre>
+<pre>z80DotNet.exe myasm.asm --verbose-asm -L myverboselist.asm</pre>
 </td></tr>
 </table>
 <table>
@@ -1612,8 +1612,8 @@ z80DotNet accepts several arguments, requiring at least one. If no option flag p
 <tr><td><b>Parameter</b></td><td>None</td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
-/z80DotNet -V
-/z80DotNet --version
+z80DotNet.exe -V
+z80DotNet.exe --version
 </pre>
 </td></tr>
 </table>
