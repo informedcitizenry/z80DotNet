@@ -217,8 +217,8 @@ namespace z80DotNet
             {
                 IAssemblyController controller = new AssemblyController(args);
                 controller.AddAssembler(new z80Asm(controller));
-                //controller.DisplayingBanner += DisplayBannerEventHandler;
-                //controller.WritingHeader += WriteHeaderEventHandler;
+                controller.DisplayingBanner += DisplayBannerEventHandler;
+                controller.WritingHeader += WriteHeaderEventHandler;
                 controller.Assemble();
             }
             catch (Exception ex)
