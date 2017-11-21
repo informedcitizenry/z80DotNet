@@ -23,12 +23,14 @@
 ;; patch 0936:0938 to cd 43 80
 ;; patch 0955:0957 to cd 43 80
 ;; patch 0973:0975 to cd 5f 81
+;; patch 0ffe:0fff to aa e8
 ;;
 ;; pacman.6h
 ;; ---------
 ;; patch 23ee:23f2 to c3 1f 81 00 00
 ;; patch 24d7:24da to c3 ac 81 02
 ;; patch 2ae2:2ae4 to cd 00 80
+;; patch 2ffe:2fff to e5 90
 ;;
 ;;-----------------------------------------------------------------------
 
