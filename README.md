@@ -1018,7 +1018,7 @@ start       ; same as start .equ *
 </pre>
 </td></tr>
 </table>
-table>
+<table>
 <tr><td><b>Name</b></td><td><code>.let</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
 <tr><td><b>Definition</b></td><td>Declares and assigns or re-assigns a variable to the given expression. Labels cannot be redefined as variables, and vice versa.</td></tr>
