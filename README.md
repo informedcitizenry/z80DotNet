@@ -257,38 +257,24 @@ This file called `"library.s"` inside the path `../lib` contains a macro definit
 ```
         .include "../lib/library.s"
 
-        .inc16 $033c    ; 16-bit increment value at $033c and $033d
+        .inc16 $c000    ; 16-bit increment value at $033c and $033d
 ``` 
 If the included library file also contained its own symbols, caution would be required to ensure no symbol clashes. An alternative to `.include` is `.binclude`, which resolves this problem by enclosing the included source in its own scoped block.
 ```
 lib     .binclude "../lib/library.s"    ; all symbols in "library.s" 
                                         ; are in the "lib" scope
 
-        jsr lib.memcopy
+        call lib.memcopy
 ```
 If no label is prefixed to the `.binclude` directive then the block is anonymous and labels are not visible to your code.
 
-External files containing raw binary that will be needed to be included in your final output, such as `.sid` files or sprite data, can be assembled using the `.binary` directive.
+External files containing raw binary that will be needed to be included in your final output, such as graphics data, can be assembled using the `.binary` directive.
 ```
         * = $1000
 
-        .binary "../rsrc/sprites.raw"
-
-        ...
-
-        lda #64     ; pointer to first sprite in "./rsrc/sprites.raw"
-        sta 2040    ; set first sprite to that sprite shape
+        .binary "../rsrc/gfx.bin"
 ```
 You can also control how the binary will be included by specifying the offset (number of bytes from the start) and size to include.
-```
-        * = $1000
-
-        .binary "../rsrc/music.sid", $7e    ; skip first 126 bytes
-                                            ; (SID header)
-
-        .binary "../lib/compiledlib.bin", 2, 256    ; skip load header
-                                                    ; and take 256 bytes
-```
 ### Mathematical and Conditional Expressions
 All non-string operands are treated as math or conditional expressions. Compound expressions are nested in paranetheses. There are several available operators for both binary and unary expressions.
 #### Binary Operations
