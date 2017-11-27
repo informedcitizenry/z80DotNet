@@ -238,7 +238,7 @@ The output can be one to four bytes. Entire character sets can also be mapped, w
 
         .map 'a', 'A' ;; this is now the same as .map 'a', 'a'
 ```
-Instead express character literals as one-character strings in double-quotes, which will evaluate to UTF-8.
+Instead express character literals as one-character strings in double-quotes, which will evaluate to UTF-8 code units.
 
 ### File inclusions
 
@@ -275,6 +275,26 @@ External files containing raw binary that will be needed to be included in your 
         .binary "../rsrc/gfx.bin"
 ```
 You can also control how the binary will be included by specifying the offset (number of bytes from the start) and size to include.
+```
+        * = $1000
+
+charA:
+        .binary "../rsrc/charset.bin",0,64
+charB:
+        .binary "../rsrc/charset.bin",64,64
+charC:
+        .binary "../rsrc/charset.bin",128,64
+        ...
+
+        * = $c000
+
+        ;; copy charA glyph graphics to $4000
+ 
+        ld hl,charA
+        ld de,$4000
+        ld bc,64
+        ldir
+```
 ### Mathematical and Conditional Expressions
 All non-string operands are treated as math or conditional expressions. Compound expressions are nested in paranetheses. There are several available operators for both binary and unary expressions.
 #### Binary Operations
