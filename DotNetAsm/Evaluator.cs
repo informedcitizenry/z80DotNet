@@ -129,7 +129,7 @@ namespace DotNetAsm
                 { "ceil",   new Tuple<Func<double[], double>, int>(parms => Math.Ceiling(parms[0]),         1) },
                 { "cos",    new Tuple<Func<double[], double>, int>(parms => Math.Cos(parms[0]),             1) },
                 { "cosh",   new Tuple<Func<double[], double>, int>(parms => Math.Cosh(parms[0]),            1) },
-                { "deg",    new Tuple<Func<double[], double>, int>(parms => (parms[0] * 180 / Math.PI),     1) },
+                { "deg",    new Tuple<Func<double[], double>, int>(parms => 180 / Math.PI * parms[0],       1) },
                 { "exp",    new Tuple<Func<double[], double>, int>(parms => Math.Exp(parms[0]),             1) },
                 { "floor",  new Tuple<Func<double[], double>, int>(parms => Math.Floor(parms[0]),           1) },
                 { "frac",   new Tuple<Func<double[], double>, int>(parms => Math.Abs(parms[0] - Math.Abs(Math.Round(parms[0], 0))), 1) },
@@ -137,7 +137,7 @@ namespace DotNetAsm
                 { "ln",     new Tuple<Func<double[], double>, int>(parms => Math.Log(parms[0]),             1) },
                 { "log10",  new Tuple<Func<double[], double>, int>(parms => Math.Log10(parms[0]),           1) },
                 { "pow",    new Tuple<Func<double[], double>, int>(parms => Math.Pow(parms[0], parms[1]),   2) },
-                { "rad",    new Tuple<Func<double[], double>, int>(parms => (parms[0] * Math.PI / 180),     1) },
+                { "rad",    new Tuple<Func<double[], double>, int>(parms => Math.PI / 180 * parms[0],       1) },
                 { "random", new Tuple<Func<double[], double>, int>(parms => _rng.Next((int)parms[0], (int)parms[1]), 2) },
                 { "sgn",    new Tuple<Func<double[], double>, int>(parms => Math.Sign(parms[0]),            1) },
                 { "sin",    new Tuple<Func<double[], double>, int>(parms => Math.Sin(parms[0]),             1) },
@@ -256,10 +256,7 @@ namespace DotNetAsm
             return expression;
         }
 
-        public void AddHexFormat(string regex)
-        {
-            _hexRegexes.Add(new Regex(regex, RegexOptions.Compiled));
-        }
+        public void AddHexFormat(string regex) => _hexRegexes.Add(new Regex(regex, RegexOptions.Compiled));
 
         /// <summary>
         /// Determines if the expression string contains user-defined symbols. Assists

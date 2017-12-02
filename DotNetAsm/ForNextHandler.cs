@@ -260,10 +260,7 @@ namespace DotNetAsm
         /// <param name="token">The token to determine if is an instruction that
         /// the handler processes.</param>
         /// <returns>True, if the DotNetAsm.ForNextHandler processes this token</returns>
-        public bool Processes(string token)
-        {
-            return Reserved.IsOneOf("Directives", token);
-        }
+        public bool Processes(string token) => Reserved.IsOneOf("Directives", token);
 
         /// <summary>
         /// Processes the DotNetAsm.SourceLine for repetitions, or within a ForNextBlock.

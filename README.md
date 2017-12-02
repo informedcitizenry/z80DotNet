@@ -242,14 +242,15 @@ Instead express character literals as one-character strings in double-quotes, wh
 
 ### File inclusions
 
-Other files can be included in final assembly, either as 6502.Net-compatible source or as raw binary. Source files are included using the `.include` and `.binclude` directives. This is useful for libraries or other organized source you would not want to include in your main source file. The operand is the file name (and path) enclosed in quotes. `.include` simply inserts the source at the directive.
+Other files can be included in final assembly, either as z80DotNet-compatible source or as raw binary. Source files are included using the `.include` and `.binclude` directives. This is useful for libraries or other organized source you would not want to include in your main source file. The operand is the file name (and path) enclosed in quotes. `.include` simply inserts the source at the directive.
 ```
     ;; inside "../lib/library.s"
 
-    .macro  inc16 mem
-    inc \mem
-    bne +
-    inc \mem+1
+    .macro  inc16 reg16
+    inc (\reg16)
+    jr nz +
+    inc \reg16
+    inc (\reg16)
 +   .endmacro
     ...
 ```
@@ -474,7 +475,7 @@ variables   .byte ?
 ```
 Macros and segments must be defined before they can be invoked.
 ## Flow Control
-In cases where you want to control the flow of assembly, either based on certain conditions (environmental or target architecture) or in certain iterations, 6502.Net provides certain directives to handle this.
+In cases where you want to control the flow of assembly, either based on certain conditions (environmental or target architecture) or in certain iterations, z80DotNet provides certain directives to handle this.
 ### Conditional Assembly
 Conditional assembly is available using the `.if` and related directive.  Conditions can be nested, but expressions will be evaluated on first pass only.
 In cases where you want to control the flow of assembly based on certain conditions (environmental or target architecture), z80DotNet provides certain directives to handle this. Conditions can be nested, but expressions will be evaluated on first pass only.
