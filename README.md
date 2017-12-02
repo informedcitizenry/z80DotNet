@@ -402,7 +402,7 @@ One of the more powerful features of the z80DotNet cross assembler is the abilit
 inc16   .macro  register
         inc (\register)
         jr  nz,+
-        inc register
+        inc \register
         inc (\register)
 +       .endmacro
 ```
