@@ -443,7 +443,7 @@ Then you would assemble defined segments as follows:
 ```
         * = $0000
         .code
-        .cerror * > $3fff, ".code segment outside of ROM space!"
+        .errorif * > $3fff, ".code segment outside of ROM space!"
         * = $4000
         .RAM
 
