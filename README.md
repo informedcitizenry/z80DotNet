@@ -1460,13 +1460,13 @@ z80DotNet.exe myasm.asm -output=myoutput
 <tr><td><b>Option</b></td><td><code>--arch</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
 <tr><td><b>Definition</b></td><td>Specify the target architecture of the binary output. If architecture not specified, output defaults to <code>flat</code>. The options:
-<ol> 
+<ul> 
     <li><code>flat</code> - Flat binary with no header</li>
     <li><code>zx</code> - ZX Spectrum TAP header</li>
     <li><code>amsdos</code> - Amstrad CPC DOS header</li>
     <li><code>asmtap</code> - Amstrad CPC Tape header</li>
     <li><code>msx</code> - MSX header</li>
-</ol>
+</ul>
 </td></tr>
 <tr><td><b>Parameter</b></td><td><code>architecture</code></td></tr>
 <tr><td><b>Example</b></td><td>
