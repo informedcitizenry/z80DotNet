@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------------
+﻿//-----------------------------------------------------------------------------
 // Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,6 +21,7 @@
 //-----------------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -35,6 +36,8 @@ namespace DotNetAsm
 
         Regex _regStrFunc, _regEncName;
 
+        static Regex _regFmtFunc;
+
         #endregion
 
         #region Constructors
@@ -46,8 +49,6 @@ namespace DotNetAsm
         public StringAssemblerBase(IAssemblyController controller) :
             base(controller)
         {
-            Reserved.DefineType("Functions", "str");
-
             Reserved.DefineType("Directives",
                     ".cstring", ".lsstring", ".nstring", ".pstring", ".string"
                 );
@@ -55,6 +56,9 @@ namespace DotNetAsm
             Reserved.DefineType("Encoding", ".encoding", ".map", ".unmap");
 
             _regStrFunc = new Regex(@"str(\(.+\))",
+                Controller.Options.RegexOption | RegexOptions.Compiled);
+
+            _regFmtFunc = new Regex(@"format(\(.+\))",
                 Controller.Options.RegexOption | RegexOptions.Compiled);
 
             _regEncName = new Regex(@"^_?[a-z][a-z0-9_]*$",
@@ -86,7 +90,7 @@ namespace DotNetAsm
             }
             else
             {
-                var parms = line.CommaSeparateOperand();
+                var parms = line.Operand.CommaSeparate().ToList();
                 if (parms.Count == 0)
                     throw new ArgumentException(line.Operand);
                 try
@@ -197,7 +201,7 @@ namespace DotNetAsm
                 var val = Controller.Evaluator.Eval(param, int.MinValue, uint.MaxValue);
                 return val.ToString();
             }
-            return string.Empty;
+            return GetFormattedString(arg, Controller.Evaluator);
         }
 
         /// <summary>
@@ -210,7 +214,7 @@ namespace DotNetAsm
             if (Reserved.IsOneOf("Encoding", line.Instruction))
                 return 0;
 
-            var csvs = line.CommaSeparateOperand();
+            var csvs = line.Operand.CommaSeparate();
             int size = 0;
             foreach (string s in csvs)
             {
@@ -284,7 +288,7 @@ namespace DotNetAsm
 
             string operand = line.Operand;
 
-            var args = line.CommaSeparateOperand();
+            var args = line.Operand.CommaSeparate();
 
             foreach (var arg in args)
             {
@@ -338,6 +342,37 @@ namespace DotNetAsm
                 Controller.Output.Add(0, 1);
             }
         }
+        #region Static Methods
+
+        public static string GetFormattedString(string operand, IEvaluator evaluator)
+        {
+            var m = _regFmtFunc.Match(operand);
+            if (string.IsNullOrEmpty(m.Value))
+                return string.Empty;
+            string parms = m.Groups[1].Value;
+            if (string.IsNullOrEmpty(parms) || m.Groups[1].Value.FirstParenEnclosure() != parms)
+                throw new Exception(ErrorStrings.None);
+
+            var csvs = parms.TrimStart('(').TrimEnd(')').CommaSeparate();
+            string fmt = csvs.First();
+            if (fmt.Length < 5 || !fmt.EnclosedInQuotes())
+                throw new Exception(ErrorStrings.None);
+            var parmlist = new List<object>();
+
+            for (int i = 1; i < csvs.Count; i++)
+            {
+                if (string.IsNullOrEmpty(csvs[i]))
+                    throw new Exception(ErrorStrings.None);
+                if (csvs[i].EnclosedInQuotes())
+                    parmlist.Add(csvs[i].Trim('"'));
+                else
+                    parmlist.Add(evaluator.Eval(csvs[i]));
+            }
+            return string.Format(fmt.Trim('"'), parmlist.ToArray());
+        }
+
+        #endregion
+
         #endregion
     }
 }

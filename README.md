@@ -1,5 +1,5 @@
 # z80DotNet, A Simple .Net-Based Z80 Cross-Assembler
-### Version 1.6.2
+### Version 1.7
 ## Introduction
 
 The z80DotNet Macro Assembler is a simple cross-assembler targeting the Zilog Z80 and compatible CPU. It is written for .Net (Version 4.5.1) and supports all of the published (legal) instructions of the Z80 processor, as well as most of the unpublished (illegal) operations. Like the MOS 6502, the Z80 was a popular choice for video game system and microcomputer manufacturers in the 1970s and mid-1980s. For more information, see [wiki entry](https://en.wikipedia.org/wiki/Zilog_Z80) or [Z80 resource page](http://www.z80.info/) to learn more about this microprocessor.
@@ -177,6 +177,7 @@ highscore   .dword ?    ; uninitialized highscore variables
             xor a,a     ; The output is now 6 bytes in size
 ```
 ### Text processing and encoding
+#### Psuedo Ops
 In addition to integral values, z80DotNet can assemble Unicode text. Text strings are enclosed in double quotes, character literals in single quotes. Escaped double quotes are not recognized, so embedded quotation marks must be "broken out" as separate operands:
 ```
 "He said, ",'"',"How are you?",'"'
@@ -192,14 +193,23 @@ Strings can be assembled in a few different ways, according to the needs of the 
 | `.pstring`    | A Pascal-style string, its size in the first byte                             |
 
 Since `.pstring` strings use a single byte to denote size, no string can be greater than 255 bytes. Since `.nstring` and `.lsstring` make use of the high and low bits, bytes must not be greater in value than 127, nor less than 0.
-
-A special function called `str()` will convert an integral value to its equivalent in bytes:
+#### String Functions
+There are two special string functions. The first, `str()`, will convert an integral value to its equivalent in bytes:
 ```
 start       = $c000
 
 startstr    .string str(start) ; assembles as $34,$39,$31,$35,$32
                                ; literally the digits "4","9","1","5","2"
 ```      
+The `format()` function allows you to output string data using a .Net format string:
+```
+stdout      = $ffd2
+stdstring   .string format("The stdout routine is at ${0:X4}", stdout)
+            ;; will assemble to:
+            ;; "The stdout routine is at $FFD2
+
+```
+#### Encodings
 Assembly source text is processed as UTF-8, and by default strings and character literals are encoded as such. You can change how text output with the `.encoding` and `.map` directives. Use `.encoding` to select an encoding. The encoding name follows the same rules as labels.
 
 The default encoding is `none`.
@@ -537,6 +547,7 @@ A minimum two operands are required: The initial expression and the condition ex
         .else
             .let n = n + 5;
         .endif
+        .echo format("{0}",n);
     .next
 ```
 If required, loops can be broken out of using the `.break` directive
@@ -1338,6 +1349,12 @@ glyph             ;12345678
 <tr><td><b>Definition</b></td><td>Round down expression.</td></tr>
 <tr><td><b>Arguments</b></td><td><code>value</code></td></tr>
 <tr><td><b>Example</b></td><td><code>.char floor(-4.8)     ; > fb</code></td></tr>
+</table>
+<table>
+<tr><td><b>Name</b></td><td><code>format</code></td></tr>
+<tr><td><b>Definition</b></td><td>Converts objects to a string in the format specified. The format string must adhere to Microsoft .Net standards. Please see <a href="https://docs.microsoft.com/en-us/dotnet/standard/base-types/standard-numeric-format-strings">the documentation on standard .Net format strings</a> for more information.</td></tr>
+<tr><td><b>Arguments</b></td><td><code>value</code></td></tr>
+<tr><td><b>Example</b></td><td><code>.echo format("Program counter is ${0:x4}", *)</code></td></tr>
 </table>
 <table>
 <tr><td><b>Name</b></td><td><code>frac</code></td></tr>
