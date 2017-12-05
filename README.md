@@ -550,6 +550,15 @@ A minimum two operands are required: The initial expression and the condition ex
         .endif
         .echo format("{0}",n);
     .next
+
+    .comment
+
+    Outputs:
+
+    6
+    11
+
+    .endcomment
 ```
 If required, loops can be broken out of using the `.break` directive
 ```
