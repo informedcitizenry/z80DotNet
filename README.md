@@ -1013,7 +1013,7 @@ start       ; same as start .equ *
 <tr><td><b>Name</b></td><td><code>.for</code>/<code>.next</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
 <tr><td><b>Definition</b></td><td>Repeat until codition is met. The iteration variable can be used in source like any other variable. Multiple iteration expressions can be specified.</td></tr>
-<tr><td><b>Arguments</b></td><td><code>init_expression, condition[, iteration_expression[, ...]]</code></td></tr>
+<tr><td><b>Arguments</b></td><td><code>init_expression, condition[, iteration_expression[, ...]</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
         .let x = 0
