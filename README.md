@@ -1298,8 +1298,11 @@ glyph             ;12345678
 </pre>
 </td></tr>
 </table>
+
 ## Appendix
+
 ### Built-In functions
+
 <table>
 <tr><td><b>Name</b></td><td><code>abs</code></td></tr>
 <tr><td><b>Definition</b></td><td>The absolute (positive sign) value of the expression.</td></tr>
