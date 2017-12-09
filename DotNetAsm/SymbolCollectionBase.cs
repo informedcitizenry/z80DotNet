@@ -110,13 +110,9 @@ namespace DotNetAsm
         List<string> GetSubScopes(string parent)
         {
             if (string.IsNullOrEmpty(parent))
-            {
                 return new List<string>();
-            }
-            var result = new List<string>
-            {
-                parent
-            };
+            
+            var result = new List<string> { parent };
 
             var split = parent.Split('.').ToList();
             split.RemoveAt(split.Count - 1);

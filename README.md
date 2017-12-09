@@ -1,5 +1,5 @@
 # z80DotNet, A Simple .Net-Based Z80 Cross-Assembler
-### Version 1.7.0.1
+### Version 1.7.1.0
 ## Introduction
 
 The z80DotNet Macro Assembler is a simple cross-assembler targeting the Zilog Z80 and compatible CPU. It is written for .Net (Version 4.5.1) and supports all of the published (legal) instructions of the Z80 processor, as well as most of the unpublished (illegal) operations. Like the MOS 6502, the Z80 was a popular choice for video game system and microcomputer manufacturers in the 1970s and mid-1980s. For more information, see [wiki entry](https://en.wikipedia.org/wiki/Zilog_Z80) or [Z80 resource page](http://www.z80.info/) to learn more about this microprocessor.
@@ -1527,7 +1527,7 @@ z80DotNet.exe mycsasm.asm --case-sensitive
 <tr><td><b>Definition</b></td><td>Assign a global label a value. Note that within the source the label cannot be redefined again. The value can be any expression z80DotNet can evaluate at assembly time. If no value is given the default value is 1.</td></tr>
 <tr><td><b>Parameter</b></td><td><code>&lt;label&gt;=&lt;value&gt;</code></td></tr>
 <tr><td><b>Example</b></td><td>
-<pre>z80DotNet.exe -D chrout=$ffd2 myasm.asm -o myoutput</pre>
+<pre>z80DotNet.exe -D label=$e000 myasm.asm -o myoutput</pre>
 </td></tr>
 </table>
 <table>
