@@ -1,5 +1,5 @@
 # z80DotNet, A Simple .Net-Based Z80 Cross-Assembler
-### Version 1.7.1.0
+### Version 1.7.2.0
 ## Introduction
 
 The z80DotNet Macro Assembler is a simple cross-assembler targeting the Zilog Z80 and compatible CPU. It is written for .Net (Version 4.5.1) and supports all of the published (legal) instructions of the Z80 processor, as well as most of the unpublished (illegal) operations. Like the MOS 6502, the Z80 was a popular choice for video game system and microcomputer manufacturers in the 1970s and mid-1980s. For more information, see [wiki entry](https://en.wikipedia.org/wiki/Zilog_Z80) or [Z80 resource page](http://www.z80.info/) to learn more about this microprocessor.
@@ -103,14 +103,14 @@ Anonymous labels allow one to do away with the need to think of unique label nam
 As you can see, anonymous labels, though convenient, would hinder readability if used too liberally. They are best for small branch jumps, though can be used in the same was as labels:
 ```
 -               .byte $01, $02, $03
-                ld  a,(-)           ; best to put anonymous label reference inside paranetheses.
+                ld  a,(-)           ; put anonymous label reference inside paranetheses.
 ```
 Label values are defined at first reference and cannot be changed. An alternative to labels are variables. Variables, like labels, are named references to values in operand expressions, but can be changed as often as required. A variable is declared with the `.let` directive, followed by an assignment expression. Variables and labels cannot share the same symbol name.
 ```
             .let myvar = 34
-                ld  a,myvar
+            ld  a,myvar
             .let myvar = myvar + 1
-                ld  b,myvar
+            ld  b,myvar
 ```
 Unlike labels, variables cannot be referenced in other expressions before they are declared, since variables are not preserved between passes.
 ```
@@ -201,12 +201,12 @@ start       = $c000
 startstr    .string str(start) ; assembles as $34,$39,$31,$35,$32
                                ; literally the digits "4","9","1","5","2"
 ```      
-The `format()` function allows you to output string data using a .Net format string:
+The `format()` function allows you to output non-string data using a .Net format string:
 ```
-stdout      = $ffd2
+stdout      = $15ef
 stdstring   .string format("The stdout routine is at ${0:X4}", stdout)
             ;; will assemble to:
-            ;; "The stdout routine is at $FFD2
+            ;; "The stdout routine is at $15EF"
 
 ```
 #### Encodings
@@ -354,7 +354,8 @@ See the section below on functions for a full list of available functions.
 ## Addressing model
 By default, programs start at address 0, but you can change this by setting the program counter before the first assembled byte. While many Z80 assemblers used `$` to denote the program counter, z80DotNet uses the `*` symbol. The assignment can be either a constant or expression:
 ```
-                * = ZP + 1000       ; program counter now 1000 bytes offset from the value of the constant ZP
+                * = ZP + 1000       ; program counter now 1000 bytes offset from 
+                                    ; the value of the constant ZP
 ```                
 (Be aware of the pesky trap of trying to square the program counter using the `**` operator, i.e. `***`. This produces unexpected results. Instead consider the `pow()` function as described in the section on math functions below.)
 
@@ -1023,7 +1024,7 @@ start       ; same as start .equ *
 <tr><td><b>Name</b></td><td><code>.for</code>/<code>.next</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
 <tr><td><b>Definition</b></td><td>Repeat until codition is met. The iteration variable can be used in source like any other variable. Multiple iteration expressions can be specified.</td></tr>
-<tr><td><b>Arguments</b></td><td><code>init_expression, condition[, iteration_expression[, ...]</code></td></tr>
+<tr><td><b>Arguments</b></td><td><code>[init_expression], condition[, iteration_expression[, ...]</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
         .let x = 0

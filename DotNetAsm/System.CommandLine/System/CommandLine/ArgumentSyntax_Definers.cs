@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft. All rights reserved.
+﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -11,7 +11,7 @@ namespace System.CommandLine
     {
         private static readonly Func<string, string> s_stringParser = v => v;
         private static readonly Func<string, bool> s_booleanParser = v => bool.Parse(v);
-        private static readonly Func<string, int> s_int32Parser = v => int.Parse(v, CultureInfo.InvariantCulture);
+        private static readonly Func<string, int> s_int32Parser = v => int.Parse(v, CultureInfo.CurrentCulture);
 
         // Commands
 
