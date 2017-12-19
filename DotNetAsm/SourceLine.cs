@@ -30,7 +30,7 @@ using System.Text.RegularExpressions;
 namespace DotNetAsm
 {
     /// <summary>
-    /// SourceLine class encapsulates a single line of assembly source.
+    /// Encapsulates a single line of assembly source.
     /// </summary>
     public class SourceLine : IEquatable<SourceLine>, ICloneable
     {
@@ -73,7 +73,7 @@ namespace DotNetAsm
         #region Constructors
 
         /// <summary>
-        /// Constructs a new SourceLine object.
+        /// Constructs an instance of a <see cref="T:DotNetAsm.SourceLine"/> object.
         /// </summary>
         /// <param name="filename">The original source filename.</param>
         /// <param name="linenumber">The original source line number.</param>
@@ -92,7 +92,7 @@ namespace DotNetAsm
         }
 
         /// <summary>
-        /// Constructs a new SourceLine object.
+        /// Constructs an instance of a <see cref="T:DotNetAsm.SourceLine"/> object.
         /// </summary>
         public SourceLine() :
             this(string.Empty, 0, string.Empty)
@@ -103,7 +103,7 @@ namespace DotNetAsm
         #region Static Constructors
 
         /// <summary>
-        /// Initializes the DotNetAsm.SourceLine class.
+        /// Initializes the <see cref="T:DotNetAsm.SourceLine"/> class.
         /// </summary>
         static SourceLine()
         {
@@ -125,7 +125,7 @@ namespace DotNetAsm
         /// Convert escaped code point expressions to actual Unicode strings.
         /// </summary>
         /// <param name="labelOperand">The label or operand string to convert</param>
-        /// <returns>A string with unicode characters converted from code points</returns>
+        /// <returns>A string with unicode characters converted from code points.</returns>
         string ConvertEscapedUnicode(string labelOperand)
         {
             return _regUnicode.Replace(labelOperand, match =>
@@ -141,7 +141,7 @@ namespace DotNetAsm
         /// </summary>
         /// <param name="checkInstruction">A callback to determine which part of the source
         /// is the instruction.</param>
-        /// <exception cref="SourceLine.QuoteNotEnclosedException">SourceLine.QuoteNotEnclosedException</exception>
+        /// <exception cref="T:DotNetAsm.QuoteNotEnclosedException">DotNetAsm.QuoteNotEnclosedException</exception>
         public void Parse(Func<string, bool> checkInstruction)
         {
             bool double_enclosed = false;
@@ -159,6 +159,8 @@ namespace DotNetAsm
                     single_enclosed = !single_enclosed;
 
             }
+            if (double_enclosed || single_enclosed)
+                throw new QuoteNotEnclosedException();
 
             string processed = SourceString.Substring(0, length).Trim();
             Match m = _regThree.Match(processed);
@@ -217,6 +219,106 @@ namespace DotNetAsm
             // both label and operand may contain escaped Unicode characters
             Label = ConvertEscapedUnicode(Label);
             Operand = ConvertEscapedUnicode(Operand);
+        }
+
+        /// <summary>
+        /// Does a comma-separated-value analysis on the SourceLine's operand
+        /// and returns the individual value as a <see cref="T:System.Collections.Generic.List&lt;string&gt;"/>.
+        /// </summary>
+        /// <returns>A <see cref="T:System.Collections.Generic.List&lt;string&gt;"/> of the values.</returns>
+        public List<string> CommaSeparateOperand()
+        {
+            List<string> csv = new List<string>();
+
+            if (string.IsNullOrEmpty(Operand))
+                return csv;
+
+            bool double_enclosed = false;
+            bool single_enclosed = false;
+            bool paren_enclosed = false;
+
+            StringBuilder sb = new StringBuilder();
+
+            int charExpCount = 0;
+
+            for (int i = 0; i < Operand.Length; i++)
+            {
+                char c = Operand[i];
+                if (double_enclosed)
+                {
+                    sb.Append(c);
+                    if (c == '"')
+                    {
+                        double_enclosed = false;
+                        if (i == Operand.Length - 1)
+                            csv.Add(sb.ToString().Trim());
+                    }
+                }
+                else if (single_enclosed)
+                {
+                    charExpCount++;
+                    sb.Append(c);
+                    if (c == '\'')
+                    {
+                        if (charExpCount == 2)
+                        {
+                            // don't set single quote closed unless we 
+                            // have consumed the char in single quote.
+                            charExpCount = 0;
+                            single_enclosed = false;
+                            if (i == Operand.Length - 1)
+                                csv.Add(sb.ToString().Trim());
+                        }
+                    }
+                }
+                else if (paren_enclosed)
+                {
+                    if (c == '"' && !single_enclosed)
+                        double_enclosed = true;
+                    else
+                        single_enclosed |= (c == '\'' && !double_enclosed);
+
+                    sb.Append(c);
+                    if (c == ')' && !double_enclosed && !single_enclosed)
+                    {
+                        paren_enclosed = false;
+                        if (i == Operand.Length - 1)
+                            csv.Add(sb.ToString().Trim());
+                    }
+                }
+                else
+                {
+                    switch (c)
+                    {
+                        case '"':
+                            double_enclosed = true;
+                            break;
+                        case '\'':
+                            single_enclosed = true;
+                            break;
+                        case '(':
+                            paren_enclosed = true;
+                            break;
+                        case ',':
+                            csv.Add(sb.ToString().Trim());
+                            sb.Clear();
+                            continue;
+                        default:
+                            break;
+                    }
+
+                    sb.Append(c);
+                    if (i == Operand.Length - 1)
+                        csv.Add(sb.ToString().Trim());
+                }
+            }
+            if (double_enclosed || single_enclosed)
+            {
+                throw new QuoteNotEnclosedException();
+            }
+            if (Operand.Last().Equals(','))
+                csv.Add(string.Empty);
+            return csv;
         }
 
         /// <summary>
@@ -288,12 +390,12 @@ namespace DotNetAsm
         #region Properties
 
         /// <summary>
-        /// Gets or sets the SourceLine's unique id number.
+        /// Gets or sets the <see cref="T:DotNetAsm.SourceLine"/>'s unique id number.
         /// </summary>
         public int Id { get; set; }
 
         /// <summary>
-        /// Gets or sets the SourceLine's Line number in the original source file.
+        /// Gets or sets the <see cref="T:DotNetAsm.SourceLine"/>'s Line number in the original source file.
         /// </summary>
         public int LineNumber { get; set; }
 
@@ -303,7 +405,7 @@ namespace DotNetAsm
         public long PC { get; set; }
 
         /// <summary>
-        /// Gets or sets the SourceLine's original source filename.
+        /// Gets or sets the <see cref="T:DotNetAsm.SourceLine"/>'s original source filename.
         /// </summary>
         public string Filename { get; set; }
 
@@ -328,7 +430,7 @@ namespace DotNetAsm
         public string Disassembly { get; set; }
 
         /// <summary>
-        /// Gets or sets the flag determining whether the SourceLine 
+        /// Gets or sets the flag determining whether the <see cref="T:DotNetAsm.SourceLine"/> 
         /// is actually part of a comment block. Setting this flag 
         /// also sets the flag to determine whether the SourceLine 
         /// is to be assembled. 
@@ -355,17 +457,17 @@ namespace DotNetAsm
         }
 
         /// <summary>
-        /// The SourceLine's label/symbol. This can be determined using the Parse method.
+        /// The <see cref="T:DotNetAsm.SourceLine"/>'s label/symbol. This can be determined using the Parse method.
         /// </summary>
         public string Label { get; set; }
 
         /// <summary>
-        /// The SourceLine's instruction. This can be determined using the Parse method.
+        /// The <see cref="T:DotNetAsm.SourceLine"/>'s instruction. This can be determined using the Parse method.
         /// </summary>
         public string Instruction { get; set; }
 
         /// <summary>
-        /// The SourceLine's operand. This can be determined using the Parse method.
+        /// The <see cref="T:DotNetAsm.SourceLine"/>'s operand. This can be determined using the Parse method.
         /// </summary>
         public string Operand { get; set; }
 

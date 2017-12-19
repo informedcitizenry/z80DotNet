@@ -39,8 +39,7 @@ namespace DotNetAsm
         public enum ExceptionReason
         {
             SymbolNotValid,
-            SymbolExists,
-            SymbolDoesNotExist
+            SymbolExists
         }
 
         #region Constructors
@@ -111,7 +110,7 @@ namespace DotNetAsm
         {
             if (string.IsNullOrEmpty(parent))
                 return new List<string>();
-            
+
             var result = new List<string> { parent };
 
             var split = parent.Split('.').ToList();
