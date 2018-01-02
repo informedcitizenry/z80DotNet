@@ -147,7 +147,6 @@ In addition to z80 assembly, data can also be assembled. Expressions evaluate in
 | `.addr`   | Two byte address          |
 | `.sint`   | Two bytes signed          |
 | `.word`   | Two bytes unsigned        |
-| `.rta`    | Two byte return address   |
 | `.lint`   | Three bytes signed        |
 | `.long`   | Three bytes unsigned      |
 | `.dint`   | Four bytes signed         |
