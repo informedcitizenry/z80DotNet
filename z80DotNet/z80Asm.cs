@@ -22,7 +22,6 @@
 
 using DotNetAsm;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -36,9 +35,9 @@ namespace z80DotNet
         #region Constructors
 
         /// <summary>
-        /// Constructs a new instance of a z80DotNet.z80Asm line assembler.
+        /// Constructs a new instance of a <see cref="T:z80DotNet.z80Asm"/> line assembler.
         /// </summary>
-        /// <param name="controller">The DotNetAsm.IAssemblyController associated to
+        /// <param name="controller">The <see cref="T:DotNetAsm.IAssemblyController"/> associated to
         /// this line assembler</param>
         public z80Asm(IAssemblyController controller) :
             base(controller)
@@ -167,11 +166,11 @@ namespace z80DotNet
         #region Methods
 
         /// <summary>
-        /// Parses a DotNetAsm.SourceLine's instruction and operand to return a
-        /// DotNetAsm.OperandFormat and correspnding DotNetAsm.Opcode.
+        /// Parses a <see cref="T:DotNetAsm.SourceLine"/>'s instruction and operand to return a
+        /// DotNetAsm.OperandFormat and correspnding <see cref="T:DotNetAsm.Opcode"/>.
         /// </summary>
-        /// <param name="line"></param>
-        /// <returns>Returns a System.Tuple&lt;DotNetAsm.OperandFormat,DotNetAsm.Opcode&gt;</returns>
+        /// <param name="line">The <see cref="T:DotNetAsm.SourceLine"/></param>
+        /// <returns>A <see cref="T:System.Tuple&lt;DotNetAsm.OperandFormat,DotNetAsm.Opcode&gt;"/>.</returns>
         Tuple<OperandFormat, Opcode> GetFormatAndOpcode(SourceLine line)
         {
             OperandFormat fmt = null;
@@ -367,6 +366,7 @@ namespace z80DotNet
         public bool AssemblesInstruction(string instruction) => Reserved.IsReserved(instruction);
 
         public override bool IsReserved(string token) => Reserved.IsReserved(token);
+
         #endregion
     }
 }
