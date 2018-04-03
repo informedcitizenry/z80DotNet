@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
+// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to 
@@ -26,7 +26,7 @@ using System.Text;
 
 namespace DotNetAsm
 {
-    public class Disassembler : AssemblerBase, ILineDisassembler
+    public class Disassembler: AssemblerBase, ILineDisassembler
     {
         #region Constructors
 
@@ -38,9 +38,9 @@ namespace DotNetAsm
             : base(controller)
         {
             PrintingOn = true;
-            Reserved.DefineType("Blocks", ConstStrings.OPEN_SCOPE, ConstStrings.CLOSE_SCOPE);
+            Reserved.DefineType("Blocks", ConstStrings.OPEN_SCOPE, ConstStrings.CLOSE_SCOPE );
             Reserved.DefineType("Directives",
-                    ".cpu", ".elif", ".else", ".endif", ".eor", ".error", ".errorif", ".if", ".ifdef",
+                    ".cpu", ".elif", ".else", ".endif", ".eor", ".error", ".errorif", ".if", ".ifdef", 
                     ".warnif", ".relocate", ".pseudopc", ".realpc", ".endrelocate", ".warn",
                     ".m16", ".m8", ".x16", ".x8", ".mx16", ".mx8"
                 );
@@ -62,7 +62,7 @@ namespace DotNetAsm
             if (string.IsNullOrEmpty(lineinfo) == false)
             {
                 if (lineinfo.Length > 14)
-                    lineinfo = lineinfo.Substring(0, 11) + "...";
+                lineinfo = lineinfo.Substring(0, 11) + "...";
                 lineinfo += "(" + line.LineNumber.ToString() + ")";
             }
             return string.Format("{0,-20}:", lineinfo);
@@ -80,25 +80,34 @@ namespace DotNetAsm
                 Reserved.IsReserved(line.Instruction))) ||
                 line.DoNotAssemble)
                 return string.Empty;
-
-            if (line.Instruction == "=" ||
+                      
+            if (line.Instruction == "=" || 
+                line.Instruction.Equals(".let", Controller.Options.StringComparison) ||
                 line.Instruction.Equals(".equ", Controller.Options.StringComparison))
             {
                 Int64 value = 0;
                 if (line.Label == "*" || Controller.Options.NoSource)
                     return string.Empty;
                 if (line.Label == "-" || line.Label == "+")
+                {
                     value = line.PC;
+                }
+                else if (line.Instruction.Equals(".let", Controller.Options.StringComparison))
+                {
+                    var variable = Controller.Variables.GetVariableFromExpression(line.Operand, line.Scope);
+                    value = Controller.Variables.GetSymbolValue(variable);
+                }
                 else
+                {
                     value = Controller.Labels.GetSymbolValue(line.Scope + line.Label);
-
+                }
                 return string.Format("=${0:x" + value.Size() * 2 + "}", value);
             }
             if (line.Instruction.StartsWith(".", Controller.Options.StringComparison) &&
                     !Reserved.IsReserved(line.Instruction))
                 return string.Format(">{0:x4}", line.PC);
-            else
-                return string.Format(".{0:x4}", line.PC);
+            
+            return string.Format(".{0:x4}", line.PC);
         }
 
         /// <summary>
@@ -112,13 +121,13 @@ namespace DotNetAsm
             if (line.Assembly.Count == 0 || Controller.Options.NoAssembly)
                 return string.Empty;
 
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             line.Assembly.ForEach(b => sb.AppendFormat(" {0:x2}", b));
 
             if (sb.Length > 24)
             {
                 long pc = line.PC;
-
+                
                 var subdisasms = sb.ToString().SplitByLength(24).ToList();
                 sb.Clear();
 
@@ -191,7 +200,7 @@ namespace DotNetAsm
 
             if (Controller.Options.NoAssembly == false)
             {
-                string asm = DisassembleAsm(line, sourcestr);
+                var asm = DisassembleAsm(line, sourcestr);
                 if (asm.Length > 24)
                 {
                     sb.Append(asm);
@@ -203,7 +212,7 @@ namespace DotNetAsm
                 else
                     sb.AppendFormat("{0,-13}", asm);
             }
-
+            
             if (Controller.Options.NoDissasembly == false)
             {
                 if (string.IsNullOrEmpty(line.Disassembly) == false)
@@ -216,7 +225,7 @@ namespace DotNetAsm
                 sb.AppendFormat("{0,-10}", sourcestr);
             else if (string.IsNullOrEmpty(line.Disassembly) && line.Assembly.Count == 0)
                 sb.TrimEnd();
-
+            
             sb.AppendLine();
         }
 
@@ -229,7 +238,7 @@ namespace DotNetAsm
         /// <returns>A string representation of the source.</returns>
         public string DisassembleLine(SourceLine line)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             DisassembleLine(line, sb);
             return sb.ToString();
         }

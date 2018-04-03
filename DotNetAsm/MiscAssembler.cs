@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
+// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to 
@@ -39,9 +39,9 @@ namespace DotNetAsm
         public MiscAssembler(IAssemblyController controller) :
             base(controller)
         {
-            Reserved.DefineType("Directives",
+            Reserved.DefineType("Directives", 
                     "assert", ".eor", ".echo", ".target",
-                    ".error", ".errorif",
+                    ".error", ".errorif", 
                     ".warnif", ".warn"
                 );
         }
@@ -77,17 +77,9 @@ namespace DotNetAsm
                 Controller.Log.LogEntry(line, ErrorStrings.TooFewArguments, line.Instruction);
                 return;
             }
-            Int64 eor = Controller.Evaluator.Eval(line.Operand);
-
-            if (eor < 0) eor += 256;
-            if (eor > 255 || eor < 0)
-            {
-                Controller.Log.LogEntry(line, ErrorStrings.IllegalQuantity, eor);
-                return;
-            }
-
-            byte eor_b = Convert.ToByte(eor);
-            Controller.Output.Transforms.Push(delegate (byte b)
+            var eor = Controller.Evaluator.Eval(line.Operand, sbyte.MinValue, byte.MaxValue);
+            var eor_b = Convert.ToByte(eor);
+            Controller.Output.Transforms.Push(delegate(byte b)
             {
                 b ^= eor_b;
                 return b;
@@ -118,7 +110,7 @@ namespace DotNetAsm
                     if (!line.Operand.EnclosedInQuotes())
                         Controller.Log.LogEntry(line, ErrorStrings.QuoteStringNotEnclosed);
                     else
-                        Controller.Options.Architecture = line.Operand.Trim('"');
+                        Controller.Options.Architecture = line.Operand.TrimOnce('"');
                     break;
                 default:
                     Controller.Log.LogEntry(line, ErrorStrings.UnknownInstruction, line.Instruction);
@@ -141,20 +133,19 @@ namespace DotNetAsm
             }
             else
             {
-                operand = operand.Trim('"');
+                operand = operand.TrimOnce('"');
             }
-            string type = line.Instruction.Substring(0, 5).ToLower();
+            var type = line.Instruction.Substring(0, 5).ToLower();
             switch (type)
             {
                 case ".echo":
                     Console.WriteLine(operand);
                     break;
-                case ".asse":
-                case ".erro":
-                    Controller.Log.LogEntry(line, operand);
-                    break;
                 case ".warn":
                     Controller.Log.LogEntry(line, operand, Controller.Options.WarningsAsErrors);
+                    break;
+                default:
+                    Controller.Log.LogEntry(line, operand);
                     break;
             }
         }

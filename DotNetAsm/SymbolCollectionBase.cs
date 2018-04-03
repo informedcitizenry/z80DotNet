@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
+// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to 
@@ -115,7 +115,7 @@ namespace DotNetAsm
 
             var split = parent.Split('.').ToList();
             split.RemoveAt(split.Count - 1);
-            string combined = string.Join(".", split);
+            var combined = string.Join(".", split);
             result.AddRange(GetSubScopes(combined));
             return result;
         }
@@ -128,13 +128,13 @@ namespace DotNetAsm
         /// <param name="fromScope">The nearest scope.</param>
         string GetNearestScope(string symbolName, string fromScope)
         {
-            List<string> scopes = GetSubScopes(fromScope);
+            var scopes = GetSubScopes(fromScope);
             foreach (var s in scopes)
             {
                 string scoped = s + "." + symbolName;
-                if (_symbols.ContainsKey(scoped.TrimStart('.')))
+                if (_symbols.ContainsKey(scoped.TrimStartOnce('.')))
                 {
-                    return scoped.TrimStart('.');
+                    return scoped.TrimStartOnce('.');
                 }
             }
             return symbolName;

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
+// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to 
@@ -65,7 +65,7 @@ namespace DotNetAsm
 
         public void Process(SourceLine line)
         {
-            string instruction = line.Instruction.ToLower();
+            var instruction = line.Instruction.ToLower();
             if (!Processes(line.Instruction))
             {
                 if (instruction.Equals(_macros.Last().Key))
@@ -106,8 +106,8 @@ namespace DotNetAsm
             }
             else if (instruction.Equals(".endmacro") || instruction.Equals(".endsegment"))
             {
-                string def = instruction.Replace("end", string.Empty);
-                string name = "." + _definitions.Peek().Label;
+                var def = instruction.Replace("end",string.Empty);
+                var name = "." + _definitions.Peek().Label;
                 if (!_definitions.Peek().Instruction.Equals(def, Controller.Options.StringComparison))
                 {
                     Controller.Log.LogEntry(line, ErrorStrings.ClosureDoesNotCloseMacro, line.Instruction);

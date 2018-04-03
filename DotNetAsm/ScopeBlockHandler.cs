@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
+// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to 
@@ -59,7 +59,7 @@ namespace DotNetAsm
         public void Process(SourceLine line)
         {
             var rev = _scope.Reverse();
-            StringBuilder scopeBuilder = new StringBuilder(line.Scope);
+            var scopeBuilder = new StringBuilder(line.Scope);
             foreach (string s in rev)
                 scopeBuilder.AppendFormat("{0}.", s);
 

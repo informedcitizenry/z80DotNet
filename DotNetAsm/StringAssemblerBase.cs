@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
+// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to 
@@ -61,7 +61,7 @@ namespace DotNetAsm
             _regFmtFunc = new Regex(@"format(\(.+\))",
                 Controller.Options.RegexOption | RegexOptions.Compiled);
 
-            _regEncName = new Regex(@"^_?[a-z][a-z0-9_]*$",
+            _regEncName = new Regex("^" + Patterns.SymbolBasic + "$",
                 Controller.Options.RegexOption | RegexOptions.Compiled);
 
         }
@@ -77,8 +77,8 @@ namespace DotNetAsm
         void UpdateEncoding(SourceLine line)
         {
             line.DoNotAssemble = true;
-            string instruction = line.Instruction.ToLower();
-            string encoding = Controller.Options.CaseSensitive ? line.Operand : line.Operand.ToLower();
+            var instruction = line.Instruction.ToLower();
+            var encoding = Controller.Options.CaseSensitive ? line.Operand : line.Operand.ToLower();
             if (instruction.Equals(".encoding"))
             {
                 if (!_regEncName.IsMatch(line.Operand))
@@ -95,19 +95,19 @@ namespace DotNetAsm
                     throw new ArgumentException(line.Operand);
                 try
                 {
-                    string firstparm = parms.First();
-                    string mapstring = string.Empty;
+                    var firstparm = parms.First();
+                    var mapstring = string.Empty;
                     if (firstparm.EnclosedInQuotes() && firstparm.Length > 3)
                     {
                         if (firstparm.Length > 4)
                             throw new ArgumentException(firstparm);
-                        mapstring = firstparm.Trim('"');
+                        mapstring = firstparm.TrimOnce('"');
                     }
                     if (instruction.Equals(".map"))
                     {
                         if (parms.Count < 2 || parms.Count > 3)
                             throw new ArgumentException(line.Operand);
-                        char translation = EvalEncodingParam(parms.Last());
+                        var translation = EvalEncodingParam(parms.Last());
 
                         if (parms.Count == 2)
                         {
@@ -117,14 +117,14 @@ namespace DotNetAsm
                             }
                             else
                             {
-                                char mapchar = EvalEncodingParam(firstparm);
+                                var mapchar = EvalEncodingParam(firstparm);
                                 Controller.Encoding.Map(mapchar, translation);
                             }
                         }
                         else
                         {
-                            char firstRange = EvalEncodingParam(firstparm);
-                            char lastRange = EvalEncodingParam(parms[1]);
+                            var firstRange = EvalEncodingParam(firstparm);
+                            var lastRange = EvalEncodingParam(parms[1]);
                             Controller.Encoding.Map(firstRange, lastRange, translation);
                         }
                     }
@@ -137,7 +137,7 @@ namespace DotNetAsm
                         {
                             if (string.IsNullOrEmpty(mapstring))
                             {
-                                char unmap = EvalEncodingParam(firstparm);
+                                var unmap = EvalEncodingParam(firstparm);
                                 Controller.Encoding.Unmap(unmap);
                             }
                             else
@@ -147,8 +147,8 @@ namespace DotNetAsm
                         }
                         else
                         {
-                            char firstunmap = EvalEncodingParam(firstparm);
-                            char lastunmap = EvalEncodingParam(parms[1]);
+                            var firstunmap = EvalEncodingParam(firstparm);
+                            var lastunmap = EvalEncodingParam(parms[1]);
                             Controller.Encoding.Unmap(firstunmap, lastunmap);
                         }
                     }
@@ -168,15 +168,14 @@ namespace DotNetAsm
         char EvalEncodingParam(string p)
         {
             // if char literal return the char itself
-            if (p.EnclosedInQuotes())
-            {
-                if (p.Length != 3)
-                    throw new ArgumentException(p);
-                return p.Trim('"').First();
-            }
+            var quoted = p.GetNextQuotedString();
+            if (string.IsNullOrEmpty(quoted))
+                return (char)Controller.Evaluator.Eval(p);
 
-            // else return the evaluated expression
-            return (char)Controller.Evaluator.Eval(p);
+            var unescaped = Regex.Unescape(quoted);
+            if (unescaped.Length != 3)
+                throw new ArgumentException(p);
+            return unescaped.TrimOnce('"').TrimOnce('\'').First();
         }
 
         /// <summary>
@@ -191,7 +190,7 @@ namespace DotNetAsm
             {
                 var m = _regStrFunc.Match(arg);
                 string strval = m.Groups[1].Value;
-                var param = strval.TrimStart('(').TrimEnd(')');
+                var param = strval.TrimStartOnce('(').TrimEndOnce(')');
                 if (string.IsNullOrEmpty(strval) ||
                     strval.FirstParenEnclosure() != m.Groups[1].Value)
                 {
@@ -220,7 +219,7 @@ namespace DotNetAsm
             {
                 if (s.EnclosedInQuotes())
                 {
-                    size += Controller.Encoding.GetByteCount(s.Trim('"'));
+                    size += Controller.Encoding.GetByteCount(Regex.Unescape(s.TrimOnce(s.First())));
                 }
                 else
                 {
@@ -230,7 +229,7 @@ namespace DotNetAsm
                     }
                     else
                     {
-                        string atoi = ExpressionToString(line, s);
+                        var atoi = ExpressionToString(line, s);
                         if (string.IsNullOrEmpty(atoi))
                         {
                             var v = Controller.Evaluator.Eval(s);
@@ -266,7 +265,7 @@ namespace DotNetAsm
                 UpdateEncoding(line);
                 return;
             }
-            string format = line.Instruction.ToLower();
+            var format = line.Instruction.ToLower();
 
             if (format.Equals(".pstring"))
             {
@@ -285,42 +284,51 @@ namespace DotNetAsm
             {
                 Controller.Output.Transforms.Push(b => Convert.ToByte(b << 1));
             }
-
-            string operand = line.Operand;
-
             var args = line.Operand.CommaSeparate();
 
             foreach (var arg in args)
             {
-                if (arg.EnclosedInQuotes() == false)
+                List<byte> encoded;
+                var quoted = arg.GetNextQuotedString();
+                if (string.IsNullOrEmpty(quoted))
                 {
                     if (arg == "?")
                     {
                         Controller.Output.AddUninitialized(1);
                         continue;
                     }
-                    string atoi = ExpressionToString(line, arg);
+                    var atoi = ExpressionToString(line, arg);
 
                     if (string.IsNullOrEmpty(atoi))
                     {
                         var val = Controller.Evaluator.Eval(arg);
-                        line.Assembly.AddRange(Controller.Output.Add(val, val.Size()));
+                        encoded = Controller.Output.Add(val, val.Size());
                     }
                     else
                     {
-                        line.Assembly.AddRange(Controller.Output.Add(atoi));
+                        encoded = Controller.Output.Add(atoi, Controller.Encoding);
                     }
                 }
                 else
                 {
-                    string noquotes = arg.Trim('"');
-                    if (string.IsNullOrEmpty(noquotes))
+                    if (!quoted.Equals(arg))
                     {
-                        Controller.Log.LogEntry(line, ErrorStrings.TooFewArguments, line.Instruction);
+                        Controller.Log.LogEntry(line, ErrorStrings.None);
                         return;
                     }
-                    line.Assembly.AddRange(Controller.Output.Add(noquotes, Controller.Encoding));
+                    var unescaped = Regex.Unescape(quoted.TrimOnce(quoted.First()));
+                    encoded = Controller.Output.Add(unescaped, Controller.Encoding);
                 }
+                if (format.Equals(".nstring"))
+                {
+                    var neg = encoded.FirstOrDefault(b => b > 0x7f);
+                    if (neg > 0x7f)
+                    {
+                        Controller.Log.LogEntry(line, ErrorStrings.IllegalQuantity, neg);
+                        return;
+                    }
+                }
+                line.Assembly.AddRange(encoded);
             }
             var lastbyte = Controller.Output.GetCompilation().Last();
 
@@ -355,12 +363,12 @@ namespace DotNetAsm
             var m = _regFmtFunc.Match(operand);
             if (string.IsNullOrEmpty(m.Value))
                 return string.Empty;
-            string parms = m.Groups[1].Value;
+            var parms = m.Groups[1].Value;
             if (string.IsNullOrEmpty(parms) || m.Groups[1].Value.FirstParenEnclosure() != parms)
                 throw new Exception(ErrorStrings.None);
 
-            var csvs = parms.TrimStart('(').TrimEnd(')').CommaSeparate();
-            string fmt = csvs.First();
+            var csvs = parms.TrimStartOnce('(').TrimEndOnce(')').CommaSeparate();
+            var fmt = csvs.First();
             if (fmt.Length < 5 || !fmt.EnclosedInQuotes())
                 throw new Exception(ErrorStrings.None);
             var parmlist = new List<object>();
@@ -370,11 +378,11 @@ namespace DotNetAsm
                 if (string.IsNullOrEmpty(csvs[i]))
                     throw new Exception(ErrorStrings.None);
                 if (csvs[i].EnclosedInQuotes())
-                    parmlist.Add(csvs[i].Trim('"'));
+                    parmlist.Add(Regex.Unescape(csvs[i].TrimOnce('"')));
                 else
                     parmlist.Add(evaluator.Eval(csvs[i]));
             }
-            return string.Format(fmt.Trim('"'), parmlist.ToArray());
+            return string.Format(Regex.Unescape(fmt.TrimOnce('"')), parmlist.ToArray());
         }
 
         #endregion

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
+// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to 
@@ -62,7 +62,7 @@ namespace DotNetAsm
         /// <param name="token">The token to check</param>
         /// <returns><c>True</c> if the token is an instruction or directive, otherwise <c>false</c>.</returns>
         bool IsInstruction(string token);
-
+ 
         /// <summary>
         /// Gets or sets the disassembler. 
         /// </summary>

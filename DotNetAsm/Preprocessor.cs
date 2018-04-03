@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
+// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to 
@@ -51,47 +51,12 @@ namespace DotNetAsm
         {
             FileRegistry = new HashSet<string>();
             _symbolNameFunc = checkSymbol;
-            Reserved.DefineType("Directives", ".binclude", ".include", ".comment", ".endcomment");
+            Reserved.DefineType("Directives", ".binclude", ".include", ".comment",  ".endcomment");
         }
 
         #endregion
 
         #region Methods
-
-        /// <summary>
-        /// Check if all quotes are properly closed.
-        /// </summary>
-        /// <param name="sourcelines">The list of <see cref="T:DotNetAsm.SourceLine"/>s.</param>
-        void CheckQuotes(IEnumerable<SourceLine> sourcelines)
-        {
-            var nocomments = sourcelines.Where(l => !l.IsComment);
-            foreach (var line in nocomments)
-            {
-                bool double_enclosed = false;
-                for (int i = 0; i < line.Operand.Length; i++)
-                {
-                    var c = line.Operand[i];
-                    if (!double_enclosed && c == '\'')
-                    {
-                        i += 2;
-                        if (i >= line.Operand.Length || line.Operand[i] != '\'')
-                        {
-                            Controller.Log.LogEntry(line, ErrorStrings.QuoteStringNotEnclosed);
-                            break;
-                        }
-                    }
-                    else if (c == '"')
-                    {
-                        double_enclosed = !double_enclosed;
-                    }
-                }
-                if (double_enclosed)
-                {
-                    Controller.Log.LogEntry(line, ErrorStrings.QuoteStringNotEnclosed);
-                    break;
-                }
-            }
-        }
 
         /// <summary>
         /// Preprocess all comment blocks, macro and segment definitions.
@@ -102,7 +67,6 @@ namespace DotNetAsm
         {
             // we can't do this check until all commenting has been processed
             ProcessCommentBlocks(sourcelines);
-            CheckQuotes(sourcelines);
             return ProcessIncludes(sourcelines.Where(l => !l.IsComment));
         }
 
@@ -124,13 +88,13 @@ namespace DotNetAsm
                         Controller.Log.LogEntry(line, ErrorStrings.FilenameNotSpecified);
                         continue;
                     }
-                    var inclistings = ConvertToSource(filename.Trim('"'));
+                    var inclistings = ConvertToSource(filename.TrimOnce('"'));
                     includedLines.AddRange(inclistings);
                 }
                 else if (line.Instruction.Equals(".binclude", Controller.Options.StringComparison))
                 {
                     var args = line.Operand.CommaSeparate();
-                    SourceLine openblock = new SourceLine();
+                    var openblock = new SourceLine();
                     if (args.Count > 1)
                     {
                         if (string.IsNullOrEmpty(line.Label) == false && _symbolNameFunc(line.Label) == false)
@@ -143,7 +107,7 @@ namespace DotNetAsm
                             Controller.Log.LogEntry(line, ErrorStrings.None);
                             continue;
                         }
-                        if (FileRegistry.Add(line.Operand.Trim('"')) == false)
+                        if (FileRegistry.Add(line.Operand.TrimOnce('"')) == false)
                         {
                             throw new Exception(string.Format(ErrorStrings.FilePreviouslyIncluded, line.Operand));
                         }
@@ -156,7 +120,7 @@ namespace DotNetAsm
                     }
                     openblock.Instruction = ConstStrings.OPEN_SCOPE;
                     includedLines.Add(openblock);
-                    var inclistings = ConvertToSource(line.Operand.Trim('"'));
+                    var inclistings = ConvertToSource(line.Operand.TrimOnce('"'));
 
                     includedLines.AddRange(inclistings);
                     includedLines.Add(new SourceLine());
@@ -177,11 +141,11 @@ namespace DotNetAsm
         void ProcessCommentBlocks(IEnumerable<SourceLine> source)
         {
             bool incomments = false;
-            foreach (var line in source)
+            foreach(var line in source)
             {
                 if (!incomments)
                     incomments = line.Instruction.Equals(".comment", Controller.Options.StringComparison);
-
+                
                 line.IsComment = incomments;
                 if (line.Instruction.Equals(".endcomment", Controller.Options.StringComparison))
                 {
@@ -189,7 +153,7 @@ namespace DotNetAsm
                         incomments = false;
                     else
                         Controller.Log.LogEntry(line, ErrorStrings.ClosureDoesNotCloseBlock, line.Instruction);
-                }
+                }   
             }
             if (incomments)
                 throw new Exception(ErrorStrings.MissingClosure);
@@ -209,17 +173,17 @@ namespace DotNetAsm
             {
                 Console.WriteLine("Processing input file " + file + "...");
                 int currentline = 1;
-                List<SourceLine> sourcelines = new List<SourceLine>();
+                var sourcelines = new List<SourceLine>();
                 using (StreamReader reader = new StreamReader(File.Open(file, FileMode.Open)))
                 {
                     while (reader.EndOfStream == false)
                     {
-                        string unprocessedline = reader.ReadLine();
+                        var unprocessedline = reader.ReadLine();
                         try
                         {
                             var line = new SourceLine(file, currentline, unprocessedline);
                             line.Parse(
-                                delegate (string token)
+                                delegate(string token)
                                 {
                                     return Controller.IsInstruction(token) || Reserved.IsReserved(token) ||
                                         (token.StartsWith(".") && Macro.IsValidMacroName(token.Substring(1))) ||
@@ -227,9 +191,9 @@ namespace DotNetAsm
                                 });
                             sourcelines.Add(line);
                         }
-                        catch (SourceLine.QuoteNotEnclosedException)
+                        catch (Exception ex)
                         {
-                            Controller.Log.LogEntry(file, currentline, ErrorStrings.QuoteStringNotEnclosed);
+                            Controller.Log.LogEntry(file, currentline, ex.Message);
                         }
                         currentline++;
                     }

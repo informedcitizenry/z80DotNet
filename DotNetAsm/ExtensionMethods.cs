@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
+// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to 
@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace DotNetAsm
 {
@@ -103,28 +104,46 @@ namespace DotNetAsm
         /// <returns><c>True</c> if string is fully enclosed in quotes, otherwise <c>false</c>.</returns>
         public static bool EnclosedInQuotes(this string str)
         {
-            if (string.IsNullOrEmpty(str) || string.IsNullOrWhiteSpace(str))
-                return false;
-            bool enclosed = false;
-            if (str.StartsWith("\"", StringComparison.CurrentCulture) &&
-                str.EndsWith("\"", StringComparison.CurrentCulture))
-            {
-                bool escaped = false;
-                string substr = str.Substring(1);
-                for (int i = 0; i < substr.Length; i++)
-                {
-                    if (substr[i] == '"' && !escaped)
-                        enclosed = !enclosed;
-                    else if (i < substr.Length - 1 && substr[i] == '\\' && substr[i + 1] == '"')
-                    {
-                        i++;
-                        escaped = true;
-                        continue;
-                    }
-                    escaped = false;
-                }
-            }
-            return enclosed;
+            return str.Equals(str.GetNextQuotedString());
+        }
+
+        /// <summary>
+        /// Trims one instance of the specified character at the start of the string.
+        /// </summary>
+        /// <returns>The modified string.</returns>
+        /// <param name="str">String.</param>
+        /// <param name="c">The character to trim.</param>
+        public static string TrimStartOnce(this string str, char c)
+        {
+            if (string.IsNullOrEmpty(str)) return string.Empty;
+            if (str.First().Equals(c))
+                return str.Length > 1 ? str.Substring(1) : string.Empty;
+            return str;
+        }
+
+        /// <summary>
+        /// Trims one instance of the specified character at the end of the string.
+        /// </summary>
+        /// <returns>The modified string.</returns>
+        /// <param name="str">String.</param>
+        /// <param name="c">The character to trim.</param>
+        public static string TrimEndOnce(this string str, char c)
+        {
+            if (string.IsNullOrEmpty(str)) return string.Empty;
+            if (str.Last().Equals(c))
+                return str.Length > 1 ? str.Substring(0, str.Length - 1) : string.Empty;
+            return str;
+        }
+
+        /// <summary>
+        /// Trims one instance of the specified character at the start and the end of the string.
+        /// </summary>
+        /// <returns>The modified string.</returns>
+        /// <param name="str">String.</param>
+        /// <param name="c">The character to trim.</param>
+        public static string TrimOnce(this string str, char c)
+        {
+            return str.TrimStartOnce(c).TrimEndOnce(c);
         }
 
         /// <summary>
@@ -132,45 +151,132 @@ namespace DotNetAsm
         /// </summary>
         /// <param name="str">The string to evaluate</param>
         /// <returns>The first instance of a parenthetical group</returns>
-        /// <exception cref="T:System.FormatException">System.FormatException</exception>
+        /// <exception cref="T:System.FormatException"></exception>
         public static string FirstParenEnclosure(this string str)
         {
-            int parens = 0;
-            string parengroup = string.Empty;
+            var num_parents = 0;
+            var parengroup = new StringBuilder();
             char open = '(', close = ')';
-            bool quote_enclosed = false;
-            foreach (var c in str)
+            for (int i = 0; i < str.Length; i++)
             {
-                if (parens >= 1)
-                    parengroup += c.ToString();
+                var c = str[i];
+                var quoted = string.Empty;
 
-                if (c == '"')
+                if (c == '"' || c == '\'')
                 {
-                    quote_enclosed = !quote_enclosed;
-                }
-                if (quote_enclosed)
+                    quoted = str.GetNextQuotedString(atIndex: i);
+                    if (num_parents >= 1)
+                        parengroup.Append(quoted);
+                    i += quoted.Length - 1;
                     continue;
+                }
+                else if (num_parents >= 1 || c == open)
+                    parengroup.Append(c);
 
                 if (c == open)
                 {
-                    if (parens == 0)
-                        parengroup += c.ToString();
-                    parens++;
+                    num_parents++;
                 }
                 else if (c == close)
                 {
-                    parens--;
-                    if (parens == 0)
-                    {
-                        return parengroup;
-                    }
-                    if (parens < 0)
-                        throw new FormatException();
+                    num_parents--;
+                    if (num_parents == 0)
+                        return parengroup.ToString();
                 }
             }
-            if (parens > 0)
+            if (num_parents != 0)
                 throw new FormatException();
             return str;
+        }
+
+        /// <summary>
+        /// Gets the next double- or single-quoted string within the string.
+        /// </summary>
+        /// <returns>The next quoted string, or empty if no quoted string present.</returns>
+        /// <param name="str">String.</param>
+        /// <exception cref="T:System.Exception"></exception>
+        public static string GetNextQuotedString(this string str)
+        {
+            return str.GetNextQuotedString(0);
+        }
+
+        /// <summary>
+        /// Gets the next double- or single-quoted string within the string.
+        /// </summary>
+        /// <returns>The next quoted string, or empty if no quoted string present.</returns>
+        /// <param name="str">String.</param>
+        /// <param name="atIndex">The index at which to search the string.</param>
+        /// <exception cref="T:System.Exception"></exception>
+        public static string GetNextQuotedString(this string str, int atIndex)
+        {
+            var quoted = new StringBuilder();
+            var double_enclosed = false;
+            var single_enclosed = false;
+            var escaped = false;
+     
+            for (int i = atIndex; i < str.Length; i++)
+            {
+                var c = str[i];
+                var escapesize = 0;
+                if (escaped)
+                {
+                    escaped = false;
+                    // find matches for the variable-length escape sequences
+                    var m = Regex.Match(str.Substring(i),
+                                        @"^(u[a-fA-F0-9]{4}|U[a-fA-F0-9]{8}|x[a-fA-F0-9]{1,4}).");
+                    if (!string.IsNullOrEmpty(m.Value))
+                    {
+                        quoted.Append(m.Value);
+                        var last = m.Value.Last();
+                        if (single_enclosed)
+                        {
+                            if (!last.Equals('\''))
+                                throw new Exception(ErrorStrings.TooManyCharacters);
+                            return quoted.ToString();
+                        }
+                        if (last.Equals('"'))
+                            return quoted.ToString();
+                        
+                        i += m.Value.Length - 1;
+                        continue;
+                    }
+                }
+                else if (c == '"' && !single_enclosed)
+                {
+                    double_enclosed = !double_enclosed;
+                    if (!double_enclosed)
+                    {
+                        if (quoted.Length < 2)
+                            throw new Exception(ErrorStrings.QuoteStringNotEnclosed);
+                        quoted.Append(c);
+                        break;
+                    }    
+                }
+                else if (c == '\'' && !double_enclosed)
+                {
+                    single_enclosed = !single_enclosed;
+                    if (!single_enclosed)
+                    {
+                        if (quoted.Length < 2)
+                            throw new Exception(ErrorStrings.QuoteStringNotEnclosed);
+                        if (quoted.Length > escapesize + 3)
+                            throw new Exception(ErrorStrings.TooManyCharacters);
+                        quoted.Append(c);
+                        break;
+                    }
+                }
+                else if (c == '\\' && (double_enclosed || single_enclosed))
+                {
+                    escaped = !escaped;
+                    if (escaped)
+                        escapesize++;
+                }
+                if (single_enclosed || double_enclosed)
+                    quoted.Append(c);
+            }
+            if (single_enclosed || double_enclosed)
+                throw new Exception(ErrorStrings.QuoteStringNotEnclosed);
+            return quoted.ToString();
         }
 
         /// <summary>
@@ -179,94 +285,57 @@ namespace DotNetAsm
         /// </summary>
         /// <param name="str">The string to evaluate</param>
         /// <returns>A <see cref="T:System.Collections.Generic.List&lt;string&gt;"/> of the values.</returns>
+        /// <exception cref="T:System.Exception"></exception>
         public static List<string> CommaSeparate(this string str)
         {
-            List<string> csv = new List<string>();
+            var csv = new List<string>();
 
             if (string.IsNullOrEmpty(str))
                 return csv;
 
-            bool double_enclosed = false;
-            bool single_enclosed = false;
-            bool paren_enclosed = false;
-
-            StringBuilder sb = new StringBuilder();
-
-            int charExpCount = 0;
+            var num_parens = 0;
+            var sb = new StringBuilder();
 
             for (int i = 0; i < str.Length; i++)
             {
                 char c = str[i];
-                if (double_enclosed)
+                if (c.Equals('\'') || c.Equals('\"'))
                 {
-                    sb.Append(c);
-                    if (c == '"')
-                    {
-                        double_enclosed = false;
-                        if (i == str.Length - 1)
-                            csv.Add(sb.ToString().Trim());
-                    }
+                    var quoted = str.GetNextQuotedString(atIndex:i);
+                    i += quoted.Length - 1;
+                    sb.Append(quoted);
+                    if (i >= str.Length - 1)
+                        csv.Add(sb.ToString().Trim());
                 }
-                else if (single_enclosed)
+                else if (num_parens > 0)
                 {
-                    charExpCount++;
                     sb.Append(c);
-                    if (c == '\'')
+                    if (c == ')')
                     {
-                        if (charExpCount == 2)
-                        {
-                            // don't set single quote closed unless we 
-                            // have consumed the char in single quote.
-                            charExpCount = 0;
-                            single_enclosed = false;
-                            if (i == str.Length - 1)
-                                csv.Add(sb.ToString().Trim());
-                        }
-                    }
-                }
-                else if (paren_enclosed)
-                {
-                    if (c == '"' && !single_enclosed)
-                        double_enclosed = true;
-                    else
-                        single_enclosed |= (c == '\'' && !double_enclosed);
-
-                    sb.Append(c);
-                    if (c == ')' && !double_enclosed && !single_enclosed)
-                    {
-                        paren_enclosed = false;
+                        num_parens--;
                         if (i == str.Length - 1)
                             csv.Add(sb.ToString().Trim());
                     }
                 }
                 else
                 {
-                    switch (c)
+                    if (c == '(')
                     {
-                        case '"':
-                            double_enclosed = true;
-                            break;
-                        case '\'':
-                            single_enclosed = true;
-                            break;
-                        case '(':
-                            paren_enclosed = true;
-                            break;
-                        case ',':
-                            csv.Add(sb.ToString().Trim());
-                            sb.Clear();
-                            continue;
-                        default:
-                            break;
+                        num_parens++;
                     }
-
+                    else if (c == ',')
+                    {
+                        csv.Add(sb.ToString().Trim());
+                        sb.Clear();
+                        continue;
+                    }
                     sb.Append(c);
                     if (i == str.Length - 1)
                         csv.Add(sb.ToString().Trim());
                 }
             }
-            if (double_enclosed || single_enclosed)
-                throw new Exception(ErrorStrings.QuoteStringNotEnclosed);
+            if (num_parens != 0)
+                throw new Exception(ErrorStrings.None);
 
             if (str.Last().Equals(','))
                 csv.Add(string.Empty);
@@ -283,80 +352,13 @@ namespace DotNetAsm
         /// <returns>The size in bytes.</returns>
         public static int Size(this Int64 value)
         {
-            int size = 1;
-            Int64 absval = Math.Abs(value) / 256;
-
-            while (absval > 0)
-            {
-                size++;
-                absval /= 256;
-            }
-            if ((size == 1 && value < sbyte.MinValue) ||
-                (size == 2 && value < short.MinValue) ||
-                (size == 3 && value < Int24.MinValue) ||
-                (size == 4 && value < int.MinValue))
-                size++;
-            return size;
-        }
-
-        /// <summary>
-        /// Gets the bitwise AND mask for the value.
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns>The AND value as an unsigned 32-bit integer.</returns>
-        public static uint AndMask(this Int64 value)
-        {
-            int size = value.Size() - 1;
-            uint and = 0xFF;
-            while (size > 0)
-            {
-                and *= 256;
-                and += 0xFF;
-                size--;
-            }
-            return and;
-        }
-    }
-
-    public static class List_t_Extension
-    {
-        /// <summary>
-        /// Returns all indexes of the given item in the list.
-        /// </summary>
-        /// <typeparam name="T">The type of the object.</typeparam>
-        /// <param name="list">The list in which to search the item.</param>
-        /// <param name="item">The item to find.</param>
-        /// <returns>A <see cref="T:System.Collections.Generic.List&lt;int&gt;"/> of all indexes the value is found in the list.</returns>
-        public static List<int> AllIndexesOf<T>(this List<T> list, T item)
-        {
-            if (list == null || list.Count == 0)
-                throw new ArgumentException("The list cannot be null or empty.");
-            List<int> indexes = new List<int>();
-            for (int index = 0; ; index++)
-            {
-                index = list.IndexOf(item, index);
-                if (index == -1)
-                    return indexes;
-                indexes.Add(index);
-            }
-        }
-
-        /// <summary>
-        /// Returns all indexes of the given item in the list.
-        /// </summary>
-        /// <typeparam name="T">The type of the object.</typeparam>
-        /// <param name="list">The list in which to search the item.</param>
-        /// <param name="expression">Filters the list of values based on a predicate.</param>
-        /// <returns>A <see cref="T:System.Collections.Generic.List&lt;int&gt;"/> of all indexes the value is found in the list.</returns>
-        public static List<int> AllIndexesOf<T>(this List<T> list, System.Func<T, bool> expression)
-        {
-            var any = list.Where(expression);
-            List<int> indexes = new List<int>();
-            foreach (var a in any)
-            {
-                indexes.AddRange(AllIndexesOf(list, a));
-            }
-            return indexes;
+            if (value < 0)
+                value = (~value) << 1;
+            
+            if ((value & 0xFFFFFF00) == 0) return 1;
+            if ((value & 0xFFFF0000) == 0) return 2;
+            if ((value & 0xFF000000) == 0) return 3;
+            return 4;
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
+// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to 
@@ -155,7 +155,7 @@ namespace DotNetAsm
             /// <returns>A <see cref="T:System.Collections.Generic.IEnumerable&lt;SourceLine&gt;"/>.</returns>
             public IEnumerable<SourceLine> GetProcessedLines()
             {
-                List<SourceLine> processed = new List<SourceLine>();
+                var processed = new List<SourceLine>();
                 foreach (var entry in _entries)
                 {
                     if (entry.LinkedBlock != null)
@@ -259,7 +259,7 @@ namespace DotNetAsm
 
         public void Process(SourceLine line)
         {
-            string instruction = line.Instruction.ToLower();
+            var instruction = line.Instruction.ToLower();
 
             if (instruction.Equals(".for"))
             {
@@ -268,10 +268,10 @@ namespace DotNetAsm
                     Controller.Log.LogEntry(line, ErrorStrings.TooFewArguments, line.Instruction);
                     return;
                 }
-                else if (string.IsNullOrEmpty(line.Label) == false)
+                if (string.IsNullOrEmpty(line.Label) == false)
                 {
                     // capture the label
-                    _processedLines.Add(new SourceLine()
+                    _processedLines.Add(new SourceLine
                     {
                         Label = line.Label,
                         SourceString = line.Label,
@@ -289,7 +289,7 @@ namespace DotNetAsm
 
                 if (_levels > 0)
                 {
-                    ForNextBlock block = new ForNextBlock();
+                    var block = new ForNextBlock();
                     _currBlock.AddEntry(null, block);
                     _currBlock = block;
                 }
@@ -313,7 +313,7 @@ namespace DotNetAsm
                             Controller.Log.LogEntry(line, ErrorStrings.BadExpression, csvs.First());
                             return;
                         }
-                        _processedLines.Add(new SourceLine()
+                        _processedLines.Add(new SourceLine
                         {
                             SourceString = ConstStrings.SHADOW_SOURCE,
                             Instruction = ConstStrings.VAR_DIRECTIVE,
@@ -321,7 +321,7 @@ namespace DotNetAsm
                         });
                     }
                 }
-                _currBlock.AddEntry(new SourceLine()
+                _currBlock.AddEntry(new SourceLine
                 {
                     SourceString = ConstStrings.SHADOW_SOURCE,
                     Instruction = "@@ for @@"
@@ -341,17 +341,17 @@ namespace DotNetAsm
                     Controller.Log.LogEntry(line, ErrorStrings.ClosureDoesNotCloseBlock, line.Instruction);
                     return;
                 }
-                else if (string.IsNullOrEmpty(line.Operand) == false)
+                if (string.IsNullOrEmpty(line.Operand) == false)
                 {
                     Controller.Log.LogEntry(line, ErrorStrings.TooManyArguments, line.Instruction);
                     return;
                 }
-                else if (string.IsNullOrEmpty(line.Label) == false)
+                if (string.IsNullOrEmpty(line.Label) == false)
                 {
                     Controller.Log.LogEntry(line, ErrorStrings.None);
                     return;
                 }
-                SourceLine loopLine = new SourceLine()
+                var loopLine = new SourceLine
                 {
                     SourceString = ConstStrings.SHADOW_SOURCE,
                     Instruction = "@@ next @@"
@@ -375,7 +375,7 @@ namespace DotNetAsm
                     return;
                 }
                 string procinst = "@@ break @@";
-                SourceLine shadow = new SourceLine()
+                var shadow = new SourceLine
                 {
                     SourceString = ConstStrings.SHADOW_SOURCE,
                     Instruction = procinst
@@ -401,7 +401,7 @@ namespace DotNetAsm
                     if (_breakBlock == null && !string.IsNullOrEmpty(_currBlock.InitExpression))
                     {
                         var initval = Controller.Variables.SetVariable(_currBlock.InitExpression, _currBlock.Scope);
-                        _processedLines.Add(new SourceLine()
+                        _processedLines.Add(new SourceLine
                         {
                             SourceString = ConstStrings.SHADOW_SOURCE,
                             Instruction = ConstStrings.VAR_DIRECTIVE,
@@ -430,7 +430,7 @@ namespace DotNetAsm
                 foreach (var iterexp in _currBlock.IterExpressions)
                 {
                     var itervar = Controller.Variables.SetVariable(iterexp, _currBlock.Scope);
-                    _processedLines.Add(new SourceLine()
+                    _processedLines.Add(new SourceLine
                     {
                         SourceString = ConstStrings.SHADOW_SOURCE,
                         Instruction = ConstStrings.VAR_DIRECTIVE,

@@ -1,5 +1,5 @@
-//-----------------------------------------------------------------------------
-// Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
+﻿//-----------------------------------------------------------------------------
+// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to 
@@ -50,6 +50,7 @@ namespace DotNetAsm
         bool _noSource;
         bool _printVersion;
         bool _noDisassembly;
+        bool _warnLeft;
 
         #endregion
 
@@ -71,6 +72,7 @@ namespace DotNetAsm
             _verboseDasm =
             _werror =
             _noWarn =
+            _warnLeft =
             _noDisassembly =
             _noSource =
             _noAssembly =
@@ -99,23 +101,24 @@ namespace DotNetAsm
             args.CopyTo(Arguments, 0);
             var result = ArgumentSyntax.Parse(args, syntax =>
             {
-                syntax.DefineOption("o|output", ref _outputFile, "Output assembly to <arg>");
-                syntax.DefineOption("b|big-endian", ref _bigEndian, "Set byte order of output to big-endian");
-                syntax.DefineOption("arch", ref _arch, "Specify architecture-specific options");
-                syntax.DefineOption("cpu", ref _cpu, "Specify the target CPU and instruction set");
-                syntax.DefineOptionList("D|define", ref _defines, "Assign value to a global symbol/label in <arg>");
-                syntax.DefineOption("q|quiet", ref _quiet, "Assemble in quiet mode (no console messages)");
-                syntax.DefineOption("w|no-warn", ref _noWarn, "Suppress all warnings");
-                syntax.DefineOption("werror", ref _werror, "Treat all warnings as errors");
-                syntax.DefineOption("l|labels", ref _labelFile, "Output label definitions to <arg>");
-                syntax.DefineOption("L|list", ref _listingFile, "Output listing to <arg>");
-                syntax.DefineOption("a|no-assembly", ref _noAssembly, "Suppress assembled bytes from assembly listing");
+                syntax.DefineOption("o|output",         ref _outputFile,    "Output assembly to <arg>");
+                syntax.DefineOption("b|big-endian",     ref _bigEndian,     "Set byte order of output to big-endian");
+                syntax.DefineOption("arch",             ref _arch,          "Specify architecture-specific options");
+                syntax.DefineOption("cpu",              ref _cpu,           "Specify the target CPU and instruction set");
+                syntax.DefineOptionList("D|define",     ref _defines,       "Assign value to a global symbol/label in <arg>");
+                syntax.DefineOption("q|quiet",          ref _quiet,         "Assemble in quiet mode (no console messages)");
+                syntax.DefineOption("w|no-warn",        ref _noWarn,        "Suppress all warnings");
+                syntax.DefineOption("werror",           ref _werror,        "Treat all warnings as errors");
+                syntax.DefineOption("wleft",            ref _warnLeft,      "Issue warnings about whitespaces before labels");
+                syntax.DefineOption("l|labels",         ref _labelFile,     "Output label definitions to <arg>");
+                syntax.DefineOption("L|list",           ref _listingFile,   "Output listing to <arg>");
+                syntax.DefineOption("a|no-assembly",    ref _noAssembly,    "Suppress assembled bytes from assembly listing");
                 syntax.DefineOption("d|no-disassembly", ref _noDisassembly, "Suppress disassembly from assembly listing");
-                syntax.DefineOption("s|no-source", ref _noSource, "Suppress original source from assembly listing");
-                syntax.DefineOption("verbose-asm", ref _verboseDasm, "Expand listing to include all directives and comments");
+                syntax.DefineOption("s|no-source",      ref _noSource,      "Suppress original source from assembly listing");
+                syntax.DefineOption("verbose-asm",      ref _verboseDasm,   "Expand listing to include all directives and comments");
                 syntax.DefineOption("C|case-sensitive", ref _caseSensitive, "Treat all symbols as case sensitive");
-                syntax.DefineOption("V|version", ref _printVersion, "Print current version");
-                syntax.DefineParameterList("source", ref _source, "The source files to assemble");
+                syntax.DefineOption("V|version",        ref _printVersion,  "Print current version");
+                syntax.DefineParameterList("source",    ref _source,        "The source files to assemble");
             });
         }
 
@@ -190,6 +193,12 @@ namespace DotNetAsm
         /// Gets the flag that indicates warnings should be suppressed.
         /// </summary>
         public bool NoWarnings { get { return _noWarn; } }
+
+        /// <summary>
+        /// Gets a value indicating whether to suppress warnings for whitespaces before labels.
+        /// </summary>
+        /// <value>If <c>true</c> warn left; otherwise, suppress the warning.</value>
+        public bool WarnLeft { get { return _warnLeft; } }
 
         /// <summary>
         /// Gets a flag that treats warnings as errors.

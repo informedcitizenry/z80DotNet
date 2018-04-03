@@ -2,10 +2,7 @@
 using z80DotNet;
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NUnit.z80Tests
 {
@@ -23,7 +20,7 @@ namespace NUnit.z80Tests
 
             Evaluator = new Evaluator(@"\$([a-fA-F0-9]+)");
 
-            Evaluator.DefineSymbolLookup("'.'", s => Convert.ToInt32(s.Trim('\'').First()).ToString());
+            Evaluator.DefineSymbolLookup("'.'", s => Convert.ToInt32(s.TrimOnce('\'').First()).ToString());
 
             // to help throw errors 
             Evaluator.DefineSymbolLookup(@"[a-ehilr]", s => string.Empty);

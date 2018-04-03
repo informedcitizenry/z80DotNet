@@ -1,5 +1,5 @@
-//-----------------------------------------------------------------------------
-// Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
+﻿//-----------------------------------------------------------------------------
+// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to 
@@ -61,7 +61,6 @@ namespace DotNetAsm
         static Regex _regThreeAlt;
         static Regex _regTwo;
         static Regex _regOne;
-        static Regex _regUnicode;
 
         #endregion
 
@@ -94,7 +93,7 @@ namespace DotNetAsm
         public SourceLine() :
             this(string.Empty, 0, string.Empty)
         {
-
+            
         }
 
         #region Static Constructors
@@ -104,12 +103,10 @@ namespace DotNetAsm
         /// </summary>
         static SourceLine()
         {
-            _regThree = new Regex(@"^([^\s]+)\s+(([^\s]+)\s+(.+))$", RegexOptions.Compiled);
-            _regThreeAlt = new Regex(@"^([^\s]+)\s*(=)\s*(.+)$", RegexOptions.Compiled);
-            _regTwo = new Regex(@"^([^\s]+)\s+(.+)$", RegexOptions.Compiled);
-            _regOne = new Regex(@"^([^\s]+)$", RegexOptions.Compiled);
-            _regUnicode = new Regex(@"(\\u[a-fA-F0-9]{4}|\\U[a-fA-F0-9]{8})",
-                                                                        RegexOptions.Compiled);
+            _regThree    = new Regex(@"^([^\s]+)\s+(([^\s]+)\s+(.+))$", RegexOptions.Compiled);
+            _regThreeAlt = new Regex(@"^([^\s]+)\s*(=)\s*(.+)$",        RegexOptions.Compiled);
+            _regTwo      = new Regex(@"^([^\s]+)\s+(.+)$",              RegexOptions.Compiled);
+            _regOne      = new Regex(@"^([^\s]+)$",                     RegexOptions.Compiled);
         }
 
         #endregion
@@ -119,19 +116,7 @@ namespace DotNetAsm
         #region Methods
 
         /// <summary>
-        /// Convert escaped code point expressions to actual Unicode strings.
-        /// </summary>
-        /// <param name="labelOperand">The label or operand string to convert</param>
-        /// <returns>A string with unicode characters converted from code points.</returns>
-        string ConvertEscapedUnicode(string labelOperand) =>
-            _regUnicode.Replace(labelOperand, match =>
-            {
-                int codepoint = int.Parse(match.Value.Substring(2), NumberStyles.HexNumber);
-                return char.ConvertFromUtf32(codepoint);
-            });
-
-        /// <summary>
-        /// Parse the SourceLine's SourceString property into its component line,
+        /// Parse the <see cref="DotNetAsm.SourceLine"/>'s SourceString property into its component line,
         /// instruction and operand.
         /// </summary>
         /// <param name="checkInstruction">A callback to determine which part of the source
@@ -139,26 +124,17 @@ namespace DotNetAsm
         /// <exception cref="T:DotNetAsm.QuoteNotEnclosedException"></exception>
         public void Parse(Func<string, bool> checkInstruction)
         {
-            bool double_enclosed = false;
-            bool single_enclosed = false;
-
             int length = 0;
             for (; length < SourceString.Length; length++)
             {
                 char c = SourceString[length];
-                if (!single_enclosed && !double_enclosed && c == ';')
+                if (c == '"' || c == '\'')
+                    length += SourceString.GetNextQuotedString(atIndex: length).Length - 1;
+                else if (c == ';')
                     break;
-                if (c == '"' && !single_enclosed)
-                    double_enclosed = !double_enclosed;
-                else if (c == '\'' && !double_enclosed)
-                    single_enclosed = !single_enclosed;
-
             }
-            if (double_enclosed || single_enclosed)
-                throw new QuoteNotEnclosedException();
-
-            string processed = SourceString.Substring(0, length).Trim();
-            Match m = _regThree.Match(processed);
+            var processed = SourceString.Substring(0, length).Trim();
+            var m = _regThree.Match(processed);
             if (string.IsNullOrEmpty(m.Value) == false)
             {
                 if (checkInstruction(m.Groups[1].Value))
@@ -211,9 +187,6 @@ namespace DotNetAsm
                     }
                 }
             }
-            // both label and operand may contain escaped Unicode characters
-            Label = ConvertEscapedUnicode(Label);
-            Operand = ConvertEscapedUnicode(Operand);
         }
 
         /// <summary>
@@ -244,15 +217,15 @@ namespace DotNetAsm
                                                       , Operand);
         }
 
-        public override int GetHashCode() => LineNumber.GetHashCode() +
-                                             Filename.GetHashCode() +
+        public override int GetHashCode() => LineNumber.GetHashCode() + 
+                                             Filename.GetHashCode() + 
                                              SourceString.GetHashCode();
 
         #endregion
 
         #region IEquatable
 
-        public bool Equals(SourceLine other) =>
+        public bool Equals(SourceLine other) => 
                    (other.LineNumber == this.LineNumber &&
                     other.Filename == this.Filename &&
                     other.SourceString == this.SourceString);

@@ -136,7 +136,10 @@
     <value>Could not process binary file '{0}'</value>
   </data>
   <data name="DefininingUnknownType" xml:space="preserve">
-    <value>Type definition for unknown type '{0}'</value>
+    <value>Type '{0}' is unknown or not redefinable</value>
+  </data>
+  <data name="Depricated" xml:space="preserve">
+    <value>{0} is depricated</value>
   </data>
   <data name="DirectiveTakesNoArguments" xml:space="preserve">
     <value>Directive '{0}' takes no arguments</value>
@@ -162,8 +165,11 @@
   <data name="LabelNotDefined" xml:space="preserve">
     <value>Symbol '{0}' not found</value>
   </data>
+  <data name="LabelNotLeft" xml:space="preserve">
+    <value>Label is not the leftmost character</value>
+  </data>
   <data name="LabelNotValid" xml:space="preserve">
-    <value>Symbol '{0}' is not a valid label name</value>
+    <value>'{0}' is not a valid symbol name</value>
   </data>
   <data name="LabelRedefinition" xml:space="preserve">
     <value>Redefinition of label '{0}'</value>
@@ -203,6 +209,9 @@
   </data>
   <data name="TooManyArguments" xml:space="preserve">
     <value>Too many arguments for directive '{0}'</value>
+  </data>
+  <data name="TooManyCharacters" xml:space="preserve">
+    <value>Too many characters in character literal</value>
   </data>
   <data name="TypeDefinitionError" xml:space="preserve">
     <value>Cannot redefine type to '{0}' because it is already a type</value>

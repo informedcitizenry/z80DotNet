@@ -11,7 +11,7 @@
     <AssemblyName>DotNetAsm</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <ReleaseVersion>1.8.1</ReleaseVersion>
+    <ReleaseVersion>1.9.0</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -97,12 +97,12 @@
     <Compile Include="SymbolCollectionBase.cs" />
     <Compile Include="LabelCollection.cs" />
     <Compile Include="VariableCollection.cs" />
+    <Compile Include="CpuChangedEvent.cs" />
     <Compile Include="ConstStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>ConstStrings.resx</DependentUpon>
     </Compile>
-    <Compile Include="CpuChangedEvent.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ErrorStrings.resx">

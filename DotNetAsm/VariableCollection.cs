@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
+// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to 
@@ -51,7 +51,7 @@ namespace DotNetAsm
             RegexOptions option = RegexOptions.Compiled;
             option |= comparer == StringComparer.CurrentCultureIgnoreCase ? RegexOptions.IgnoreCase : RegexOptions.None;
             _evaluator = evaluator;
-            _regExpression = new Regex("^(_*" + Patterns.SymbolUnicode + @")\s*=\s*(.+)$", option);
+            _regExpression = new Regex("^(" + Patterns.SymbolUnicode + @")\s*=\s*(.+)$", option);
         }
 
         #endregion
@@ -66,10 +66,10 @@ namespace DotNetAsm
         /// <param name="inScope">The scope of the variable</param>
         KeyValuePair<string, long> ParseExpression(string expression, string inScope)
         {
-            Match m = _regExpression.Match(expression);
+            var m = _regExpression.Match(expression);
             if (string.IsNullOrEmpty(m.Value) == false)
                 return new KeyValuePair<string, long>(inScope + m.Groups[1].Value,
-                                                      _evaluator.Eval(m.Groups[2].Value, int.MinValue, uint.MaxValue));
+                                                      _evaluator.Eval(m.Groups[3].Value, int.MinValue, uint.MaxValue));
             return new KeyValuePair<string, long>(string.Empty, long.MinValue);
         }
 
@@ -91,9 +91,9 @@ namespace DotNetAsm
         /// <param name="expression">Expression.</param>
         public string GetAssignmentFromExpression(string expression)
         {
-            Match m = _regExpression.Match(expression);
+            var m = _regExpression.Match(expression);
             if (string.IsNullOrEmpty(m.Value) == false)
-                return m.Groups[2].Value;
+                return m.Groups[3].Value;
             return string.Empty;
         }
 
@@ -108,7 +108,7 @@ namespace DotNetAsm
         /// <exception cref="T:DotNetAsm.SymbolCollectionException">DotNetAsm.SymbolCollectionException</exception>
         public KeyValuePair<string, long> SetVariable(string expression, string inScope)
         {
-            KeyValuePair<string, long> result = ParseExpression(expression, inScope);
+            var result = ParseExpression(expression, inScope);
             if (string.IsNullOrEmpty(result.Key))
                 throw new ExpressionException(expression);
             if (IsSymbolValid(result.Key, true) == false)

@@ -1,5 +1,5 @@
-//-----------------------------------------------------------------------------
-// Copyright (c) 2017 informedcitizenry <informedcitizenry@gmail.com>
+﻿//-----------------------------------------------------------------------------
+// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to 
@@ -84,7 +84,7 @@ namespace DotNetAsm
         protected IAssemblyController Controller
         {
             get { return _controller; }
-            set { _controller = value; }
+            set {_controller = value; }
         }
 
         #endregion
