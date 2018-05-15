@@ -31,28 +31,19 @@ namespace z80DotNet
 {
     class Program
     {
-        static string DisplayBannerEventHandler(object sender, bool isVerbose)
+		static string DisplayBannerEventHandler(object sender, bool showVersionOnly)
         {
             StringBuilder sb = new StringBuilder();
 
-            if (isVerbose)
-            {
-                sb.Append("z80DotNet, A Simple .Net Z80 Cross Assembler\n(C) Copyright 2017 informedcitizenry.");
-                sb.Append(Environment.NewLine);
-                sb.Append("z80DotNet comes with ABSOLUTELY NO WARRANTY; see LICENSE!");
-                sb.Append(Environment.NewLine);
-            }
-            else
-            {
-                sb.Append("z80DotNet, A Simple .Net Z80 Cross Assembler\n(C) Copyright 2017 informedcitizenry.");
-                sb.AppendFormat("Version {0}.{1} Build {2}",
-                                        Assembly.GetEntryAssembly().GetName().Version.Major,
-                                        Assembly.GetEntryAssembly().GetName().Version.Minor,
-                                        Assembly.GetEntryAssembly().GetName().Version.Build);
-                sb.Append(Environment.NewLine);
-                sb.Append("z80DotNet comes with ABSOLUTELY NO WARRANTY; see LICENSE!");
-                sb.Append(Environment.NewLine);
-            }
+			sb.AppendLine("z80DotNet, A Simple .Net Z80 Cross Assembler\n(C) Copyright 2017, 2018 informedcitizenry.");
+            sb.AppendFormat("Version {0}.{1} Build {2}",
+                                    Assembly.GetEntryAssembly().GetName().Version.Major,
+                                    Assembly.GetEntryAssembly().GetName().Version.Minor,
+                                    Assembly.GetEntryAssembly().GetName().Version.Build);
+			sb.AppendLine();
+			if (!showVersionOnly)
+				sb.Append("z80DotNet comes with ABSOLUTELY NO WARRANTY; see LICENSE!");
+           
             return sb.ToString();
         }
 
