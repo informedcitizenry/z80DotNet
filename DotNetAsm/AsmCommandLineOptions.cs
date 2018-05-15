@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------------
+﻿//-----------------------------------------------------------------------------
 // Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -89,10 +89,6 @@ namespace DotNetAsm
         /// Process the command-line arguments passed by the end-user.
         /// </summary>
         /// <param name="args">The argument string.</param>
-<<<<<<< HEAD
-        /// <returns><c>True</c> if version info was requested, otherwise <c>false</c>.</returns>
-=======
->>>>>>> 3879217... Version 1.9.0
         public void ProcessArgs(string[] args)
         {
             if (args.Length == 0)
@@ -123,10 +119,7 @@ namespace DotNetAsm
                 syntax.DefineOption("V|version",        ref _printVersion,  "Print current version");
                 syntax.DefineParameterList("source",    ref _source,        "The source files to assemble");
             });
-<<<<<<< HEAD
-=======
             ArgsPassed = args.Length;
->>>>>>> 3879217... Version 1.9.0
         }
 
         #endregion
@@ -221,8 +214,6 @@ namespace DotNetAsm
         }
 
         /// <summary>
-<<<<<<< HEAD
-=======
         /// Gets the number of arguments passed after the call to 
         /// <see cref="T:DotNetAsm.AsmCommandLineOptions.ProcessArgs"/>.
         /// </summary>
@@ -230,7 +221,6 @@ namespace DotNetAsm
         public int ArgsPassed { get; private set; }
 
         /// <summary>
->>>>>>> 3879217... Version 1.9.0
         /// Gets a flag indicating that assembly listing should be 
         /// verbose.
         /// </summary>

@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------------
+﻿//-----------------------------------------------------------------------------
 // Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -32,11 +32,7 @@ namespace DotNetAsm
     /// <summary>
     /// Handler for the DisplayBanner event.
     /// </summary>
-<<<<<<< HEAD
-    public delegate string DisplayBannerEventHandler(object sender, bool isVerbose);
-=======
     public delegate string DisplayBannerEventHandler(object sender, bool showVersion);
->>>>>>> 3879217... Version 1.9.0
 
     /// <summary>
     /// Handler for the WriteBytes event.
@@ -795,11 +791,7 @@ namespace DotNetAsm
             }
             if (Log.HasErrors == false)
             {
-<<<<<<< HEAD
-                Console.WriteLine("\n********************************");
-=======
                 Console.WriteLine("\n*********************************");
->>>>>>> 3879217... Version 1.9.0
                 Console.WriteLine("Assembly start: ${0:X4}", Output.ProgramStart);
                 Console.WriteLine("Assembly end:   ${0:X4}", Output.ProgramEnd);
                 Console.WriteLine("Passes: {0}", _passes);
@@ -945,10 +937,6 @@ namespace DotNetAsm
             if (Options.InputFiles.Count == 0)
                 return;
 
-<<<<<<< HEAD
-            if (Options.PrintVersion && DisplayingBanner != null)
-                Console.WriteLine(DisplayingBanner.Invoke(this, true));
-=======
             if (Options.PrintVersion && DisplayingBanner != null) 
             {
                 Console.WriteLine(DisplayingBanner.Invoke(this, true));
@@ -956,16 +944,11 @@ namespace DotNetAsm
                     Console.WriteLine("Additional options ignored.");
                 return;
             }
->>>>>>> 3879217... Version 1.9.0
 
             if (Options.Quiet)
                 Console.SetOut(TextWriter.Null);
 
-<<<<<<< HEAD
-            if (!Options.PrintVersion && DisplayingBanner != null)
-=======
             if (DisplayingBanner != null)
->>>>>>> 3879217... Version 1.9.0
                 Console.WriteLine(DisplayingBanner.Invoke(this, false));
 
             DateTime asmTime = DateTime.Now;
