@@ -1,12 +1,12 @@
 # z80DotNet, A Simple .Net-Based Z80 Cross-Assembler
-### Version 1.10.0
+### Version 1.11.0
 ## Introduction
 
 The z80DotNet Macro Assembler is a simple cross-assembler targeting the Zilog Z80 and compatible CPU. It is written for .Net (Version 4.5.1) and supports all of the published (legal) instructions of the Z80 processor, as well as most of the unpublished (illegal) operations. Like the MOS 6502, the Z80 was a popular choice for video game system and microcomputer manufacturers in the 1970s and mid-1980s. For more information, see [wiki entry](https://en.wikipedia.org/wiki/Zilog_Z80) or [Z80 resource page](http://www.z80.info/) to learn more about this microprocessor.
 
 ## Legal
 * z80DotNet (c) 2017, 2018 informedcitizenry
-* System.CommandLine, a [command-line argument parser](https://github.com/dotnet/corefxlab/tree/master/src/System.CommandLine) (c) Microsoft Corporation
+* System.CommandLine, a [command-line argument parser](https://github.com/dotnet/corefxlab/tree/master/archived_projects/src/System.CommandLine) (c) Microsoft Corporation
 
 See LICENSE and LICENSE_third_party for licensing information.
 ## Overview
@@ -224,6 +224,9 @@ Text encodings are modified using the `.map` and `.unmap` directives. After sele
 
             ;; char literals are also affected
             ld  a,'A'    ;; 3e 00
+
+            ;; emoji will assemble too!
+            .string "😁"    ;; f0 9f 98 81
 ```
 The output can be one to four bytes. Entire character sets can also be mapped, with the re-mapped code treated as the first in the output range. The start and endpoints in the character set to be re-mapped can either be expressed as a two-character string literal or as expressions.
 ```
