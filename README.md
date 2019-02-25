@@ -1,19 +1,24 @@
 # z80DotNet, A Simple .Net-Based Z80 Cross-Assembler
-### Version 1.11.0
+### Version 1.12.0
 ## Introduction
 
 The z80DotNet Macro Assembler is a simple cross-assembler targeting the Zilog Z80 and compatible CPU. It is written for .Net (Version 4.5.1) and supports all of the published (legal) instructions of the Z80 processor, as well as most of the unpublished (illegal) operations. Like the MOS 6502, the Z80 was a popular choice for video game system and microcomputer manufacturers in the 1970s and mid-1980s. For more information, see [wiki entry](https://en.wikipedia.org/wiki/Zilog_Z80) or [Z80 resource page](http://www.z80.info/) to learn more about this microprocessor.
 
-## Legal
-* z80DotNet (c) 2017, 2018 informedcitizenry
-* System.CommandLine, a [command-line argument parser](https://github.com/dotnet/corefxlab/tree/master/archived_projects/src/System.CommandLine) (c) Microsoft Corporation
-
-See LICENSE and LICENSE_third_party for licensing information.
 ## Overview
 The z80DotNet assembler is simple to use. Invoke it from a command line with the assembly source and (optionally) the output filename in the parameters. A `z80DotNet.exe myprg.asm` command will output assembly listing in `myprgm.asm` to binary output. To specify output file name use the `-o <file>` or `--output=<file>` option, otherwise the default output filename will be `a.out`.
 
 You can specify as many source files as assembly input as needed. For instance, `z80DotNet.exe mylib.asm myprg.asm` will assemble both the `mylib.asm` and `myprgm.asm` files sequentially to output. Be aware that if both files define the same symbol an assembler error will result.
 ## General Features
+### Assembly Statements
+All assembly statements are composed of ASCII or Unicode text. Statements are terminated by a carriage return:
+```
+        ld a,0                    
+```
+Multiple statements per line are allowed; they are separated by a colon (`:`) character:
+```        
+        ld (hl),MESSAGE:call STDOUT    ; multiple statement line
+```
+Semi-colons denote the beginning of line comments, and remaining line text will not be processed by the assembler. 
 ### Numeric constants
 Integral constants can be expressed as decimal, hexadecimal, and binary. Decimal numbers are written as is, while hex numbers are prefixed with a `$` and binary numbers are prefixed with a `%`.
 ```

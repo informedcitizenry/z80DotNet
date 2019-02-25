@@ -1,23 +1,8 @@
 ﻿//-----------------------------------------------------------------------------
-// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
+// Copyright (c) 2017-2019 informedcitizenry <informedcitizenry@gmail.com>
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to 
-// deal in the Software without restriction, including without limitation the 
-// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
-// sell copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
+// Licensed under the MIT license. See LICENSE for full license information.
 // 
-// The above copyright notice and this permission notice shall be included in 
-// all copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
-// IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
 using System;
@@ -30,7 +15,7 @@ namespace DotNetAsm
     /// <summary>
     /// A preprocessor class for the 6502.Net assembler.
     /// </summary>
-    public class Preprocessor : AssemblerBase
+    public sealed class Preprocessor : AssemblerBase
     {
         #region Members
 
@@ -51,7 +36,7 @@ namespace DotNetAsm
         {
             FileRegistry = new HashSet<string>();
             _symbolNameFunc = checkSymbol;
-            Reserved.DefineType("Directives", ".binclude", ".include", ".comment",  ".endcomment");
+            Reserved.DefineType("Directives", ".binclude", ".include", ".comment", ".endcomment");
         }
 
         #endregion
@@ -141,11 +126,11 @@ namespace DotNetAsm
         void ProcessCommentBlocks(IEnumerable<SourceLine> source)
         {
             bool incomments = false;
-            foreach(var line in source)
+            foreach (var line in source)
             {
                 if (!incomments)
                     incomments = line.Instruction.Equals(".comment", Controller.Options.StringComparison);
-                
+
                 line.IsComment = incomments;
                 if (line.Instruction.Equals(".endcomment", Controller.Options.StringComparison))
                 {
@@ -153,7 +138,7 @@ namespace DotNetAsm
                         incomments = false;
                     else
                         Controller.Log.LogEntry(line, ErrorStrings.ClosureDoesNotCloseBlock, line.Instruction);
-                }   
+                }
             }
             if (incomments)
                 throw new Exception(ErrorStrings.MissingClosure);
@@ -182,14 +167,17 @@ namespace DotNetAsm
                         try
                         {
                             var line = new SourceLine(file, currentline, unprocessedline);
-                            line.Parse(
-                                delegate(string token)
+                            var lines = line.Parse(
+                                delegate (string token)
                                 {
                                     return Controller.IsInstruction(token) || Reserved.IsReserved(token) ||
                                         (token.StartsWith(".") && Macro.IsValidMacroName(token.Substring(1))) ||
                                         token == "=";
                                 });
-                            sourcelines.Add(line);
+                            if (!string.IsNullOrEmpty(line.Label) && char.IsWhiteSpace(line.SourceString[0])
+                                    && Controller.Options.WarnLeft)
+                                Controller.Log.LogEntry(line, ErrorStrings.LabelNotLeft, Controller.Options.WarningsAsErrors);
+                            sourcelines.AddRange(lines);
                         }
                         catch (Exception ex)
                         {

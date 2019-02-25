@@ -1,23 +1,8 @@
 ﻿//-----------------------------------------------------------------------------
-// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
+// Copyright (c) 2017-2019 informedcitizenry <informedcitizenry@gmail.com>
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to 
-// deal in the Software without restriction, including without limitation the 
-// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
-// sell copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
+// Licensed under the MIT license. See LICENSE for full license information.
 // 
-// The above copyright notice and this permission notice shall be included in 
-// all copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
-// IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
 using System;
@@ -27,7 +12,7 @@ using System.Linq;
 namespace DotNetAsm
 {
     /// <summary>
-    /// A dictionary of reserved words.
+    /// A collection of uniquely defined reserved words.
     /// </summary>
     public class ReservedWords
     {
@@ -36,6 +21,8 @@ namespace DotNetAsm
         HashSet<string> _values;
 
         Dictionary<string, HashSet<string>> _types;
+
+        StringComparer _comparer;
 
         #endregion
 
@@ -46,18 +33,18 @@ namespace DotNetAsm
         /// </summary>
         /// <param name="comparer">A <see cref="T:System.StringComparison"/> object to indicate whether
         /// to enforce case-sensitivity.</param>
-        public ReservedWords(StringComparison comparer)
+        public ReservedWords(StringComparer comparer)
         {
             _types = new Dictionary<string, HashSet<string>>();
             Comparer = comparer;
-            _values = new HashSet<string>();
+            _values = new HashSet<string>(comparer);
         }
 
         /// <summary>
         /// Instantiates a new <see cref="T:DotNetAsm.ReservedWords"/> class object.
         /// </summary>
         public ReservedWords() :
-            this(StringComparison.CurrentCulture)
+            this(StringComparer.Ordinal)
         {
 
         }
@@ -85,7 +72,7 @@ namespace DotNetAsm
         /// </summary>
         /// <param name="type">The type name.</param>
         /// <exception cref="T:System.ArgumentException">System.ArgumentException</exception>
-        public void DefineType(string type) => _types.Add(type, new HashSet<string>());
+        public void DefineType(string type) => _types.Add(type, new HashSet<string>(_comparer));
 
         /// <summary>
         /// Define a type of reserved words.
@@ -96,7 +83,7 @@ namespace DotNetAsm
         /// <exception cref="T:System.ArgumentException">System.ArgumentException</exception>
         public void DefineType(string type, params string[] values)
         {
-            _types.Add(type, new HashSet<string>(values));
+            _types.Add(type, new HashSet<string>(values, _comparer));
             foreach (var v in values)
                 _values.Add(v); // grr!!!
         }
@@ -109,7 +96,7 @@ namespace DotNetAsm
         /// <returns><c>True</c> if the specified token is one of the specified type, otherwise <c>false</c>.</returns>
         /// <exception cref="T:System.ArgumentNullException">System.ArgumentNullException</exception>
         /// <exception cref="T:System.ArgumentException">System.ArgumentException</exception>
-        public bool IsOneOf(string type, string token) => _types[type].Any(d => d.Equals(token, Comparer));
+        public bool IsOneOf(string type, string token) => _types[type].Contains(token);
 
         /// <summary>
         /// Determines if the token is in the list of reserved words for all types.
@@ -117,35 +104,26 @@ namespace DotNetAsm
         /// <param name="token">The token or keyword.</param>
         /// <returns><c>True</c> if the specified token is in the collection of reserved words,
         /// regardless of type, otherwise <c>false</c>.</returns>
-        public bool IsReserved(string token) => _values.Any(s => s.Equals(token, Comparer));
-
-        /// <summary>
-        /// Gets the type of the token, if any.
-        /// </summary>
-        /// <param name="token">The token or keyword.</param>
-        /// <returns>The type of the token.</returns>
-        public string GetType(string token)
-        {
-            return _types.FirstOrDefault(kv => kv.Value.Equals(token)).Key;
-        }
-
-        /// <summary>
-        /// Determines if the ReservedWord object contains a type (key) of reserved words.
-        /// </summary>
-        /// <param name="type">The type to check.</param>
-        /// <returns><c>True</c> if the <see cref="T:DotNetAsm.ReservedWord"/> object has the type, 
-        /// otherwise <c>false</c>.</returns>
-        public bool HasType(string type) => _types.ContainsKey(type);
+        public bool IsReserved(string token) => _values.Contains(token);
 
         #endregion
 
         #region Properties
 
         /// <summary>
-        /// Gets or sets the <see cref="T:System.StringComparison"/> for the 
-        /// <see cref="T:DotNetAsm.ReservedWords"/> collection.
+        /// Sets the <see cref="T:System.StringComparer"/> for the 
+        /// <see cref="T:DotNetAsm.ReservedWords"/> collection. Setting this value
+        /// will clear the collection values.
         /// </summary>
-        public StringComparison Comparer { get; set; }
+        public StringComparer Comparer
+        {
+            set
+            {
+                _comparer = value;
+                _types = new Dictionary<string, HashSet<string>>();
+                _values = new HashSet<string>(_comparer);
+            }
+        }
 
         #endregion
     }

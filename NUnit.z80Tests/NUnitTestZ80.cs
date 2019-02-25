@@ -18,7 +18,7 @@ namespace NUnit.z80Tests
 
             Encoding = new AsmEncoding(false);
 
-            Evaluator = new Evaluator(@"\$([a-fA-F0-9]+)");
+            Evaluator = new Evaluator();
 
             Evaluator.DefineSymbolLookup("'.'", s => Convert.ToInt32(s.TrimOnce('\'').First()).ToString());
 
@@ -30,7 +30,7 @@ namespace NUnit.z80Tests
             Variables = new VariableCollection(Options.StringComparar, Evaluator);
 
             if (args != null)
-                Options.ProcessArgs(args);
+                Options.ParseArgs(args);
         }
 
         public void AddAssembler(ILineAssembler lineAssembler)
@@ -49,30 +49,6 @@ namespace NUnit.z80Tests
         }
 
         public AsmCommandLineOptions Options { get; private set; }
-
-        public Action<IAssemblyController, System.IO.BinaryWriter> HeaderOutputAction
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public Action<IAssemblyController, System.IO.BinaryWriter> FooterOutputAction
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
 
         public ILineDisassembler Disassembler
         {
@@ -102,6 +78,8 @@ namespace NUnit.z80Tests
         public IEvaluator Evaluator { get; private set; }
 
         public AsmEncoding Encoding { get; private set; }
+
+        public ISymbolManager Symbols { get; private set; }
 
         public event CpuChangeEventHandler CpuChanged;
 

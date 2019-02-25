@@ -1,23 +1,8 @@
 ﻿//-----------------------------------------------------------------------------
-// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
+// Copyright (c) 2017-2019 informedcitizenry <informedcitizenry@gmail.com>
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to 
-// deal in the Software without restriction, including without limitation the 
-// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
-// sell copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
+// Licensed under the MIT license. See LICENSE for full license information.
 // 
-// The above copyright notice and this permission notice shall be included in 
-// all copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
-// IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
 using System;
@@ -26,7 +11,7 @@ using System.Text;
 
 namespace DotNetAsm
 {
-    public class Disassembler: AssemblerBase, ILineDisassembler
+    public sealed class Disassembler : AssemblerBase, ILineDisassembler
     {
         #region Constructors
 
@@ -38,9 +23,9 @@ namespace DotNetAsm
             : base(controller)
         {
             PrintingOn = true;
-            Reserved.DefineType("Blocks", ConstStrings.OPEN_SCOPE, ConstStrings.CLOSE_SCOPE );
+            Reserved.DefineType("Blocks", ConstStrings.OPEN_SCOPE, ConstStrings.CLOSE_SCOPE);
             Reserved.DefineType("Directives",
-                    ".cpu", ".elif", ".else", ".endif", ".eor", ".error", ".errorif", ".if", ".ifdef", 
+                    ".cpu", ".elif", ".else", ".endif", ".eor", ".error", ".errorif", ".if", ".ifdef",
                     ".warnif", ".relocate", ".pseudopc", ".realpc", ".endrelocate", ".warn",
                     ".m16", ".m8", ".x16", ".x8", ".mx16", ".mx8"
                 );
@@ -62,7 +47,7 @@ namespace DotNetAsm
             if (string.IsNullOrEmpty(lineinfo) == false)
             {
                 if (lineinfo.Length > 14)
-                lineinfo = lineinfo.Substring(0, 11) + "...";
+                    lineinfo = lineinfo.Substring(0, 11) + "...";
                 lineinfo += "(" + line.LineNumber.ToString() + ")";
             }
             return string.Format("{0,-20}:", lineinfo);
@@ -80,8 +65,8 @@ namespace DotNetAsm
                 Reserved.IsReserved(line.Instruction))) ||
                 line.DoNotAssemble)
                 return string.Empty;
-                      
-            if (line.Instruction == "=" || 
+
+            if (line.Instruction == "=" ||
                 line.Instruction.Equals(".let", Controller.Options.StringComparison) ||
                 line.Instruction.Equals(".equ", Controller.Options.StringComparison))
             {
@@ -94,19 +79,19 @@ namespace DotNetAsm
                 }
                 else if (line.Instruction.Equals(".let", Controller.Options.StringComparison))
                 {
-                    var variable = Controller.Variables.GetVariableFromExpression(line.Operand, line.Scope);
-                    value = Controller.Variables.GetSymbolValue(variable);
+                    var variable = Controller.Symbols.Variables.GetVariableFromExpression(line.Operand, line.Scope);
+                    value = Controller.Symbols.Variables.GetSymbolValue(variable);
                 }
                 else
                 {
-                    value = Controller.Labels.GetSymbolValue(line.Scope + line.Label);
+                    value = Controller.Symbols.Labels.GetSymbolValue(line.Scope + line.Label);
                 }
                 return string.Format("=${0:x" + value.Size() * 2 + "}", value);
             }
             if (line.Instruction.StartsWith(".", Controller.Options.StringComparison) &&
                     !Reserved.IsReserved(line.Instruction))
                 return string.Format(">{0:x4}", line.PC);
-            
+
             return string.Format(".{0:x4}", line.PC);
         }
 
@@ -127,7 +112,7 @@ namespace DotNetAsm
             if (sb.Length > 24)
             {
                 long pc = line.PC;
-                
+
                 var subdisasms = sb.ToString().SplitByLength(24).ToList();
                 sb.Clear();
 
@@ -212,7 +197,7 @@ namespace DotNetAsm
                 else
                     sb.AppendFormat("{0,-13}", asm);
             }
-            
+
             if (Controller.Options.NoDissasembly == false)
             {
                 if (string.IsNullOrEmpty(line.Disassembly) == false)
@@ -225,7 +210,7 @@ namespace DotNetAsm
                 sb.AppendFormat("{0,-10}", sourcestr);
             else if (string.IsNullOrEmpty(line.Disassembly) && line.Assembly.Count == 0)
                 sb.TrimEnd();
-            
+
             sb.AppendLine();
         }
 

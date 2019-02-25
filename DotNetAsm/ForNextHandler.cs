@@ -1,23 +1,8 @@
 ﻿//-----------------------------------------------------------------------------
-// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
+// Copyright (c) 2017-2019 informedcitizenry <informedcitizenry@gmail.com>
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to 
-// deal in the Software without restriction, including without limitation the 
-// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
-// sell copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
+// Licensed under the MIT license. See LICENSE for full license information.
 // 
-// The above copyright notice and this permission notice shall be included in 
-// all copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
-// IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
 using System.Collections.Generic;
@@ -25,7 +10,7 @@ using System.Linq;
 
 namespace DotNetAsm
 {
-    public class ForNextHandler : AssemblerBase, IBlockHandler
+    public sealed class ForNextHandler : AssemblerBase, IBlockHandler
     {
         #region Classes 
 
@@ -307,7 +292,7 @@ namespace DotNetAsm
                 {
                     if (!string.IsNullOrEmpty(_currBlock.InitExpression))
                     {
-                        var iteratorvar = Controller.Variables.SetVariable(_currBlock.InitExpression, _currBlock.Scope);
+                        var iteratorvar = Controller.Symbols.Variables.SetVariable(_currBlock.InitExpression, _currBlock.Scope);
                         if (string.IsNullOrEmpty(iteratorvar.Key))
                         {
                             Controller.Log.LogEntry(line, ErrorStrings.BadExpression, csvs.First());
@@ -400,7 +385,7 @@ namespace DotNetAsm
 
                     if (_breakBlock == null && !string.IsNullOrEmpty(_currBlock.InitExpression))
                     {
-                        var initval = Controller.Variables.SetVariable(_currBlock.InitExpression, _currBlock.Scope);
+                        var initval = Controller.Symbols.Variables.SetVariable(_currBlock.InitExpression, _currBlock.Scope);
                         _processedLines.Add(new SourceLine
                         {
                             SourceString = ConstStrings.SHADOW_SOURCE,
@@ -429,12 +414,13 @@ namespace DotNetAsm
                 // in output source (i.e., emit .let n = ... epxressions)
                 foreach (var iterexp in _currBlock.IterExpressions)
                 {
-                    var itervar = Controller.Variables.SetVariable(iterexp, _currBlock.Scope);
+                    var itervar = Controller.Symbols.Variables.SetVariable(iterexp, _currBlock.Scope);
+                    var iterval = Controller.Symbols.Variables.GetScopedSymbolValue(itervar.Key, _currBlock.Scope);
                     _processedLines.Add(new SourceLine
                     {
                         SourceString = ConstStrings.SHADOW_SOURCE,
                         Instruction = ConstStrings.VAR_DIRECTIVE,
-                        Operand = string.Format("{0}={1}", itervar.Key, itervar.Value)
+                        Operand = string.Format("{0}={1}", itervar.Key, iterval)
                     });
                 }
 

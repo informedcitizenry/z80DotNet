@@ -1,23 +1,8 @@
 ﻿//-----------------------------------------------------------------------------
-// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
+// Copyright (c) 2017-2019 informedcitizenry <informedcitizenry@gmail.com>
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to 
-// deal in the Software without restriction, including without limitation the 
-// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
-// sell copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
+// Licensed under the MIT license. See LICENSE for full license information.
 // 
-// The above copyright notice and this permission notice shall be included in 
-// all copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
-// IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
 using System;
@@ -64,7 +49,7 @@ namespace DotNetAsm
     /// Implements an assembly controller to process source input and convert 
     /// to assembled output.
     /// </summary>
-    public class AssemblyController : AssemblerBase, IAssemblyController
+    public sealed class AssemblyController : AssemblerBase, IAssemblyController
     {
         #region Members
 
@@ -74,13 +59,10 @@ namespace DotNetAsm
         List<SourceLine> _processedLines;
         SourceLine _currentLine;
 
-        LabelCollection _labelCollection;
-
         int _passes;
 
         Regex _specialLabels;
-
-        HashSet<int> _anonPlus, _anonMinus;
+        string _localLabelScope;
 
         #endregion
 
@@ -93,6 +75,13 @@ namespace DotNetAsm
         /// <param name="args">The array of <see cref="T:System.String"/> args passed by the commandline.</param>
         public AssemblyController(string[] args)
         {
+            Controller = this;
+
+            Options = new AsmCommandLineOptions();
+            Options.ParseArgs(args);
+
+            Reserved.Comparer = Options.StringComparar;
+
             Reserved.DefineType("Directives",
                     ".cpu", ".endrelocate", ".equ", ".pseudopc", ".realpc", ".relocate", ".end",
                     ".endrepeat", ".proff", ".pron", ".repeat", ConstStrings.VAR_DIRECTIVE
@@ -102,57 +91,35 @@ namespace DotNetAsm
                      "abs", "acos", "asin", "atan", "cbrt", "ceil", "cos", "cosh", "count", "deg",
                      "exp", "floor", "frac", "hypot", "ln", "log10", "pow", "rad", "random",
                      "round", "sgn", "sin", "sinh", "sizeof", "sqrt", "tan", "tanh", "trunc",
-                     "str", "format"
+                     "format"
                 );
 
             Reserved.DefineType("UserDefined");
 
+
             Log = new ErrorLog();
 
-            _anonPlus = new HashSet<int>();
-            _anonMinus = new HashSet<int>();
             _processedLines = new List<SourceLine>();
 
-            Options = new AsmCommandLineOptions();
-            Options.ProcessArgs(args);
-
-            Controller = this;
-
-            Reserved.Comparer = Options.StringComparison;
             Output = new Compilation(!Options.BigEndian);
 
             _specialLabels = new Regex(@"^\*|\+|-$", RegexOptions.Compiled);
 
             Encoding = new AsmEncoding(Options.CaseSensitive);
 
-            Evaluator = new Evaluator(@"\$([a-fA-F0-9]+)");
-            Evaluator.DefineSymbolLookup(@"(?<=\B)'(.+)'(?=\B)", GetCharValue);
-            if (!Options.CaseSensitive)
-                Evaluator.DefineSymbolLookup(Patterns.SymbolBasic + @"\(", (fnc) => fnc.ToLower());
-            
-                                            // The gnarliest regex you have 
-                                            // seen in your life.           
-                                            //              ||              
-                                            //              ||              
-            Evaluator.DefineSymbolLookup(   //              \/
-                @"(?<=^|[^\p{Ll}\p{Lu}\p{Lt}0-9_.$])(?>(_+[\p{Ll}\p{Lu}\p{Lt}0-9]|[\p{Ll}\p{Lu}\p{Lt}])(\.[\p{Ll}\p{Lu}\p{Lt}_]|[\p{Ll}\p{Lu}\p{Lt}0-9_])*)(?=[^(.]|$)",
-                                         GetNamedSymbolValue);
-            Evaluator.DefineSymbolLookup(@"^\++$|^-+$|\(\++\)|\(-+\)", ConvertAnonymous);
-            Evaluator.DefineSymbolLookup(@"(?<![\p{Ll}\p{Lu}\p{Lt}0-9_.)])\*(?![\p{Ll}\p{Lu}\p{Lt}0-9_.(])", (str) => Output.LogicalPC.ToString());
+            Evaluator = new Evaluator(Options.CaseSensitive);
 
-            _labelCollection = new LabelCollection(Options.StringComparar);
-            Variables = new VariableCollection(Options.StringComparar, Evaluator);
+            Evaluator.DefineSymbolLookup(SymbolsToValues);
 
-            _labelCollection.AddCrossCheck(Variables);
-            Variables.AddCrossCheck(_labelCollection);
+            Symbols = new SymbolManager(this);
+            _localLabelScope = string.Empty;
 
-            _preprocessor = new Preprocessor(this, s => IsSymbolName(s.TrimEnd(':'), true, false));
+            _preprocessor = new Preprocessor(this, s => IsSymbolName(s, true, false));
             _assemblers = new Stack<ILineAssembler>();
             _assemblers.Push(new PseudoAssembler(this, arg =>
-                {
-                    return IsReserved(arg) ||
-                    _labelCollection.IsScopedSymbol(arg, _currentLine.Scope);
-                }));
+            {
+                return IsReserved(arg) || Symbols.Labels.IsScopedSymbol(arg, _currentLine.Scope);
+            }));
 
             _assemblers.Push(new MiscAssembler(this));
 
@@ -172,41 +139,6 @@ namespace DotNetAsm
         #region Methods
 
         /// <summary>
-        /// Get the encoded value of the character and return it as a string.
-        /// </summary>
-        /// <param name="chr">The character to encode.</param>
-        /// <returns>The encoded value as a string.</returns>
-        string GetCharValue(string chr)
-        {
-            var literal = chr.GetNextQuotedString();
-            var unescaped = Regex.Unescape(literal.Trim('\''));
-            var charval = Encoding.GetEncodedValue(unescaped.Substring(0, 1)).ToString();
-            if (literal.Equals(chr))
-                return charval;
-        
-            var post = chr.Substring(literal.Length);
-            return Evaluator.Eval(charval + post).ToString();              
-        }
-
-        /// <summary>
-        /// Used by the expression evaluator to convert an anonymous symbol
-        /// to an address.
-        /// </summary>
-        /// <param name="symbol">The anonymous symbol.</param>
-        /// <returns>The actual address the anonymous symbol will resolve to.</returns>
-        string ConvertAnonymous(string symbol)
-        {
-            var trimmed = symbol.Trim(new char[] { '(', ')' });
-            var addr = GetAnonymousAddress(_currentLine, trimmed);
-            if (addr < 0 && _passes > 0)
-            {
-                Log.LogEntry(_currentLine, ErrorStrings.CannotResolveAnonymousLabel);
-                return "0";
-            }
-            return addr.ToString();
-        }
-
-        /// <summary>
         /// Checks if a given token is actually an instruction or directive, either
         /// for the <see cref="T:DotNetAsm.AssemblyController"/> or any line assemblers.
         /// </summary>
@@ -223,17 +155,10 @@ namespace DotNetAsm
         /// </summary>
         /// <param name="token">The token to test.</param>
         /// <returns>True, if the token is a reserved word, otherwise false.</returns>
-        public override bool IsReserved(string token) => IsInstruction(token) || Reserved.IsReserved(token);
+        public override bool IsReserved(string token) => IsInstruction(token) ||
+                                                         Reserved.IsReserved(token) ||
+                                                         Evaluator.IsConstant(token);
 
-        /// <summary>
-        /// Checks whether the token is a valid symbol/label name.
-        /// </summary>
-        /// <param name="token">The token to check.</param>
-        /// <param name="allowLeadUnderscore">Allow the token to have a leading underscore
-        /// for it to be a symbol.</param>
-        /// <param name="allowDot">Allow the token to have separating dots for it to be
-        /// considered a symbol.</param>
-        /// <returns><c>True</c> if the token is a valid symbole name, otherwise <c>false</c>.</returns>
         bool IsSymbolName(string token, bool allowLeadUnderscore = true, bool allowDot = true)
         {
             // empty string 
@@ -253,14 +178,15 @@ namespace DotNetAsm
                 return false;
 
             // otherwise...
-            return _labelCollection.IsSymbolValid(token, true);
+            return Symbols.Labels.IsSymbolValid(token, true);
         }
 
-        /// <summary>
-        /// Preprocess the source file into a <see cref="T:System.IEnumerable&lt;DotNetAsm.SourceLine&gt;"/>.
+        string SymbolsToValues(string expression)
+            => Symbols.TranslateExpressionSymbols(_currentLine, expression, _localLabelScope, _passes > 0);
+
+        /// <remarks>
         /// Define macros and segments, and add included source files.
-        /// </summary>
-        /// <returns>The preprocessed <see cref="T:System.IEnumerable&lt;DotNetAsm.SourceLine&gt;"/></returns>
+        /// </remarks>
         IEnumerable<SourceLine> Preprocess()
         {
             var source = new List<SourceLine>();
@@ -288,11 +214,9 @@ namespace DotNetAsm
         }
 
 
-        /// <summary>
+        /// <remarks>
         /// Add labels defined with command-line -D option
-        /// </summary>
-        /// <returns>Returns a System.Collections.Generic.IEnumerable&lt;SourceLine&gt; 
-        /// that will define the labels at assembly time.</returns>
+        /// </remarks>
         IEnumerable<SourceLine> ProcessDefinedLabels()
         {
             var labels = new List<SourceLine>();
@@ -301,15 +225,13 @@ namespace DotNetAsm
             {
                 string name = label;
                 string definition = "1";
-
-                if (label.Contains("="))
+                var eqix = label.IndexOf('=');
+                if (eqix > -1)
                 {
-                    var def = label.Split(new string[] { "=" }, StringSplitOptions.RemoveEmptyEntries);
-
-                    if (def.Count() != 2)
-                        throw new Exception("Bad argument in label definition '" + label + "'");
-
-                    name = def.First(); definition = def.Last();
+                    if (eqix == label.Length - 1)
+                        throw new Exception(string.Format("Bad argument in label definition '{0}'", label));
+                    name = label.Substring(0, eqix);
+                    definition = label.Substring(eqix + 1);
                 }
 
                 if (IsSymbolName(name, false, false) == false)
@@ -334,16 +256,10 @@ namespace DotNetAsm
                 Log.LogEntry(line, ErrorStrings.UnknownInstruction, line.Instruction);
         }
 
-        /// <summary>
-        /// Performs a first (or more) pass of preprocessed source to resolve all 
-        /// actual symbol values, process conditions and repetitions, and add to 
-        /// Processed Lines.
-        /// </summary>
-        /// <param name="source">The preprocessed System.IEnumerable&lt;DotNetAsm&gt;</param>
         void FirstPass(IEnumerable<SourceLine> source)
         {
             _passes = 0;
-            int id = 0;
+            int id = 1;
 
             var sourceList = source.ToList();
 
@@ -396,7 +312,7 @@ namespace DotNetAsm
                 {
                     Log.LogEntry(_currentLine, exprEx.Message);
                 }
-                catch
+                catch (Exception)
                 {
                     Log.LogEntry(_currentLine, ErrorStrings.None);
                 }
@@ -406,10 +322,6 @@ namespace DotNetAsm
                 Log.LogEntry(_processedLines.Last(), ErrorStrings.MissingClosure);
         }
 
-        /// <summary>
-        /// Performs a first pass on the <see cref="T:DotNetAsm.SourceLine"/>, including updating 
-        /// the Program Counter and definining labels.
-        /// </summary>
         void FirstPassLine()
         {
             try
@@ -424,14 +336,15 @@ namespace DotNetAsm
                 }
                 if (_currentLine.Instruction.Equals(ConstStrings.VAR_DIRECTIVE, Options.StringComparison))
                 {
-                    var varname = Variables.GetVariableFromExpression(_currentLine.Operand, _currentLine.Scope);
+                    var varname = Symbols.Variables.GetVariableFromExpression(_currentLine.Operand, _currentLine.Scope);
                     try
                     {
-                        _currentLine.PC = Variables.SetVariable(_currentLine.Operand, _currentLine.Scope).Value;
+                        var varAssignment = Symbols.Variables.SetVariable(_currentLine.Operand, _currentLine.Scope).Value;
+                        _currentLine.PC = Evaluator.Eval(varAssignment);
                     }
                     catch (SymbolNotDefinedException)
                     {
-                        Variables.SetSymbol(varname, 0, false);
+                        Symbols.Variables.SetSymbol(varname, 0, false);
                         _currentLine.PC = 0;
                     }
                 }
@@ -470,19 +383,26 @@ namespace DotNetAsm
 
         }
 
-        /// <summary>
-        /// Perform a second or final pass on a <see cref="T:DotNetAsm.SourceLine"/>, including final 
-        /// assembly of bytes.
-        /// </summary>
-        /// <param name="finalPass">A flag indicating this is a final pass</param>
-        /// <returns><c>True</c> if another pass is needed. Otherwise <c>false</c>.</returns>
         bool SecondPassLine(bool finalPass)
         {
             UpdatePC();
             bool passNeeded = false;
+
+            string label = string.Empty;
+            if (!string.IsNullOrEmpty(_currentLine.Label))
+            {
+                if (_currentLine.Label.First() == '_')
+                    label = string.Concat(_localLabelScope, _currentLine.Label);
+                else if (!_currentLine.Label.Equals("*") &&
+                         !_currentLine.Label.Equals("-") &&
+                         !_currentLine.Label.Equals("+"))
+                    label = _localLabelScope = _currentLine.Label;
+            }
+
             if (IsAssignmentDirective())
             {
                 if (_currentLine.Label.Equals("*")) return false;
+
                 long val = long.MinValue;
 
                 // for .vars initialization is optional
@@ -500,17 +420,17 @@ namespace DotNetAsm
                         Controller.Log.LogEntry(_currentLine, ErrorStrings.TooFewArguments, _currentLine.Instruction);
                         return false;
                     }
-                    passNeeded = !(val.Equals(_labelCollection.GetScopedSymbolValue(_currentLine.Label, _currentLine.Scope)));
-                    _labelCollection.SetLabel(_currentLine.Scope + _currentLine.Label, val, false, false);
+                    passNeeded = val != Symbols.Labels.GetScopedSymbolValue(label, _currentLine.Scope);
+                    Symbols.Labels.SetLabel(_currentLine.Scope + label, val, false, false);
 
                 }
                 _currentLine.PC = val;
             }
             else if (_currentLine.Instruction.Equals(ConstStrings.VAR_DIRECTIVE, Options.StringComparison))
             {
-                var varparts = Variables.SetVariable(_currentLine.Operand, _currentLine.Scope);
-                passNeeded = _currentLine.PC != varparts.Value;
-                _currentLine.PC = varparts.Value;
+                var varparts = Symbols.Variables.SetVariable(_currentLine.Operand, _currentLine.Scope);
+                passNeeded = _currentLine.PC != Evaluator.Eval(varparts.Value);
+                _currentLine.PC = Evaluator.Eval(varparts.Value);
             }
             else if (_currentLine.Instruction.Equals(".cpu", Options.StringComparison))
             {
@@ -518,8 +438,8 @@ namespace DotNetAsm
             }
             else
             {
-                if (_labelCollection.IsScopedSymbol(_currentLine.Label, _currentLine.Scope))
-                    _labelCollection.SetLabel(_currentLine.Scope + _currentLine.Label, Output.LogicalPC, false, false);
+                if (Symbols.Labels.IsScopedSymbol(label, _currentLine.Scope))
+                    Symbols.Labels.SetLabel(_currentLine.Scope + label, Output.LogicalPC, false, false);
                 passNeeded = _currentLine.PC != Output.LogicalPC;
                 _currentLine.PC = Output.LogicalPC;
                 if (finalPass)
@@ -530,9 +450,6 @@ namespace DotNetAsm
             return passNeeded;
         }
 
-        /// <summary>
-        /// Perform a second pass on the processed source, including output to binary.
-        /// </summary>
         void SecondPass()
         {
             const int MAX_PASSES = 4;
@@ -547,7 +464,9 @@ namespace DotNetAsm
                 passNeeded = false;
                 Output.Reset();
 
-                Variables.Clear();
+                Symbols.Variables.Clear();
+
+                _localLabelScope = string.Empty;
 
                 foreach (SourceLine line in assembleLines)
                 {
@@ -618,12 +537,11 @@ namespace DotNetAsm
             }
         }
 
-        /// <summary>
+        /// <remarks>
         /// This does a quick and "dirty" look at instructions. It will catch
         /// some but not all syntax errors, concerned mostly with the probable 
         /// size of the instruction. 
-        /// </summary>
-        /// <returns>The size in bytes of the instruction, including opcode and operand.</returns>
+        /// </remarks>
         int GetInstructionSize()
         {
             try
@@ -638,12 +556,9 @@ namespace DotNetAsm
             }
         }
 
-        /// <summary>
-        /// Examine the current <see cref="T:DotNetAsm.SourceLine"/> and determine if a label is being defined.
-        /// </summary>
         void DefineLabel()
         {
-            if (string.IsNullOrEmpty(_currentLine.Label) == false)
+            if (!string.IsNullOrEmpty(_currentLine.Label))
             {
                 if (_currentLine.Label.Equals("*"))
                     return;
@@ -666,13 +581,7 @@ namespace DotNetAsm
                         _currentLine.PC = Output.LogicalPC;
                     }
 
-                    if (_currentLine.Label.Equals("+") || _currentLine.Label.Equals("-"))
-                    {
-                        if (_currentLine.Label == "+")
-                            _anonPlus.Add(_currentLine.Id);
-                        else
-                            _anonMinus.Add(_currentLine.Id);
-                    }
+                    Symbols.AddAnonymousLine(_currentLine);
                 }
                 else
                 {
@@ -688,7 +597,16 @@ namespace DotNetAsm
                         return;
                     }
 
-                    scopedLabel = _currentLine.Scope + _currentLine.Label;
+                    if (_currentLine.Label.First() == '_')
+                    {
+                        scopedLabel = _currentLine.Scope + _localLabelScope + _currentLine.Label;
+                    }
+                    else
+                    {
+                        _localLabelScope = _currentLine.Label;
+                        scopedLabel = _currentLine.Scope + _currentLine.Label;
+                    }
+
 
                     long val = _currentLine.PC;
                     if (IsAssignmentDirective())
@@ -702,14 +620,12 @@ namespace DotNetAsm
                             val = 0;
                         }
                     }
-                    _labelCollection.SetLabel(scopedLabel, val, false, true);
+                    Symbols.Labels.SetLabel(scopedLabel, val, false, true);
                 }
             }
         }
 
-        /// <summary>
-        /// Determine if the current <see cref="T:DotNetAsm.SourceLine"/> updates the output's Program Counter
-        /// </summary>
+        // Are we updating the program counter?
         void UpdatePC()
         {
             long val = 0;
@@ -762,11 +678,6 @@ namespace DotNetAsm
             }
         }
 
-        /// <summary>
-        /// Determines whether the current <see cref="T:DotNetAsm.SourceLine"/> 
-        /// command is an assignment directive.
-        /// </summary>
-        /// <returns><c>True</c> if the line is defining a constant, otherwise <c>false</c>.</returns>
         bool IsAssignmentDirective()
         {
             if (_currentLine.Operand.EnclosedInQuotes())
@@ -779,9 +690,6 @@ namespace DotNetAsm
             return false;
         }
 
-        /// <summary>
-        /// Print the status of the assembly results to console output.
-        /// </summary>
         void PrintStatus(DateTime asmTime)
         {
             if (Log.HasWarnings && !Options.NoWarnings)
@@ -816,10 +724,6 @@ namespace DotNetAsm
             }
         }
 
-        /// <summary>
-        /// Sends the assembled source to listing, either as a list of labels or 
-        /// a full assembly listing, including assembled bytes and disassembly.
-        /// </summary>
         void ToListing()
         {
             if (string.IsNullOrEmpty(Options.ListingFile) && string.IsNullOrEmpty(Options.LabelFile))
@@ -876,26 +780,24 @@ namespace DotNetAsm
                                 Environment.NewLine);
         }
 
-        /// <summary>
+        /// <remarks>
         /// Used by the ToListing method to get a listing of all defined labels.
-        /// </summary>
-        /// <returns>A string containing all label definitions.</returns>
+        /// </remarks>
         string GetLabelsAndVariables()
         {
             var listing = new StringBuilder();
 
-            foreach (var label in _labelCollection)
+            foreach (var label in Symbols.Labels)
                 listing.Append(GetSymbolListing(label.Key, label.Value, false));
 
-            foreach (var variable in Variables)
+            foreach (var variable in Symbols.Variables)
                 listing.Append(GetSymbolListing(variable.Key, variable.Value, true));
 
             return listing.ToString();
         }
 
-        /// <summary>
-        /// Used by the ToListing method to get the full listing.</summary>
-        /// <returns>A listing string to save to disk.</returns>
+        /// <remarks>
+        /// Used by the ToListing method to get the full listing.</remarks>
         string GetListing()
         {
             var listing = new StringBuilder();
@@ -908,9 +810,6 @@ namespace DotNetAsm
             return listing.ToString();
         }
 
-        /// <summary>
-        /// Saves the output to disk.
-        /// </summary>
         void SaveOutput()
         {
             if (!Options.GenerateOutput)
@@ -937,7 +836,7 @@ namespace DotNetAsm
             if (Options.InputFiles.Count == 0)
                 return;
 
-            if (Options.PrintVersion && DisplayingBanner != null) 
+            if (Options.PrintVersion && DisplayingBanner != null)
             {
                 Console.WriteLine(DisplayingBanner.Invoke(this, true));
                 if (Options.ArgsPassed > 1)
@@ -974,72 +873,6 @@ namespace DotNetAsm
             PrintStatus(asmTime);
         }
 
-        /// <summary>
-        /// Used by the expression evaluator to get the actual value of the symbol.
-        /// </summary>
-        /// <param name="symbol">The symbol to look up.</param>
-        /// <returns>The underlying value of the symbol.</returns>
-        string GetNamedSymbolValue(string symbol)
-        {
-            if (Variables.IsScopedSymbol(symbol, _currentLine.Scope))
-                return Variables.GetScopedSymbolValue(symbol, _currentLine.Scope).ToString();
-
-            var value = _labelCollection.GetScopedSymbolValue(symbol, _currentLine.Scope);
-            if (value.Equals(long.MinValue))
-                throw new SymbolNotDefinedException(symbol);
-            return value.ToString();
-
-        }
-
-        /// <summary>
-        /// Gets the actual address of an anonymous symbol.
-        /// </summary>
-        /// <param name="fromLine">The <see cref="T:DotNetAsm.SourceLine"/> containing the anonymous symbol.</param>
-        /// <param name="operand">The operand.</param>
-        /// <returns>The anonymous symbol address.</returns>
-        long GetAnonymousAddress(SourceLine fromLine, string operand)
-        {
-            int count = operand.Length - 1;
-            IOrderedEnumerable<int> idList;
-            if (operand.First() == '-')
-            {
-                idList = _anonMinus.Where(i => i < fromLine.Id).OrderByDescending(i => i);
-            }
-            else
-            {
-                idList = _anonPlus.Where(i => i > fromLine.Id).OrderBy(i => i);
-            }
-            long id = 0;
-            string scope = fromLine.Scope;
-
-            while (id != -1)
-            {
-                id = idList.Count() > count ? idList.ElementAt(count) : -1;
-
-                var lines = from line in _processedLines
-                            where line.Id == id && line.Scope == scope
-                            select line;
-                if (!lines.Any())
-                {
-                    if (string.IsNullOrEmpty(scope) == false)
-                    {
-                        var splitscope = scope.Split('.').ToList();
-                        splitscope.RemoveAt(splitscope.Count - 1);
-                        scope = string.Join(".", splitscope);
-                    }
-                    else
-                    {
-                        scope = fromLine.Scope;
-                        count++;
-                    }
-                }
-                else
-                {
-                    return lines.First().PC;
-                }
-            }
-            return id;
-        }
         #endregion
 
         #region Properties
@@ -1052,9 +885,7 @@ namespace DotNetAsm
 
         public ErrorLog Log { get; private set; }
 
-        public SymbolCollectionBase Labels { get { return _labelCollection; } }
-
-        public VariableCollection Variables { get; private set; }
+        public ISymbolManager Symbols { get; private set; }
 
         public IEvaluator Evaluator { get; private set; }
 

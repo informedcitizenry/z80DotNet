@@ -1,23 +1,8 @@
 ﻿//-----------------------------------------------------------------------------
-// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
+// Copyright (c) 2017-2019 informedcitizenry <informedcitizenry@gmail.com>
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to 
-// deal in the Software without restriction, including without limitation the 
-// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
-// sell copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
+// Licensed under the MIT license. See LICENSE for full license information.
 // 
-// The above copyright notice and this permission notice shall be included in 
-// all copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
-// IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
 using System;
@@ -147,18 +132,37 @@ namespace DotNetAsm
         }
 
         /// <summary>
-        /// Capture and return the first parenthetical group in the string. 
+        /// Capture and return the first parenthetical group in the string.
         /// </summary>
         /// <param name="str">The string to evaluate</param>
-        /// <returns>The first instance of a parenthetical group</returns>
+        /// <returns>The first instance of a parenthetical group.</returns>
         /// <exception cref="T:System.FormatException"></exception>
         public static string FirstParenEnclosure(this string str)
         {
-            if (str.Contains("(") || str.Contains(")"))
+            return FirstParenEnclosure(str, false);
+        }
+
+        /// <summary>
+        /// Capture and return the first parenthetical group in the string.
+        /// </summary>
+        /// <returns>The first instance of a parenthetical group.</returns>
+        /// <param name="str">The string to evaluate..</param>
+        /// <param name="useBracket">If set to <c>true</c> consider square brackets.
+        /// as open and close parentheses.</param>
+        public static string FirstParenEnclosure(this string str, bool useBracket)
+        {
+            char open = '(', closure = ')';
+            if (useBracket)
             {
+                open = '[';
+                closure = ']';
+            }
+            if (str.Contains(open.ToString()) || str.Contains(closure.ToString()))
+            {
+                if (str.Length < 3)
+                    throw new ExpressionException(str);
                 var num_parens = 0;
                 var parengroup = new StringBuilder();
-                char open = '(', close = ')';
                 for (int i = 0; i < str.Length; i++)
                 {
                     var c = str[i];
@@ -179,7 +183,7 @@ namespace DotNetAsm
                     {
                         num_parens++;
                     }
-                    else if (c == close)
+                    else if (c == closure)
                     {
                         num_parens--;
                         if (num_parens == 0)
@@ -191,7 +195,6 @@ namespace DotNetAsm
             }
             return str;
         }
-
         /// <summary>
         /// Gets the next double- or single-quoted string within the string.
         /// </summary>
@@ -212,9 +215,6 @@ namespace DotNetAsm
         /// <exception cref="T:System.Exception"></exception>
         public static string GetNextQuotedString(this string str, int atIndex)
         {
-            if (!str.Contains("\"") && !str.Contains("'"))
-                return string.Empty;
-
             var quoted = new StringBuilder();
             var enclosestring = char.MinValue;
             int stringsize = 0;
@@ -226,28 +226,32 @@ namespace DotNetAsm
                 {
                     quoted.Append(c);
                     stringsize++;
-                    if (c == '\'' || c == '"')
+                    if (c.Equals('\'') || c.Equals('"'))
                     {
                         if (enclosestring.Equals(char.MinValue))
                             enclosestring = c;
                         else if (enclosestring.Equals(c))
                             break;
                     }
-                    else if (c == '\\')
+                    else if (c.Equals('\\'))
                     {
                         // escape cannot be the last char in the string
                         if (++i == str.Length - 1)
-                            throw new Exception("QuoteStringNotEnclosed");
-                        var m = Regex.Match(str.Substring(i), @"^(u[a-fA-F0-9]{4}|x[a-fA-F0-9]{2})");
-                        if (!string.IsNullOrEmpty(m.Value))
+                            throw new Exception(ErrorStrings.QuoteStringNotEnclosed);
+                        c = str[i];
+                        if (c.Equals('u') || c.Equals('x'))
                         {
+                            var m = Regex.Match(str.Substring(i), @"^(u[a-fA-F0-9]{4}|x[a-fA-F0-9]{2})");
+                            if (!string.IsNullOrEmpty(m.Value))
+                            {
 
-                            quoted.Append(m.Value);
-                            i += m.Value.Length - 1;
+                                quoted.Append(m.Value);
+                                i += m.Value.Length - 1;
+                            }
                         }
                         else
                         {
-                            quoted.Append(str[i]);
+                            quoted.Append(c);
                         }
                     }
                 }
@@ -255,10 +259,10 @@ namespace DotNetAsm
             if (!enclosestring.Equals(char.MinValue))
             {
                 if (stringsize < 2 || !quoted[quoted.Length - 1].Equals(enclosestring))
-                    throw new Exception("QuoteStringNotEnclosed");
+                    throw new Exception(ErrorStrings.QuoteStringNotEnclosed);
 
                 if (enclosestring.Equals('\'') && stringsize > 3)
-                    throw new Exception(string.Format("TooManyCharacters: {0}", stringsize));
+                    throw new Exception(ErrorStrings.TooManyCharacters);
             }
             return quoted.ToString();
         }
@@ -267,10 +271,24 @@ namespace DotNetAsm
         /// Does a comma-separated-value analysis on the <see cref="T:DotNetAsm.SourceLine"/>'s operand
         /// and returns the individual value as a <see cref="T:System.Collections.Generic.List&lt;string&gt;"/>.
         /// </summary>
-        /// <param name="str">The string to evaluate</param>
+        /// <param name="str">The string to evaluate.</param>
         /// <returns>A <see cref="T:System.Collections.Generic.List&lt;string&gt;"/> of the values.</returns>
         /// <exception cref="T:System.Exception"></exception>
         public static List<string> CommaSeparate(this string str)
+        {
+            return CommaSeparate(str, '(', ')');
+        }
+
+        /// <summary>
+        /// Does a comma-separated-value analysis on the <see cref="T:DotNetAsm.SourceLine"/>'s operand
+        /// and returns the individual value as a <see cref="T:System.Collections.Generic.List&lt;string&gt;"/>.
+        /// </summary>
+        /// <returns>A <see cref="T:System.Collections.Generic.List&lt;string&gt;"/> of the values.</returns>
+        /// <param name="str">The string to evaluate.</param>
+        /// <param name="open">Open paranethesis character.</param>
+        /// <param name="closure">Close paranthesis character.</param>
+        /// <remarks>All commas inside paranetheses will be skipped.</remarks>
+        public static List<string> CommaSeparate(this string str, char open, char closure)
         {
             var csv = new List<string>();
 
@@ -286,9 +304,9 @@ namespace DotNetAsm
             for (int i = 0; i < str.Length; i++)
             {
                 char c = str[i];
-                if (c.Equals('\'') || c.Equals('\"'))
+                if (c == '\'' || c == '"')
                 {
-                    var quoted = str.GetNextQuotedString(atIndex:i);
+                    var quoted = str.GetNextQuotedString(atIndex: i);
                     i += quoted.Length - 1;
                     sb.Append(quoted);
                     if (i >= str.Length - 1)
@@ -297,7 +315,7 @@ namespace DotNetAsm
                 else if (num_parens > 0)
                 {
                     sb.Append(c);
-                    if (c == ')')
+                    if (c == closure)
                     {
                         num_parens--;
                         if (i == str.Length - 1)
@@ -306,7 +324,7 @@ namespace DotNetAsm
                 }
                 else
                 {
-                    if (c == '(')
+                    if (c == open)
                     {
                         num_parens++;
                     }
@@ -330,6 +348,25 @@ namespace DotNetAsm
         }
     }
 
+    public static class Char_Extension
+    {
+        /// <summary>
+        /// Indicates whether the specified Unicode character is a mathematical
+        /// operator.
+        /// </summary>
+        /// <returns><c>true</c>, if the character is an operator, <c>false</c> otherwise.</returns>
+        /// <param name="c">The Unicode character.</param>
+        public static bool IsOperator(this char c)
+        {
+            return (char.IsSymbol(c) && !c.IsRadixOperator()) || c == '/' || c == '*' || c == '-' || c == '&' || c == '%' || c == '!';
+        }
+
+        public static bool IsRadixOperator(this char c)
+        {
+            return c == '$' || c == '%';
+        }
+    }
+
     public static class Int64_Extension
     {
         /// <summary>
@@ -341,7 +378,7 @@ namespace DotNetAsm
         {
             if (value < 0)
                 value = (~value) << 1;
-            
+
             if ((value & 0xFFFFFF00) == 0) return 1;
             if ((value & 0xFFFF0000) == 0) return 2;
             if ((value & 0xFF000000) == 0) return 3;

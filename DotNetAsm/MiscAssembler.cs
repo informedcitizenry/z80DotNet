@@ -1,23 +1,8 @@
 ﻿//-----------------------------------------------------------------------------
-// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
+// Copyright (c) 2017-2019 informedcitizenry <informedcitizenry@gmail.com>
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to 
-// deal in the Software without restriction, including without limitation the 
-// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
-// sell copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
+// Licensed under the MIT license. See LICENSE for full license information.
 // 
-// The above copyright notice and this permission notice shall be included in 
-// all copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
-// IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
 using System;
@@ -28,7 +13,7 @@ namespace DotNetAsm
     /// <summary>
     /// A class that assembles miscellaneous directives, such as error and warn messages.
     /// </summary>
-    public class MiscAssembler : AssemblerBase, ILineAssembler
+    public sealed class MiscAssembler : AssemblerBase, ILineAssembler
     {
         #region Constructors
 
@@ -39,9 +24,9 @@ namespace DotNetAsm
         public MiscAssembler(IAssemblyController controller) :
             base(controller)
         {
-            Reserved.DefineType("Directives", 
+            Reserved.DefineType("Directives",
                     "assert", ".eor", ".echo", ".target",
-                    ".error", ".errorif", 
+                    ".error", ".errorif",
                     ".warnif", ".warn"
                 );
         }
@@ -79,7 +64,7 @@ namespace DotNetAsm
             }
             var eor = Controller.Evaluator.Eval(line.Operand, sbyte.MinValue, byte.MaxValue);
             var eor_b = Convert.ToByte(eor);
-            Controller.Output.Transforms.Push(delegate(byte b)
+            Controller.Output.Transforms.Push(delegate (byte b)
             {
                 b ^= eor_b;
                 return b;
@@ -127,7 +112,9 @@ namespace DotNetAsm
         {
             if (!operand.EnclosedInQuotes())
             {
-                operand = StringAssemblerBase.GetFormattedString(line.Operand, Controller.Evaluator);
+                operand = StringAssemblerBase.GetFormattedString(line.Operand,
+                                                                 Controller.Options.StringComparison,
+                                                                 Controller.Evaluator);
                 if (string.IsNullOrEmpty(operand))
                     Controller.Log.LogEntry(line, ErrorStrings.QuoteStringNotEnclosed);
             }

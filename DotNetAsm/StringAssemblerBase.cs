@@ -1,23 +1,8 @@
 ﻿//-----------------------------------------------------------------------------
-// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
+// Copyright (c) 2017-2019 informedcitizenry <informedcitizenry@gmail.com>
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to 
-// deal in the Software without restriction, including without limitation the 
-// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
-// sell copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
+// Licensed under the MIT license. See LICENSE for full license information.
 // 
-// The above copyright notice and this permission notice shall be included in 
-// all copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
-// IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
 using System;
@@ -30,13 +15,11 @@ namespace DotNetAsm
     /// <summary>
     /// A base class to assemble string pseudo operations.
     /// </summary>
-    public class StringAssemblerBase : AssemblerBase
+    public abstract class StringAssemblerBase : AssemblerBase
     {
         #region Members
 
-        Regex _regStrFunc, _regEncName;
-
-        static Regex _regFmtFunc;
+        Regex _regEncName;
 
         #endregion
 
@@ -46,7 +29,7 @@ namespace DotNetAsm
         /// Constructs a <see cref="T:DotNetAsm.StringAssemblerBase"/> class.
         /// </summary>
         /// <param name="controller">The <see cref="T:DotNetAsm.IAssemblyController"/> to associate</param>
-        public StringAssemblerBase(IAssemblyController controller) :
+        protected StringAssemblerBase(IAssemblyController controller) :
             base(controller)
         {
             Reserved.DefineType("Directives",
@@ -54,12 +37,6 @@ namespace DotNetAsm
                 );
 
             Reserved.DefineType("Encoding", ".encoding", ".map", ".unmap");
-
-            _regStrFunc = new Regex(@"str(\(.+\))",
-                Controller.Options.RegexOption | RegexOptions.Compiled);
-
-            _regFmtFunc = new Regex(@"format(\(.+\))",
-                Controller.Options.RegexOption | RegexOptions.Compiled);
 
             _regEncName = new Regex("^" + Patterns.SymbolBasic + "$",
                 Controller.Options.RegexOption | RegexOptions.Compiled);
@@ -70,10 +47,6 @@ namespace DotNetAsm
 
         #region Methods
 
-        /// <summary>
-        /// Update the controller's encoding
-        /// </summary>
-        /// <param name="line">The <see cref="T:DotNetAsm.SourceLine"/> containing the encoding update</param>
         void UpdateEncoding(SourceLine line)
         {
             line.DoNotAssemble = true;
@@ -162,11 +135,7 @@ namespace DotNetAsm
             }
         }
 
-        /// <summary>
-        /// Evaluate parameter the string as either a char literal or expression
-        /// </summary>
-        /// <param name="p">The string parameter</param>
-        /// <returns>A string representation of the parameter</returns>
+        // Evaluate parameter the string as either a char literal or expression
         string EvalEncodingParam(string p)
         {
             // if char literal return the char itself
@@ -182,36 +151,11 @@ namespace DotNetAsm
                 {
                     throw new ArgumentException(p);
                 }
-            }   
+            }
             var unescaped = Regex.Unescape(quoted);
             if (unescaped.First().Equals('"'))
                 return unescaped.TrimOnce('"');
             return unescaped.TrimOnce('\'');
-        }
-
-        /// <summary>
-        /// Converts the numerical constant of a mathematical expression or to a string.
-        /// </summary>
-        /// <param name="line">The <see cref="T:DotNetAsm.SourceLine"/> associated to the expression</param>
-        /// <param name="arg">The string expression to convert</param>
-        /// <returns>The expression as a string</returns>
-        string ExpressionToString(SourceLine line, string arg)
-        {
-            if (_regStrFunc.IsMatch(arg))
-            {
-                var m = _regStrFunc.Match(arg);
-                string strval = m.Groups[1].Value;
-                var param = strval.TrimStartOnce('(').TrimEndOnce(')');
-                if (string.IsNullOrEmpty(strval) ||
-                    strval.FirstParenEnclosure() != m.Groups[1].Value)
-                {
-                    Controller.Log.LogEntry(line, ErrorStrings.None);
-                    return string.Empty;
-                }
-                var val = Controller.Evaluator.Eval(param, int.MinValue, uint.MaxValue);
-                return val.ToString();
-            }
-            return GetFormattedString(arg, Controller.Evaluator);
         }
 
         /// <summary>
@@ -240,7 +184,7 @@ namespace DotNetAsm
                     }
                     else
                     {
-                        var atoi = ExpressionToString(line, s);
+                        var atoi = GetFormattedString(s, Controller.Options.StringComparison, Controller.Evaluator);
                         if (string.IsNullOrEmpty(atoi))
                         {
                             var v = Controller.Evaluator.Eval(s);
@@ -300,35 +244,36 @@ namespace DotNetAsm
             foreach (var arg in args)
             {
                 List<byte> encoded;
-                var quoted = arg.GetNextQuotedString();
-                if (string.IsNullOrEmpty(quoted))
+                var atoi = GetFormattedString(arg, Controller.Options.StringComparison, Controller.Evaluator);
+                if (string.IsNullOrEmpty(atoi))
                 {
-                    if (arg == "?")
+                    var quoted = arg.GetNextQuotedString();
+                    if (string.IsNullOrEmpty(quoted))
                     {
-                        Controller.Output.AddUninitialized(1);
-                        continue;
-                    }
-                    var atoi = ExpressionToString(line, arg);
-
-                    if (string.IsNullOrEmpty(atoi))
-                    {
+                        if (arg == "?")
+                        {
+                            Controller.Output.AddUninitialized(1);
+                            continue;
+                        }
                         var val = Controller.Evaluator.Eval(arg);
                         encoded = Controller.Output.Add(val, val.Size());
                     }
                     else
                     {
-                        encoded = Controller.Output.Add(atoi, Controller.Encoding);
+                        if (!quoted.Equals(arg))
+                        {
+                            Controller.Log.LogEntry(line, ErrorStrings.None);
+                            return;
+                        }
+                        var unescaped = quoted.TrimOnce(quoted.First());
+                        if (unescaped.Contains("\\"))
+                            unescaped = Regex.Unescape(unescaped);
+                        encoded = Controller.Output.Add(unescaped, Controller.Encoding);
                     }
                 }
                 else
                 {
-                    if (!quoted.Equals(arg))
-                    {
-                        Controller.Log.LogEntry(line, ErrorStrings.None);
-                        return;
-                    }
-                    var unescaped = Regex.Unescape(quoted.TrimOnce(quoted.First()));
-                    encoded = Controller.Output.Add(unescaped, Controller.Encoding);
+                    encoded = Controller.Output.Add(atoi, Controller.Encoding);
                 }
                 if (format.Equals(".nstring"))
                 {
@@ -368,15 +313,15 @@ namespace DotNetAsm
         /// </summary>
         /// <returns>The formatted string.</returns>
         /// <param name="operand">The line's operand.</param>
+        /// <param name="comparison">The <see cref="T:System.StringComparison"/> to evaluate the string operand</param>
         /// <param name="evaluator">The <see cref="T:DotNetAsm.IEvaluator"/> to evaluate non-string objects.</param>
-        public static string GetFormattedString(string operand, IEvaluator evaluator)
+        public static string GetFormattedString(string operand, StringComparison comparison, IEvaluator evaluator)
         {
-            var m = _regFmtFunc.Match(operand);
-            if (string.IsNullOrEmpty(m.Value))
+            if (!operand.StartsWith("format(", comparison))
                 return string.Empty;
-            var parms = m.Groups[1].Value;
-            if (string.IsNullOrEmpty(parms) || m.Groups[1].Value.FirstParenEnclosure() != parms)
+            if (!operand.EndsWith(")", comparison))
                 throw new Exception(ErrorStrings.None);
+            var parms = operand.Substring(operand.IndexOf('('));
 
             var csvs = parms.TrimStartOnce('(').TrimEndOnce(')').CommaSeparate();
             var fmt = csvs.First();

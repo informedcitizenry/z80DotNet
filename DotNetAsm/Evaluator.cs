@@ -1,23 +1,8 @@
 ﻿//-----------------------------------------------------------------------------
-// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
+// Copyright (c) 2017-2019 informedcitizenry <informedcitizenry@gmail.com>
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to 
-// deal in the Software without restriction, including without limitation the 
-// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
-// sell copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
+// Licensed under the MIT license. See LICENSE for full license information.
 // 
-// The above copyright notice and this permission notice shall be included in 
-// all copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
-// IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
 using System;
@@ -25,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using OperationDef = System.Tuple<System.Func<System.Collections.Generic.List<double>, double>, int>;
 
 namespace DotNetAsm
 {
@@ -42,7 +28,7 @@ namespace DotNetAsm
         /// Constructs an instance of the ExpressionException class.
         /// </summary>
         /// <param name="expression">The expression that raises the exception.</param>
-        public ExpressionException(string expression)
+        public ExpressionException(string expression) : base()
         {
             ExpressionString = expression;
         }
@@ -51,233 +37,406 @@ namespace DotNetAsm
         /// Overrides the Exception message.
         /// </summary>
         public override string Message
-        {
-            get
-            {
-                return "Unknown or invalid expression: " + ExpressionString;
-            }
-        }
+            => "Unknown or invalid expression: " + ExpressionString;
     }
 
     /// <summary>
-    /// Math expression evaluator class. Takes string input and parses and evaluates.
+    /// Math expression evaluator class. Takes string input and parses and evaluates 
+    /// to a <see cref="System.Int64"/> value.
     /// </summary>
-    public class Evaluator : IEvaluator
+    public sealed class Evaluator : IEvaluator
     {
-        #region Constants
-
-        /// <summary>
-        /// Represents the string indicating the expression cannot be evaluated.
-        /// </summary>
-        public const string EVAL_FAIL = "?FAIL";
-
-        #endregion
-
         #region Members
+
+        readonly Dictionary<string, Tuple<Regex, Func<string, string>>> _regSymbolLookups;
+
+        readonly List<Func<string, string>> _symbolLookups;
 
         #region Static Members
 
-        static List<char> _operators = new List<char>
+        static Random _rng = new Random();
+
+        static Dictionary<string, OperationDef> _functions;
+
+        static readonly Dictionary<string, double> _constants = new Dictionary<string, double>(StringComparer.Ordinal)
         {
-            '∨', '∧', '<', '≤', '≠', '≡', '≥', '>', '≪', '≫',
-            '-', '+', '^', '|', '&', '%', '/', '*', '↑'
+            { "MATH_PI", Math.PI },
+            { "MATH_E", Math.E }
+        };
+
+        static readonly Dictionary<string, OperationDef> _operators = new Dictionary<string, OperationDef>
+        {
+
+            { "||",     new OperationDef(parms => ((int)parms[1]!=0?1:0) | ((int)parms[0]!=0?1:0),    0) },
+            { "&&",     new OperationDef(parms => ((int)parms[1]!=0?1:0) & ((int)parms[0]!=0?1:0),    1) },
+            { "|",      new OperationDef(parms => (long)parms[1]         | (long)parms[0],            2) },
+            { "^",      new OperationDef(parms => (long)parms[1]         ^ (long)parms[0],            3) },
+            { "&",      new OperationDef(parms => (long)parms[1]         & (long)parms[0],            4) },
+            { "!=",     new OperationDef(parms => (long)parms[1]         != (long)parms[0] ? 1 : 0,   5) },
+            { "==",     new OperationDef(parms => (long)parms[1]         == (long)parms[0] ? 1 : 0,   5) },
+            { "<",      new OperationDef(parms => (long)parms[1]         <  (long)parms[0] ? 1 : 0,   6) },
+            { "<=",     new OperationDef(parms => (long)parms[1]         <= (long)parms[0] ? 1 : 0,   6) },
+            { ">=",     new OperationDef(parms => (long)parms[1]         >= (long)parms[0] ? 1 : 0,   6) },
+            { ">",      new OperationDef(parms => (long)parms[1]         >  (long)parms[0] ? 1 : 0,   6) },
+            { "<<",     new OperationDef(parms => (int)parms[1]          << (int)parms[0],            7) },
+            { ">>",     new OperationDef(parms => (int)parms[1]          >> (int)parms[0],            7) },
+            { "-",      new OperationDef(parms => parms[1]               - parms[0],                  8) },
+            { "+",      new OperationDef(parms => parms[1]               + parms[0],                  8) },
+            { "/",      new OperationDef(parms => parms[1]               / parms[0],                  9) },
+            { "*",      new OperationDef(parms => parms[1]               * parms[0],                  9) },
+            { "%",      new OperationDef(parms => (long)parms[1]         % (long)parms[0],            9) },
+            { "\x11-",  new OperationDef(parms => -parms[0],                                         11) },
+            { "\x11+",  new OperationDef(parms => parms[0],                                          11) },
+            { "\x11~",  new OperationDef(parms => ~((long)parms[0]),                                 12) },
+            { "\x11!",  new OperationDef(parms => (long)parms[0] == 0 ? 1 : 0,                       12) },
+            { "**",     new OperationDef(parms => Math.Pow(parms[1], parms[0]),                      13) },
+            { "\x11>",  new OperationDef(parms => (long)(parms[0] / 0x100) % 256,                    14) },
+            { "\x11<",  new OperationDef(parms => (long)parms[0]  % 256,                             14) },
+            { "\x11&",  new OperationDef(parms => (long)parms[0]  % 65536,                           14) },
+            { "\x11^",  new OperationDef(parms => (long)(parms[0] / 0x10000) % 256,                  14) },
+            { "!",      new OperationDef(parms => Double.NaN,                                        -1) },
+            { "~",      new OperationDef(parms => Double.NaN,                                        -1) },
+            { "=",      new OperationDef(parms => Double.NaN,                                        -1) },
         };
 
         #endregion
-
-        Random _rng;
-        Regex _regFcn, _regUnary, _regBinary;
-        List<Tuple<Regex, string>> _replacements;
-        List<Regex> _hexRegexes;
-        Dictionary<string, double> _cache;
-        readonly Dictionary<string, Tuple<Regex, Func<string, string>>> _symbolLookups;
-        Dictionary<string, Tuple<Func<double[], double>, int>> _functions;
 
         #endregion
 
         #region Constructors
 
-        /// <summary>
-        /// Constructs an instance of the <see cref="T:DotNetAsm.Evaluator"/> class, used to evaluate 
-        /// strings as mathematical expressions.
-        /// </summary>
-        /// <param name="hexPattern">The default hexadecimal pattern used to identify hexadecimal
-        /// strings in an expression</param>
-        public Evaluator(string hexPattern)
+        public Evaluator()
+            : this(false)
         {
-            _symbolLookups = new Dictionary<string, Tuple<Regex, Func<string, string>>>();
 
-            _regFcn = new Regex(@"(" + Patterns.SymbolBasic + @")(\(.+\))", RegexOptions.Compiled);
-            _regUnary = new Regex(@"(?<![0-9.)<>])([!+\-~^&<>])(\(.+\)|[0-9.]+)", RegexOptions.Compiled);
-            _regBinary = new Regex(@"(?<=^|[^01#.])%(([01]+)|([#.]+))", RegexOptions.Compiled);
-
-            _cache = new Dictionary<string, double>();
-            _hexRegexes = new List<Regex> { new Regex(hexPattern, RegexOptions.Compiled) };
-
-            _rng = new Random();
-
-            _replacements = new List<Tuple<Regex, string>>
-            {
-                new Tuple<Regex, string>(new Regex(@"\*\*", RegexOptions.Compiled), "↑")
-            };
-            _functions = new Dictionary<string, Tuple<Func<double[], double>, int>>
-            {
-                { "abs",    new Tuple<Func<double[], double>, int>(parms => Math.Abs(parms[0]),             1) },
-                { "acos",   new Tuple<Func<double[], double>, int>(parms => Math.Acos(parms[0]),            1) },
-                { "atan",   new Tuple<Func<double[], double>, int>(parms => Math.Atan(parms[0]),            1) },
-                { "cbrt",   new Tuple<Func<double[], double>, int>(parms => Math.Pow(parms[0], 1.0 / 3.0),  1) },
-                { "ceil",   new Tuple<Func<double[], double>, int>(parms => Math.Ceiling(parms[0]),         1) },
-                { "cos",    new Tuple<Func<double[], double>, int>(parms => Math.Cos(parms[0]),             1) },
-                { "cosh",   new Tuple<Func<double[], double>, int>(parms => Math.Cosh(parms[0]),            1) },
-                { "deg",    new Tuple<Func<double[], double>, int>(parms => (parms[0] * 180 / Math.PI),     1) },
-                { "exp",    new Tuple<Func<double[], double>, int>(parms => Math.Exp(parms[0]),             1) },
-                { "floor",  new Tuple<Func<double[], double>, int>(parms => Math.Floor(parms[0]),           1) },
-                { "frac",   new Tuple<Func<double[], double>, int>(parms => Math.Abs(parms[0] - Math.Abs(Math.Round(parms[0], 0))), 1) },
-                { "hypot",  new Tuple<Func<double[], double>, int>(parms => Math.Sqrt(Math.Pow(parms[0], 2) + Math.Pow(parms[1], 2)), 2) },
-                { "ln",     new Tuple<Func<double[], double>, int>(parms => Math.Log(parms[0]),             1) },
-                { "log10",  new Tuple<Func<double[], double>, int>(parms => Math.Log10(parms[0]),           1) },
-                { "pow",    new Tuple<Func<double[], double>, int>(parms => Math.Pow(parms[0], parms[1]),   2) },
-                { "rad",    new Tuple<Func<double[], double>, int>(parms => (parms[0] * Math.PI / 180),     1) },
-                { "random", new Tuple<Func<double[], double>, int>(parms => _rng.Next((int)parms[0], (int)parms[1]), 2) },
-                { "sgn",    new Tuple<Func<double[], double>, int>(parms => Math.Sign(parms[0]),            1) },
-                { "sin",    new Tuple<Func<double[], double>, int>(parms => Math.Sin(parms[0]),             1) },
-                { "sinh",   new Tuple<Func<double[], double>, int>(parms => Math.Sinh(parms[0]),            1) },
-                { "sqrt",   new Tuple<Func<double[], double>, int>(parms => Math.Sqrt(parms[0]),            1) },
-                { "tan",    new Tuple<Func<double[], double>, int>(parms => Math.Tan(parms[0]),             1) },
-                { "tanh",   new Tuple<Func<double[], double>, int>(parms => Math.Tanh(parms[0]),            1) },
-                { "round",
-                    new Tuple<Func<double[], double>, int>(delegate (double[] parms)
-                     {
-                         if (parms.Length == 2)
-                             return Math.Round(parms[0], (int)parms[1]);
-                         return Math.Round(parms[0]);
-                     }, 2)
-                }
-            };
         }
 
         /// <summary>
         /// Constructs an instance of the <see cref="T:DotNetAsm.Evaluator"/> class, used to evaluate 
         /// strings as mathematical expressions.
         /// </summary>
-        public Evaluator()
-            : this(@"0x([a-fA-F0-9])+")
+        /// <param name="functionsCaseSensitive">Determines whether to treat case 
+        /// sensitivity to function names in expressions.</param>
+        public Evaluator(bool functionsCaseSensitive)
         {
+            StringComparer comparer = functionsCaseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
 
+            _functions = new Dictionary<string, OperationDef>(comparer)
+            {
+                { "abs",    new OperationDef(parms => Math.Abs(parms[0]),             1) },
+                { "acos",   new OperationDef(parms => Math.Acos(parms[0]),            1) },
+                { "atan",   new OperationDef(parms => Math.Atan(parms[0]),            1) },
+                { "cbrt",   new OperationDef(parms => Math.Pow(parms[0], 1.0 / 3.0),  1) },
+                { "ceil",   new OperationDef(parms => Math.Ceiling(parms[0]),         1) },
+                { "cos",    new OperationDef(parms => Math.Cos(parms[0]),             1) },
+                { "cosh",   new OperationDef(parms => Math.Cosh(parms[0]),            1) },
+                { "deg",    new OperationDef(parms => (parms[0] * 180 / Math.PI),     1) },
+                { "exp",    new OperationDef(parms => Math.Exp(parms[0]),             1) },
+                { "floor",  new OperationDef(parms => Math.Floor(parms[0]),           1) },
+                { "frac",   new OperationDef(parms => Math.Abs(parms[0] - Math.Abs(Math.Round(parms[0], 0))), 1) },
+                { "hypot",  new OperationDef(parms => Math.Sqrt(Math.Pow(parms[1], 2) + Math.Pow(parms[0], 2)), 2) },
+                { "ln",     new OperationDef(parms => Math.Log(parms[0]),             1) },
+                { "log10",  new OperationDef(parms => Math.Log10(parms[0]),           1) },
+                { "pow",    new OperationDef(parms => Math.Pow(parms[1], parms[0]),   2) },
+                { "rad",    new OperationDef(parms => (parms[0] * Math.PI / 180),     1) },
+                { "random", new OperationDef(parms => _rng.Next((int)parms[1], (int)parms[0]), 2) },
+                { "round",  new OperationDef(parms => Math.Round(parms[0]),              1) },
+                { "sgn",    new OperationDef(parms => Math.Sign(parms[0]),            1) },
+                { "sin",    new OperationDef(parms => Math.Sin(parms[0]),             1) },
+                { "sinh",   new OperationDef(parms => Math.Sinh(parms[0]),            1) },
+                { "sqrt",   new OperationDef(parms => Math.Sqrt(parms[0]),            1) },
+                { "tan",    new OperationDef(parms => Math.Tan(parms[0]),             1) },
+                { "tanh",   new OperationDef(parms => Math.Tanh(parms[0]),            1) }
+            };
+            _regSymbolLookups = new Dictionary<string, Tuple<Regex, Func<string, string>>>();
+
+            _symbolLookups = new List<Func<string, string>>();
         }
 
         #endregion
 
         #region Methods
 
-        /// <summary>
-        /// Evaluate function calls within the expression.
-        /// </summary>
-        /// <param name="expression">The expression to evaluate for function calls</param>
-        /// <returns>The modified expression with return values substituted in
-        /// for function calls</returns>
-        /// <exception cref="T:DotNetAsm.ExpressionException">DotNetAsm.ExpressionException</exception>
-        string EvalFunctions(string expression)
+        bool AddToken(StringBuilder token, List<string> toList)
         {
-            var m = _regFcn.Match(expression);
-            while (string.IsNullOrEmpty(m.Value) == false)
+            if (token.Length > 0)
             {
-                var fcnName = m.Groups[1].Value;
-                var call_list = m.Groups[2].Value.FirstParenEnclosure();
-                var parens = EvalFunctions(call_list.Substring(1, call_list.Length - 2));
+                toList.Add(token.ToString());
+                token.Clear();
+                return true;
+            }
+            return false;
+        }
 
-                var parms = parens.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+        // Take a string expression and tokenize it.
+        List<string> Tokenize(string expression)
+        {
+            StringBuilder operandString = new StringBuilder(),
+                          operatorString = new StringBuilder();
 
-                double result = 0;
+            List<string> tokens = new List<string>();
+            for (int i = 0; i < expression.Length; i++)
+            {
+                var c = expression[i];
 
-                var fcn = _functions[fcnName];
-
-                if (parms.Length > fcn.Item2)
-                    throw new ExpressionException(expression);
-
-                if (parms.Length == 2)
-                    result = fcn.Item1(new double[] { EvalInternal(parms[0]), EvalInternal(parms[1]) });
+                if ((c == '%' && operandString.Length == 0 && (i == 0 || (!_operators.ContainsKey(expression[i - 1].ToString()) && expression[i - 1] != ')'))) ||
+                     c == '$' || char.IsLetterOrDigit(c) || c == '.' || c == '#')
+                {
+                    AddToken(token: operatorString, toList: tokens);
+                    operandString.Append(c);
+                }
+                else if (_operators.ContainsKey(c.ToString()) || c == '(' || c == ')' || c == ',')
+                {
+                    AddToken(token: operandString, toList: tokens);
+                    if (c == '(' || c == ')')
+                    {
+                        AddToken(token: operatorString, toList: tokens);
+                        tokens.Add(c.ToString());
+                    }
+                    else
+                    {
+                        // Is the compound operator valid? If not, tokenize the existing operator string.
+                        if (!_operators.ContainsKey(string.Concat(operatorString.ToString(), c)))
+                            AddToken(token: operatorString, toList: tokens);
+                        operatorString.Append(c);
+                    }
+                }
                 else
-                    result = fcn.Item1(new double[] { EvalInternal(parms[0]) });
+                {
+                    if (!char.IsWhiteSpace(c))
+                        throw new ExpressionException(expression);
 
-                expression = expression.Replace(fcnName + call_list, result.ToString());
-                m = _regFcn.Match(expression);
+                    if (!AddToken(token: operandString, toList: tokens))
+                        AddToken(token: operatorString, toList: tokens);
+                }
+            }
+            if (!AddToken(token: operandString, toList: tokens))
+                AddToken(token: operatorString, toList: tokens);
+
+            return tokens;
+        }
+
+        // Tokenize expression and then re-order according to RPN notation.
+        List<string> ToRpn(string expression)
+        {
+            var tokens = Tokenize(expression);
+            var output = new List<string>();
+            var operators = new Stack<string>();
+            var lastToken = string.Empty;
+            var functionstack = new Stack<Tuple<int, int>>();
+            var parens = 0;
+
+            foreach (var t in tokens)
+            {
+                if (_functions.ContainsKey(t))
+                {
+                    // if the token is a function name push onto the stack
+                    lastToken = t;
+                    operators.Push(t);
+
+                    // keep track of param count if necessary
+                    functionstack.Push(new Tuple<int, int>(_functions[t].Item2, parens + 1));
+                }
+                else if (_operators.ContainsKey(t))
+                {
+                    // check for unary
+                    string op;
+                    if (string.IsNullOrEmpty(lastToken) ||
+                        _functions.ContainsKey(lastToken) ||
+                        _operators.ContainsKey(lastToken))
+                        op = string.Concat("\x11", t);
+                    else
+                        op = t;
+
+                    // or else if the token is an operator, send higher order
+                    // operators or functions at the top of the stack to the output
+                    while (operators.Count > 0)
+                    {
+                        var topofstack = operators.Peek();
+                        if (_functions.ContainsKey(topofstack))
+                        {
+                            output.Add(operators.Pop());
+                        }
+                        else if (topofstack != "(")
+                        {
+                            var toporder = _operators[topofstack].Item2;
+                            var tokenorder = _operators[op].Item2;
+                            if (toporder >= tokenorder)
+                                output.Add(operators.Pop());
+                            else
+                                break;
+                        }
+                        else
+                        {
+                            // don't pop off open parens (just yet)
+                            break;
+                        }
+                    }
+                    // finally push the operator onto the stack
+                    operators.Push(op);
+                    lastToken = op;
+                }
+                else if (t.Equals("("))
+                {
+                    // else open paren push onto the stack
+                    if (!string.IsNullOrEmpty(lastToken) && !_operators.ContainsKey(lastToken) && !_functions.ContainsKey(lastToken))
+                        throw new ExpressionException(expression);
+                    parens++;
+                    operators.Push(t);
+
+                    // new clause (unaries are acceptable)
+                    lastToken = string.Empty;
+                }
+                else if (t.Equals(")") || t.Equals(","))
+                {
+                    if (string.IsNullOrEmpty(lastToken) || _operators.ContainsKey(lastToken))
+                        throw new ExpressionException(expression);
+
+                    // closed paren or param closure (comma) move all operators into output
+                    // until an open paren is reached
+                    while (operators.Peek() != "(")
+                        output.Add(operators.Pop());
+
+                    // only pop the open paren off the stack if it is a closed paren
+                    if (t.Equals(")"))
+                    {
+                        operators.Pop();
+                        if (functionstack.Count > 0 && functionstack.Peek().Item2 == parens)
+                            functionstack.Pop();
+                        parens--;
+                    }
+                    else
+                    {
+                        // track params against function definition
+                        var fcntop = functionstack.Pop();
+                        var parmnum = fcntop.Item1 - 1;
+                        if (parmnum < 1)
+                            throw new ExpressionException(expression);
+                        functionstack.Push(new Tuple<int, int>(parmnum, fcntop.Item2));
+                    }
+                    // A comma, like open paren, marks new clause. Closed paren does not.
+                    lastToken = t.Equals(")") ? t : string.Empty;
+                }
+                else
+                {
+                    // else this is not a function or an operator nor a paren, so send the token
+                    // onto the output.
+
+                    // non-operator tokens cannot be preceded by functions nor by other non-operator tokens 
+                    if (!string.IsNullOrEmpty(lastToken) && !_operators.ContainsKey(lastToken))
+                        throw new ExpressionException(expression);
+
+                    lastToken = t;
+                    output.Add(t);
+                }
+            }
+            // pop all remaining operators off of stack and send to the output.
+            while (operators.Count > 0)
+                output.Add(operators.Pop());
+            return output;
+        }
+
+        double Calculate(IEnumerable<string> output)
+        {
+            var result = new Stack<double>();
+
+            foreach (var s in output)
+            {
+                if (s.Equals(")"))
+                    continue;
+
+                if (double.TryParse(s, out double num))
+                {
+                    result.Push(num);
+                }
+                else if ((s.StartsWith("%", StringComparison.Ordinal) && s.Length > 1) ||
+                         s.StartsWith("$", StringComparison.Ordinal))
+                {
+                    var hexbin = s.Substring(1);
+                    int radix;
+                    if (s.First().Equals('%'))
+                    {
+                        radix = 2;
+                        hexbin = Regex.Replace(hexbin, @"^([#.]+)$",
+                                               m => m.Groups[1].Value.Replace("#", "1").Replace(".", "0"));
+                    }
+                    else
+                    {
+                        radix = 16;
+                    }
+                    result.Push(Convert.ToInt64(hexbin, radix));
+                }
+                else
+                {
+                    OperationDef operation;
+                    List<double> parms = new List<double> { result.Pop() };
+
+                    if (_functions.ContainsKey(s))
+                    {
+                        operation = _functions[s];
+                        var parmcount = _functions[s].Item2 - 1;
+                        while (parmcount-- > 0)
+                            parms.Add(result.Pop());
+                    }
+                    else
+                    {
+                        operation = _operators[s];
+                        if (!s.StartsWith("\x11", StringComparison.Ordinal))
+                            parms.Add(result.Pop());
+                    }
+                    result.Push(operation.Item1(parms));
+                }
+            }
+            return result.Pop();
+        }
+
+        bool ContainsSymbols(string expression) =>
+                _regSymbolLookups.Values.Any(l => l.Item1.IsMatch(expression));
+
+        string EvalConstant(string expression, KeyValuePair<string, double> kvp)
+        {
+            var cix = expression.IndexOf(kvp.Key, StringComparison.Ordinal);
+            if (cix >= 0)
+            {
+                int ixAfter = cix + kvp.Key.Length;
+                if (
+                    (cix != 0 && char.IsLetterOrDigit(expression[cix - 1])) ||
+                    (ixAfter < expression.Length - 1 && char.IsLetterOrDigit(expression[ixAfter]))
+                   )
+                {
+                    return expression;
+                }
+                string val = kvp.Value.ToString();
+                if (cix == 0)
+                {
+                    if (ixAfter == expression.Length)
+                        expression = val;
+                    else
+                        expression = val + EvalConstant(expression.Substring(ixAfter), kvp);
+                }
+                else
+                {
+                    if (ixAfter == expression.Length)
+                        expression = expression.Substring(0, cix) + val;
+                    else
+                        expression = expression.Substring(0, cix) + val + EvalConstant(expression.Substring(ixAfter), kvp);
+                }
             }
             return expression;
         }
 
-        /// <summary>
-        /// Evaluate the expression string for unary operations.
-        /// </summary>
-        /// <param name="expression">The expression to evaluate</param>
-        /// <returns>The modified expression string with unary operations converted
-        /// to binary operations</returns>
-        /// <exception cref="T:DotNetAsm.ExpressionException">DotNetAsm.ExpressionException</exception>
-        string EvalUnaries(string expression)
-        {
-            expression = Regex.Replace(expression, @"\s+(?=[!+\-~^&<>])", string.Empty);
-            expression = _regUnary.Replace(expression, delegate (Match m)
-            {
-                // <value =  value        % 256
-                // >value = (value/256)   % 256
-                // ^value = (value/65536) % 256
-                var value = m.Groups[2].Value.FirstParenEnclosure();
-                var post = string.Empty;
-
-                if (value != m.Groups[2].Value)
-                {
-                    int start = value.Length;
-                    int end = m.Groups[2].Value.Length - start;
-                    post = string.Format("{0}{1}", m.Groups[2].Value.Substring(start, 1),
-                        EvalUnaries(m.Groups[2].Value.Substring(start + 1, end - 1)));
-                }
-
-                switch (m.Groups[1].Value)
-                {
-                    case "^":
-                        return string.Format("((({0})/65536)%256){1}", value, post);
-                    case ">":
-                        return string.Format("((({0})/256)%256){1}", value, post);
-                    case "&":
-                        return string.Format("(({0})%65536){1}", value, post);
-                    case "<":
-                        return string.Format("(({0})%256){1}", value, post);
-                    case "-":
-                        return string.Format("(0-{0}){1}", value, post);
-                    case "!":
-                        return string.Format("{0}{1}", Eval(value) == 0 ? "1" : "0", post);
-                    case "+":
-                        return value;
-                }
-                long compl = ~Eval(value);
-                if (compl < 0)
-                    return string.Format("(0{0}){1}", compl, post);
-                return string.Format("{0}{1}", compl, post);
-            });
-            return expression;
-        }
-
-        public void AddHexFormat(string regex) => _hexRegexes.Add(new Regex(regex, RegexOptions.Compiled));
-
-        /// <summary>
-        /// Determines if the expression string contains user-defined symbols.
-        /// </summary>
-        /// <param name="expression">The expression string to evaluate.</param>
-        /// <returns><c>True</c> if the expression contains user-defined symbols, otherwise <c>false</c>.</returns>
-        bool ContainsSymbols(string expression) =>
-                _symbolLookups.Values.Any(l => l.Item1.IsMatch(expression));
-
-        /// <summary>
-        /// Evaluate the expression strings for user-defined symbols, then do a callback
-        /// to the user-defined lookup to substitute the symbols for a real value.
-        /// </summary>
-        /// <param name="expression">The expression to evaluate.</param>
-        /// <returns>The modified expression string with user-defined symbols replaced
-        /// with real values.</returns>
+        // convert client-defined symbols into values
         string EvalDefinedSymbols(string expression)
         {
-            // convert client-defined symbols into values
-            foreach (var lookup in _symbolLookups)
+            foreach (var kvp in _constants)
+            {
+                expression = EvalConstant(expression, kvp);
+            }
+            foreach (var look in _symbolLookups)
+            {
+                expression = look(expression);
+            }
+            foreach (var lookup in _regSymbolLookups)
             {
                 Regex r = lookup.Value.Item1;
                 var f = lookup.Value.Item2;
@@ -289,156 +448,30 @@ namespace DotNetAsm
                         return f(match);
                     return match;
                 });
-                if (expression.Contains(EVAL_FAIL))
-                    return string.Empty;
             }
             return expression;
         }
 
-        /// <summary>
-        /// Determines if the character is a math symbol, such as a paranthesis or operator.
-        /// </summary>
-        /// <param name="c">The character to test.</param>
-        /// <returns><c>True</c> if the character is a math symbol, otherwise <c>false</c>.</returns>
-        static bool IsMathSymbol(char c)
-        {
-            return _operators.Contains(c) || c.Equals('(') || c.Equals(')');
-        }
-
-        /// <summary>
-        /// Convert the math expression string from an infix to postfix (often called
-        /// Reverse Polish Notation) expression, using the Shunting Yard strategy.
-        /// </summary>
-        /// <param name="expression">The infix expression to convert</param>
-        /// <returns>A <see cref="System.Collections.Generic.List&lt;string&gt;"/> of outputs
-        /// representing a postfix of the infix expression.</returns>
-        /// <exception cref="T:DotNetAsm.ExpressionException">DotNetAsm.ExpressionException</exception>
-        List<string> Shunt(string expression)
-        {
-            var outputString = new StringBuilder();
-            var outputs = new List<string>();
-            var operators = new Stack<char>();
-
-            bool lastWasWS = false;
-
-            for (int i = 0; i < expression.Length; i++)
-            {
-                char c = expression[i];
-                if (char.IsWhiteSpace(c))
-                {
-                    lastWasWS = true;
-                    continue;
-                }
-
-                if (char.IsDigit(c) || c.Equals('.'))
-                {
-                    // check for things like 55 23
-                    if (outputString.Length > 0 && lastWasWS)
-                        throw new ExpressionException(expression);
-                    lastWasWS = false;
-                    outputString.Append(c);
-                }
-                else if (!IsMathSymbol(c))
-                {
-                    throw new ExpressionException(expression);
-                }
-                if ((IsMathSymbol(c) || i == expression.Length - 1) && outputString.Length > 0)
-                {
-                    // If it's a number add it to output
-                    outputs.Add(outputString.ToString());
-                    outputString.Clear();
-                }
-
-                if (_operators.Contains(c))
-                {
-                    if (i == 0 || _operators.Contains(expression[i - 1]))
-                    {
-                        // operation is first of string or
-                        // previous char is also an operation
-                        throw new ExpressionException(expression);
-                    }
-
-                    while (operators.Count > 0)
-                    {
-                        // While there's an operator on the top of the 
-                        // stack with greater precedence, pop operators from the 
-                        // stack onto the output queue
-                        if (_operators.IndexOf(operators.Peek()) >=
-                                        _operators.IndexOf(c))
-                            outputs.Add(operators.Pop().ToString());
-                        else
-                            break;
-                    }
-                    // Push the current operator onto the stack
-                    operators.Push(c);
-                }
-                else if (c.Equals('('))
-                {
-                    if (i > 0 && !char.IsWhiteSpace(expression[i - 1]) &&
-                        !(_operators.Contains(expression[i - 1]) ||
-                        expression[i - 1].Equals('('))
-                        )
-                    {
-                        throw new ExpressionException(expression);
-                    }
-                    // If it's a ( push it onto the stack
-                    operators.Push(c);
-                }
-                else if (c.Equals(')'))
-                {
-
-                    if (operators.Count == 0 ||
-                        _operators.Contains(expression[i - 1]))
-                        throw new ExpressionException(expression);
-
-                    while (operators.Peek() != '(')
-                    {
-                        // While there's not a ( at the top of the stack:
-                        // Pop operators from the stack onto the output queue.
-                        outputs.Add(operators.Pop().ToString());
-                    }
-                    // Pop the left bracket from the stack and discard it
-                    operators.Pop();
-                }
-                else if (!char.IsDigit(c) && !c.Equals('.'))
-                {
-                    throw new ExpressionException(expression);
-                }
-            }
-            // While there's operators on the stack, pop them to the queue
-            while (operators.Count > 0)
-            {
-                outputs.Add(operators.Pop().ToString());
-            }
-            return outputs;
-        }
-
-        /// <summary>
-        /// Internally evaluates expression string as a System.Double. Used primarily by other
-        /// functions.
-        /// </summary>
-        /// <param name="expression">The string expression to evaluate</param>
-        /// <returns>A <see cref="T:System.Double"/> representation of the expression.</returns>
-        /// <exception cref="T:DotNetAsm.ExpressionException">DotNetAsm.ExpressionException</exception>
+        // Evaluate internally the expression to a double.
         double EvalInternal(string expression)
         {
             if (string.IsNullOrEmpty(expression))
                 throw new ExpressionException(expression);
 
-            if (_cache.ContainsKey(expression))
-                return _cache[expression];
-
-            var pre_eval = PreEvaluate(expression);
-
-            var outputs = Shunt(pre_eval);
-            if (outputs.Count == 0)
+            var output = ToRpn(EvalDefinedSymbols(expression));
+            if (output.Count == 0)
                 throw new ExpressionException(expression);
 
             try
             {
-                var result = Calculate(outputs);
-                if (_cache.ContainsKey(expression))
-                    _cache[expression] = result;
+                var result = Calculate(output);
+
+                if (double.IsInfinity(result))
+                    throw new DivideByZeroException(expression);
+
+                if (double.IsNaN(result))
+                    throw new ExpressionException(expression);
+
                 return result;
             }
             catch (Exception)
@@ -448,149 +481,13 @@ namespace DotNetAsm
         }
 
         /// <summary>
-        /// Pre-evaluate the math expression string for hex strings, binary strings,
-        /// symbols, function calls, and unary operations before final evaluation.
-        /// </summary>
-        /// <param name="expression">The expression string to pre-evaluate.</param>
-        /// <returns>The modified expression string ready for final evaluation.</returns>
-        /// <exception cref="T:DotNetAsm.ExpressionException">DotNetAsm.ExpressionException</exception>
-        string PreEvaluate(string expression)
-        {
-            string unevaluated = expression;
-
-            expression = expression.Replace("<<", "≪")
-                                   .Replace(">>", "≫")
-                                   .Replace("==", "≡")
-                                   .Replace("&&", "∧")
-                                   .Replace("||", "∨")
-                                   .Replace("<=", "≤")
-                                   .Replace("!=", "≠")
-                                   .Replace(">=", "≥");
-
-            foreach (Regex r in _hexRegexes)
-                expression = r.Replace(expression, m => Convert.ToInt64(m.Groups[1].Value, 16).ToString());
-
-            expression = _regBinary.Replace(expression, delegate (Match m)
-            {
-                var binstring = m.Groups[1].Value.Replace("#", "1").Replace(".", "0");
-                return Convert.ToInt64(binstring, 2).ToString();
-            });
-
-            if (!ContainsSymbols(expression))
-                _cache.Add(unevaluated, Double.NaN);
-
-            expression = EvalUnaries(EvalFunctions(EvalDefinedSymbols(expression)));
-
-            foreach (var replacement in _replacements)
-                expression = replacement.Item1.Replace(expression, replacement.Item2);
-
-            return expression;
-        }
-
-        /// <summary>
         /// Evaluates a text string as a mathematical expression.
         /// </summary>
         /// <param name="expression">The string representation of the mathematical expression.</param>
         /// <returns>The result of the expression evaluation as a <see cref="T:System.Int64"/> value.</returns>
         /// <exception cref="T:DotNetAsm.ExpressionException">DotNetAsm.ExpressionException</exception>
         /// <exception cref="T:System.DivideByZeroException">System.DivideByZeroException</exception>
-        public long Eval(string expression) => (long)EvalInternal(expression);
-
-
-        /// <summary>
-        /// Calculates a <see cref="System.Collections.Generic.IEnumerable&lt;string&gt;"/> representing a postfix
-        /// mathematical expression into a real value.
-        /// </summary>
-        /// <param name="outputs">A <see cref="System.Collections.Generic.IEnumerable&lt;string&gt;"/></param>
-        /// <returns>The calculated value.</returns>
-        /// <exception cref="T:DotNetAsm.ExpressionException">DotNetAsm.ExpressionException</exception>
-        /// <exception cref="T:System.DivideByZeroException">System.DivideByZeroException</exception>"
-        double Calculate(IEnumerable<string> outputs)
-        {
-            var result = new Stack<double>();
-
-            bool needOperator = false;
-
-            foreach (string s in outputs)
-            {
-                if (double.TryParse(s, out double num))
-                {
-                    needOperator = result.Count > 0;
-                    result.Push(num);
-                }
-                else
-                {
-                    needOperator = false;
-                    var right = result.Pop();
-                    var left = result.Pop();
-
-                    switch (s)
-                    {
-                        case "+":
-                            result.Push(left + right);
-                            break;
-                        case "-":
-                            result.Push(left - right);
-                            break;
-                        case "*":
-                            result.Push(left * right);
-                            break;
-                        case "/":
-                            result.Push(left / right);
-                            break;
-                        case "&":
-                            result.Push((long)left & (long)right);
-                            break;
-                        case "|":
-                            result.Push((long)left | (long)right);
-                            break;
-                        case "^":
-                            result.Push((long)left ^ (long)right);
-                            break;
-                        case "%":
-                            result.Push((long)left % (long)right);
-                            break;
-                        case "≪":
-                            result.Push((int)left << (int)right);
-                            break;
-                        case "≫":
-                            result.Push((int)left >> (int)right);
-                            break;
-                        case "↑":
-                            result.Push(Math.Pow(left, right));
-                            break;
-                        case ">":
-                            result.Push(left > right ? 1 : 0);
-                            break;
-                        case "≥":
-                            result.Push(left >= right ? 1 : 0);
-                            break;
-                        case "≡":
-                            result.Push((long)left == (long)right ? 1 : 0);
-                            break;
-                        case "≠":
-                            result.Push((long)left != (long)right ? 1 : 0);
-                            break;
-                        case "≤":
-                            result.Push(left <= right ? 1 : 0);
-                            break;
-                        case "<":
-                            result.Push(left < right ? 1 : 0);
-                            break;
-                        case "∧":
-                            result.Push((int)left & (int)right);
-                            break;
-                        case "∨":
-                            result.Push((int)left | (int)right);
-                            break;
-                        default:
-                            throw new Exception();
-                    }
-                }
-            }
-            if (needOperator) throw new Exception();
-            return result.Pop();
-        }
+        public long Eval(string expression) => Eval(expression, Int32.MinValue, UInt32.MaxValue);
 
         /// <summary>
         /// Evaluates a text string as a mathematical expression.
@@ -607,8 +504,6 @@ namespace DotNetAsm
         public long Eval(string expression, long minval, long maxval)
         {
             var result = EvalInternal(expression);
-            if (double.IsInfinity(result))
-                throw new DivideByZeroException(expression);
             if (result < minval || result > maxval)
                 throw new OverflowException(expression);
             return (long)result;
@@ -626,17 +521,37 @@ namespace DotNetAsm
         /// Defines a symbol lookup for the evaluator to translate symbols (such as 
         /// variables) in expressions.
         /// </summary>
-        /// <param name="pattern">A regex pattern for the symbol</param>
-        /// <param name="lookupfunc">The lookup function to define the symbol</param>
+        /// <param name="pattern">A regex pattern for the symbol.</param>
+        /// <param name="lookupfunc">The lookup function to define the symbol.</param>
         /// <exception cref="T:System.ArgumentNullException">System.ArgumentNullException</exception>
         public void DefineSymbolLookup(string pattern, Func<string, string> lookupfunc)
         {
             var value = new Tuple<Regex, Func<string, string>>(new Regex(pattern, RegexOptions.Compiled), lookupfunc);
-            if (_symbolLookups.ContainsKey(pattern))
-                _symbolLookups[pattern] = value;
+            if (_regSymbolLookups.ContainsKey(pattern))
+                _regSymbolLookups[pattern] = value;
             else
-                _symbolLookups.Add(pattern, value);
+                _regSymbolLookups.Add(pattern, value);
         }
+
+        /// <summary>
+        /// Defines the symbol lookup for the evaluator to translate symbols (such as
+        /// variables) in expressions.
+        /// </summary>
+        /// <param name="lookupfunc">The lookup function to define the symbol.</param>
+        /// <exception cref="T:System.ArgumentNullException"></exception>
+        public void DefineSymbolLookup(Func<string, string> lookupfunc)
+        {
+            _symbolLookups.Add(lookupfunc);
+        }
+
+        /// <summary>
+        /// Determines if the specifed symbol is a constant to the evaluator and would be
+        /// evaulated as such.
+        /// </summary>
+        /// <returns><c>true</c>, if the symbol is a constant, <c>false</c> otherwise.</returns>
+        /// <param name="symbol">Symbol.</param>
+        public bool IsConstant(string symbol) => _constants.ContainsKey(symbol);
+
         #endregion
     }
 }

@@ -1,23 +1,8 @@
 ﻿//-----------------------------------------------------------------------------
-// Copyright (c) 2017, 2018 informedcitizenry <informedcitizenry@gmail.com>
+// Copyright (c) 2017-2019 informedcitizenry <informedcitizenry@gmail.com>
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to 
-// deal in the Software without restriction, including without limitation the 
-// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
-// sell copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
+// Licensed under the MIT license. See LICENSE for full license information.
 // 
-// The above copyright notice and this permission notice shall be included in 
-// all copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
-// IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
 using System;
@@ -31,12 +16,11 @@ namespace DotNetAsm
     /// An implementation of the <see cref="T:DotNetAsm.ILineAssembler"/> interface that assembles
     /// pseudo operations such as byte and string assembly.
     /// </summary>
-    public class PseudoAssembler : StringAssemblerBase, ILineAssembler
+    public sealed class PseudoAssembler : StringAssemblerBase, ILineAssembler
     {
         #region Members
 
         HashSet<BinaryFile> _includedBinaries;
-        readonly Dictionary<string, string> _typeDefs;
         Func<string, bool> _reservedSymbol;
 
         #endregion
@@ -54,12 +38,11 @@ namespace DotNetAsm
         {
             _includedBinaries = new HashSet<BinaryFile>();
 
-            Reserved.DefineType("PseudoOps", 
-                    ".addr", ".align", ".binary", ".byte", ".sbyte",   
-                    ".dint", ".dword", ".fill", ".lint", ".long", 
-                    ".sint", ".typedef", ".word"
+            Reserved.DefineType("PseudoOps",
+                    ".addr", ".align", ".binary", ".byte", ".sbyte",
+                    ".dint", ".dword", ".fill", ".lint", ".long",
+                    ".sint", ".word"
                 );
-            _typeDefs = new Dictionary<string, string>();
             _reservedSymbol = reservedSymbolFunc;
         }
 
@@ -107,7 +90,7 @@ namespace DotNetAsm
         /// <param name="minval">The minimum value based on the type.</param>
         /// <param name="maxval">The maximum value based on the type.</param>
         /// <param name="size">The precise size in bytes of the assembled value.</param>
-        protected void AssembleValues(SourceLine line, long minval, long maxval, int size)
+        void AssembleValues(SourceLine line, long minval, long maxval, int size)
         {
             var tokens = line.Operand.CommaSeparate();
             foreach (var t in tokens)
@@ -206,13 +189,6 @@ namespace DotNetAsm
             return binary;
         }
 
-        string GetInstruction(SourceLine line)
-        {
-            if (_typeDefs.ContainsKey(line.Instruction))
-                return _typeDefs[line.Instruction].ToLower();
-            return line.Instruction.ToLower();
-        }
-
         public void AssembleLine(SourceLine line)
         {
             if (Controller.Output.PCOverflow)
@@ -222,7 +198,7 @@ namespace DotNetAsm
                                         Controller.Output.LogicalPC);
                 return;
             }
-            var instruction = GetInstruction(line);
+            var instruction = line.Instruction.ToLower();
 
             switch (instruction)
             {
@@ -258,60 +234,13 @@ namespace DotNetAsm
                 case ".sint":
                     AssembleValues(line, short.MinValue, short.MaxValue, 2);
                     break;
-                case ".typedef":
-                    DefineType(line);
-                    break;
                 default:
                     AssembleStrings(line);
                     break;
             }
         }
 
-        /// <summary>
-        /// Define an existing type to a user-defined type.
-        /// </summary>
-        /// <param name="line">The <see cref="T:DotNetAsm.SourceLine"/> to assemble.</param>
-        void DefineType(SourceLine line)
-        {
-            if (string.IsNullOrEmpty(line.Label) == false)
-            {
-                Controller.Log.LogEntry(line, ErrorStrings.None);
-                return;
-            }
-            var csvs = line.Operand.CommaSeparate();
-            if (csvs.Count != 2)
-            {
-                Controller.Log.LogEntry(line, ErrorStrings.None);
-                return;
-            }
-            var currtype = csvs.First();
-            if (!Reserved.IsOneOf("PseudoOps", currtype) ||
-                !base.IsReserved(currtype))
-            {
-                Controller.Log.LogEntry(line, ErrorStrings.DefininingUnknownType, currtype);
-                return;
-            }
-
-            var newtype = csvs.Last();
-            if (!Regex.IsMatch(newtype, @"^\.?" + Patterns.SymbolUnicode + "$"))
-            {
-                Controller.Log.LogEntry(line, ErrorStrings.None);
-            }
-            else if (Controller.IsInstruction(newtype))
-            {
-                Controller.Log.LogEntry(line, ErrorStrings.TypeDefinitionError, newtype);
-            }
-            else if (_reservedSymbol(newtype))
-            {
-                Controller.Log.LogEntry(line, ErrorStrings.TypeNameReserved, newtype);
-            }
-            else
-            {
-                Controller.Log.LogEntry(line, ErrorStrings.Depricated, ".typedef", Controller.Options.WarningsAsErrors);
-            }
-        }
-
-        public virtual int GetInstructionSize(SourceLine line)
+        public int GetInstructionSize(SourceLine line)
         {
             if (string.IsNullOrEmpty(line.Operand))
             {
@@ -325,7 +254,7 @@ namespace DotNetAsm
                 Controller.Log.LogEntry(line, ErrorStrings.TooFewArguments, line.Instruction);
                 return 0;
             }
-            var instruction = GetInstruction(line);
+            var instruction = line.Instruction.ToLower();
 
             switch (instruction)
             {
@@ -368,11 +297,10 @@ namespace DotNetAsm
             }
         }
 
-        public virtual bool AssemblesInstruction(string instruction)
+        public bool AssemblesInstruction(string instruction)
         {
             return Reserved.IsOneOf("PseudoOps", instruction) ||
-                base.IsReserved(instruction) ||
-                _typeDefs.ContainsKey(instruction);
+                base.IsReserved(instruction);
         }
         #endregion
     }

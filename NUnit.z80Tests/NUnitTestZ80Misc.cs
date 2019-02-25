@@ -1,4 +1,5 @@
 ﻿using DotNetAsm;
+using z80DotNet;
 using NUnit.Framework;
 using System.Text.RegularExpressions;
 
