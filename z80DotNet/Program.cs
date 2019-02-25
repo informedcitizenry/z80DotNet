@@ -20,7 +20,7 @@ namespace z80DotNet
         {
             StringBuilder sb = new StringBuilder();
 
-			sb.AppendLine("z80DotNet, A Simple .Net Z80 Cross Assembler\n(C) Copyright 2017, 2018 informedcitizenry.");
+			sb.AppendLine("z80DotNet, A Simple .Net Z80 Cross Assembler\n(C) Copyright 2017-2019 informedcitizenry.");
             sb.AppendFormat("Version {0}.{1} Build {2}",
                                     Assembly.GetEntryAssembly().GetName().Version.Major,
                                     Assembly.GetEntryAssembly().GetName().Version.Minor,
