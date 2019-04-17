@@ -50,7 +50,7 @@ setborder:  call $229b       ; poke border color with acc.
 Trailing colons for jump instructions are optional.
 
 Once labels are defined they cannot be redinfed in other parts of code. This gets tricky as source grows, since one must choose a unique name for each label. There are a few ways to avoid this problem.
-``
+```
 routine1    ld  a,(hl)
             jr  z,_done
             call stdout
