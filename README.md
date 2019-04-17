@@ -964,6 +964,21 @@ done        ret
 </td></tr>
 </table>
 <table>
+<tr><td><b>Name</b></td><td><code>.dsegment</code></td></tr>
+<tr><td><b>Alias</b></td><td>None</td></tr>
+<tr><td><b>Definition</b></td><td>Declare a segment to be used in code. The segment declaration can precede its definition in the <code>.segment</code>/<code>.endsegment</code> block.
+</td></tr>
+<tr><td><b>Arguments</b></td><td>Segment name</td></tr>
+<tr><td><b>Example</b></td><td>
+<pre>
+      .dsegment code    ; >> a2 0f
+      .segment code
+            ldx #$0f
+      .endsegment
+</pre>
+</td></tr>
+</table>
+<table>
 <tr><td><b>Name</b></td><td><code>.echo</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
 <tr><td><b>Definition</b></td><td>Send a message to the console output. Note if the assembler
@@ -1260,7 +1275,7 @@ highcode_end
 <table>
 <tr><td><b>Name</b></td><td><code>.segment</code>/<code>.endsegment</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Defines a block of code as a segment, to be invoked and expanded elsewhere. Similar to macros but takes no parameters and symbols are not local. Useful for building large mix of source code and data without needing to relocate code manually. Segments can be defined within other segment block definitions, but are not considered "nested." Segment closures require the segment name after the directive.</td></tr>
+<tr><td><b>Definition</b></td><td>Defines a block of code as a segment, to be declared into source with the <code>.dsegment</code> directive. Similar to macros but takes no parameters and symbols are not local. Useful for building large mix of source code and data without needing to relocate code manually. Segments can be defined within other segment block definitions, but are not considered "nested." Segment closures require the segment name after the directive.</td></tr>
 <tr><td><b>Arguments</b></td><td><code>segmentname</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
@@ -1288,13 +1303,13 @@ glyph             ;12345678
             call init
             .endsegment code
             * = $8000
-            .bss
+            .dsegment bss
             * = $9000
-            .highvar
+            .dsegment highvar
             * = $5000
-            .code
+            .dsegment code
             * = $6000
-            .data
+            .dsegment data
 </pre>
 </td></tr>
 </table>
