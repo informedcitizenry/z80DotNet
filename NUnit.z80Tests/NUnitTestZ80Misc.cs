@@ -92,9 +92,9 @@ namespace NUnit.z80Tests
         [Test]
         public void TestFormatBuilderAdvanced()
         {
-            TestController controller = new TestController(null);
+            TestController controller = new TestController();
 
-            FormatBuilder builder = new FormatBuilder(@"^\(\s*(c)\s*\)\s*,\s*(.+)$()", "({0}),{3}", string.Empty, "{0}", 1, 3, 3, 2, controller.Options.RegexOption, controller.Evaluator);
+            FormatBuilder builder = new FormatBuilder(@"^\(\s*(c)\s*\)\s*,\s*(.+)$()", "({0}),{3}", string.Empty, "{0}", 1, 3, 3, 2, Assembler.Options.RegexOption, Assembler.Evaluator);
 
             OperandFormat fmt = builder.GetFormat("(c),0");
             Assert.IsNotNull(fmt);
@@ -108,7 +108,7 @@ namespace NUnit.z80Tests
             Assert.IsTrue(string.IsNullOrEmpty(fmt.Expression1));
             Assert.IsTrue(string.IsNullOrEmpty(fmt.Expression2));
 
-            builder = new FormatBuilder(@"^(.+)\s*,\s*\(\s*i(x|y)\s*((\+|-).+)\)(\s*,\s*[a-ehl])?$()", "{3},(i{0}+{2}){1}", "${0:x2}", "{0}", 2, 5, 3, 1, controller.Options.RegexOption, controller.Evaluator);
+            builder = new FormatBuilder(@"^(.+)\s*,\s*\(\s*i(x|y)\s*((\+|-).+)\)(\s*,\s*[a-ehl])?$()", "{3},(i{0}+{2}){1}", "${0:x2}", "{0}", 2, 5, 3, 1, Assembler.Options.RegexOption, Assembler.Evaluator);
 
             fmt = builder.GetFormat("0,(ix+$30),a");
             Assert.IsNotNull(fmt);
@@ -116,7 +116,7 @@ namespace NUnit.z80Tests
             Assert.AreEqual("+$30", fmt.Expression1);
             Assert.IsTrue(string.IsNullOrEmpty(fmt.Expression2));
 
-            builder = new FormatBuilder(@"^\(\s*i(x|y)\s*\+(.+)\)\s*,\s*(.+)$()", "(i{0}+{2}),{3}", "${0:x2}", "${1:x2}", 1, 4, 2, 3, controller.Options.RegexOption);
+            builder = new FormatBuilder(@"^\(\s*i(x|y)\s*\+(.+)\)\s*,\s*(.+)$()", "(i{0}+{2}),{3}", "${0:x2}", "${1:x2}", 1, 4, 2, 3, Assembler.Options.RegexOption);
 
             fmt = builder.GetFormat("(ix+$00),$ff");
             Assert.IsNotNull(fmt);

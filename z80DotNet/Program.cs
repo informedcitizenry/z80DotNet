@@ -36,11 +36,11 @@ namespace z80DotNet
         {
             IAssemblyController controller = sender as IAssemblyController;
 
-            string arch = controller.Options.Architecture.ToLower();
-            ushort progstart = Convert.ToUInt16(controller.Output.ProgramStart);
-            ushort progend = Convert.ToUInt16(controller.Output.ProgramCounter);
-            ushort size = Convert.ToUInt16(controller.Output.GetCompilation().Count);
-            string name = controller.Options.OutputFile;
+            string arch = Assembler.Options.Architecture.ToLower();
+            ushort progstart = Convert.ToUInt16(Assembler.Output.ProgramStart);
+            ushort progend = Convert.ToUInt16(Assembler.Output.ProgramCounter);
+            ushort size = Convert.ToUInt16(Assembler.Output.GetCompilation().Count);
+            string name = Assembler.Options.OutputFile;
 
             using(MemoryStream ms = new MemoryStream()) {
             using (BinaryWriter writer = new BinaryWriter(ms))

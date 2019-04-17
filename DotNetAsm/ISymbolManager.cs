@@ -5,6 +5,9 @@
 // 
 //-----------------------------------------------------------------------------
 
+using System;
+using System.Collections.Generic;
+
 namespace DotNetAsm
 {
     /// <summary>
@@ -39,8 +42,8 @@ namespace DotNetAsm
         /// appears in. This is needed for scoping purposes.</param>
         /// <param name="expression">The expression string.</param>
         /// <param name="scope">Scope information about the current expression.</param>
-        /// <param name="errorOnAnonymousNotFound">Raise an error if the anonymous symbol could
+        /// <param name="errorOnNotFound">Raise an error if the symbol could
         /// not be translated.</param>
-        string TranslateExpressionSymbols(SourceLine line, string expression, string scope, bool errorOnAnonymousNotFound);
+        List<ExpressionElement> TranslateExpressionSymbols(SourceLine line, string expression, string scope, bool errorOnNotFound);
     }
 }

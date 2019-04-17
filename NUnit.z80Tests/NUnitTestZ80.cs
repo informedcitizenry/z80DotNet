@@ -8,29 +8,10 @@ namespace NUnit.z80Tests
 {
     public class TestController : IAssemblyController
     {
-        public TestController(string[] args)
+        public TestController()
         {
-            Output = new Compilation(true);
-
-            Options = new AsmCommandLineOptions();
-
-            Log = new ErrorLog();
-
-            Encoding = new AsmEncoding(false);
-
-            Evaluator = new Evaluator();
-
-            Evaluator.DefineSymbolLookup("'.'", s => Convert.ToInt32(s.TrimOnce('\'').First()).ToString());
-
-            // to help throw errors 
-            Evaluator.DefineSymbolLookup(@"[a-ehilr]", s => string.Empty);
-
-            Labels = new LabelCollection(Options.StringComparar);
-
-            Variables = new VariableCollection(Options.StringComparar, Evaluator);
-
-            if (args != null)
-                Options.ParseArgs(args);
+            Assembler.Initialize();
+            Assembler.Evaluator.DefineParser(str => Assembler.Symbols.TranslateExpressionSymbols(new SourceLine(), str, string.Empty, false));
         }
 
         public void AddAssembler(ILineAssembler lineAssembler)
@@ -67,20 +48,6 @@ namespace NUnit.z80Tests
             throw new NotImplementedException();
         }
 
-        public Compilation Output { get; private set; }
-
-        public ErrorLog Log { get; private set; }
-
-        public SymbolCollectionBase Labels { get; private set; }
-
-        public VariableCollection Variables { get; private set; }
-
-        public IEvaluator Evaluator { get; private set; }
-
-        public AsmEncoding Encoding { get; private set; }
-
-        public ISymbolManager Symbols { get; private set; }
-
         public event CpuChangeEventHandler CpuChanged;
 
         public event DisplayBannerEventHandler DisplayingBanner;
@@ -99,7 +66,7 @@ namespace NUnit.z80Tests
 
         public NUnitTestZ80()
         {
-            _controller = new TestController(null);
+            _controller = new TestController();
             _asm = new z80Asm(_controller);
         }
 
@@ -108,15 +75,15 @@ namespace NUnit.z80Tests
             _asm.AssembleLine(line);
             if (positive)
             {
-                Assert.IsFalse(_controller.Log.HasErrors);
-                Assert.AreEqual(pc, _controller.Output.LogicalPC);
-                Assert.IsTrue(_controller.Output.GetCompilation().SequenceEqual(expected));
+                Assert.IsFalse(Assembler.Log.HasErrors);
+                Assert.AreEqual(pc, Assembler.Output.LogicalPC);
+                Assert.IsTrue(Assembler.Output.GetCompilation().SequenceEqual(expected));
                 Assert.AreEqual(disasm, line.Disassembly);
                 Assert.AreEqual(expected.Count(), _asm.GetInstructionSize(line));
             }
             else
             {
-                Assert.IsTrue(_controller.Log.HasErrors);
+                Assert.IsTrue(Assembler.Log.HasErrors);
             }
             ResetController();
         }
@@ -135,8 +102,8 @@ namespace NUnit.z80Tests
 
         private void ResetController()
         {
-            _controller.Output.Reset();
-            _controller.Log.ClearErrors();
+            Assembler.Output.Reset();
+            Assembler.Log.ClearErrors();
         }
 
         [Test]
@@ -355,17 +322,6 @@ namespace NUnit.z80Tests
             line.Operand = "(iy+$30)";
             size = _asm.GetInstructionSize(line);
             Assert.AreEqual(3, size);
-        }
-
-        [Test]
-        public void TestZ80SourceLine()
-        {
-            SourceLine line = new SourceLine();
-            line.SourceString = "ld a,$1000";
-            line.Parse(r => _asm.AssemblesInstruction(r));
-
-            Assert.AreEqual(line.Instruction, "ld");
-            Assert.AreEqual(line.Operand, "a,$1000");
         }
 
         [Test]
@@ -1451,7 +1407,7 @@ namespace NUnit.z80Tests
             SourceLine line = new SourceLine();
             line.Instruction = "jr";
             line.Operand = "$0000";
-            _controller.Output.SetPC(0x0006);
+            Assembler.Output.SetPC(0x0006);
             TestInstruction(line, 0x0008, new byte[] { 0x18, (byte)(256 - (0x0006 + 2)) }, "jr $0000");
 
             line.Operand = "$0006";
@@ -1460,14 +1416,14 @@ namespace NUnit.z80Tests
             line.Operand = "nz,$0006";
             TestInstruction(line, 0x0002, new byte[] { 0x20, 0x04 }, "jr nz,$0006");
 
-            _controller.Output.SetPC(0x0006);
+            Assembler.Output.SetPC(0x0006);
             line.Operand = "z,$0000";
             TestInstruction(line, 0x0008, new byte[] { 0x28, 0xf8 }, "jr z,$0000");
 
             line.Operand = "nc,$0006";
             TestInstruction(line, 0x0002, new byte[] { 0x30, 0x04 }, "jr nc,$0006");
 
-            _controller.Output.SetPC(0x0006);
+            Assembler.Output.SetPC(0x0006);
             line.Operand = "c,$0000";
             TestInstruction(line, 0x0008, new byte[] { 0x38, 0xf8 }, "jr c,$0000");
 

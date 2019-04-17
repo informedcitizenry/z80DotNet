@@ -1,5 +1,5 @@
 # z80DotNet, A Simple .Net-Based Z80 Cross-Assembler
-### Version 1.12.0
+### Version 1.13.0
 ## Introduction
 
 The z80DotNet Macro Assembler is a simple cross-assembler targeting the Zilog Z80 and compatible CPU. It is written for .Net (Version 4.5.1) and supports all of the published (legal) instructions of the Z80 processor, as well as most of the unpublished (illegal) operations. Like the MOS 6502, the Z80 was a popular choice for video game system and microcomputer manufacturers in the 1970s and mid-1980s. For more information, see [wiki entry](https://en.wikipedia.org/wiki/Zilog_Z80) or [Z80 resource page](http://www.z80.info/) to learn more about this microprocessor.
@@ -49,7 +49,27 @@ setborder:  call $229b       ; poke border color with acc.
 ```
 Trailing colons for jump instructions are optional.
 
-Using the `.block`/`.endblock` directives, labels can be placed in scope blocks to avoid the problem of label reduplication:
+Once labels are defined they cannot be redinfed in other parts of code. This gets tricky as source grows, since one must choose a unique name for each label. There are a few ways to avoid this problem.
+``
+routine1    ld  a,(hl)
+            jr  z,_done
+            call stdout
+            inc hl
+            jr  routine1
+_done       ret
+
+routine2    ld  c,flag
+            jr z,_done
+            jp  dosomething
+_done       ret
+```
+In the routine above, there are two labels called `_done` but the assembler will differentiate between them, since the second `_done` follows a different non-local label than the first.
+The first is to append the label with an underscore, making it a local label. 
+
+
+In addition to local labels, scope blocks can be used. All source inside a pair of `.block` and `.endblock` directives are considered local to that block, but can also be nested, making them much like namespaces.
+
+A scope block looks like this:
 ```
             ...
 endloop     ld  a,$ff    
@@ -74,7 +94,7 @@ wait_key    = $15d4
             call speccy.key_in  ; call the subroutine whose label        
                                 ; is defined in the speccy block
 ```
-Blocks can also be nested. Labels in unnamed blocks are only visible in their own block, and are unavailable outside:
+Any block not preceded by a label is an anonymous block. All symbols inside an anonymous block are only visible within the block, and are unavailable outside:
 ```
             .block
             call inc32
@@ -110,7 +130,7 @@ As you can see, anonymous labels, though convenient, would hinder readability if
 -           .byte $01, $02, $03
             ld  a,(-)           ; put anonymous label reference inside paranetheses.
 ```
-Label values are defined at first reference and cannot be changed. An alternative to labels are variables. Variables, like labels, are named references to values in operand expressions, but can be changed as often as required. A variable is declared with the `.let` directive, followed by an assignment expression. Variables and labels cannot share the same symbol name.
+Another type of named symbol besides a label is a variable. Variables, like labels, are named references to values in operand expressions, but whose value can be changed as often as required. A variable is declared with the `.let` directive, followed by an assignment expression. Variables and labels cannot share the same symbol name.
 ```
             .let myvar = 34
             ld  a,myvar
@@ -180,6 +200,13 @@ Note that if uninitialized data is defined, but thereafter initialized data is d
 highscore   .dword ?    ; uninitialized highscore variables
             xor a,a     ; The output is now 6 bytes in size
 ```
+Use the `.typedef` directive to redefine a type name. This is useful for cross- and backward-compatibility with other assemblers. Each type can have more than one definition.
+```
+            .typedef    .byte,   db
+            .typedef    .byte,   defb    ; multiple okay
+            .typedef    .string, asc
+```
+Only pseudo operations can have their types redefined. For mnemonics or other assembler directives consider using macros instead.
 ### Text processing and encoding
 #### Psuedo Ops
 In addition to integral values, z80DotNet can assemble Unicode text. Text strings are enclosed in double quotes, character literals in single quotes.
@@ -195,20 +222,13 @@ Strings can be assembled in a few different ways, according to the needs of the 
 | `.pstring`    | A Pascal-style string, its size in the first byte                             |
 
 Since `.pstring` strings use a single byte to denote size, no string can be greater than 255 bytes. Since `.nstring` and `.lsstring` make use of the high and low bits, bytes must not be greater in value than 127, nor less than 0.
-#### String Functions
-There are two special string functions. The first, `str()`, will convert an integral value to its equivalent in bytes:
+#### String Format function
+The special function `format()` function allows you to convert non-string data to string data using a .Net format string:
 ```
-start       = $c000
-
-startstr    .string str(start) ; assembles as $34,$39,$31,$35,$32
-                               ; literally the digits "4","9","1","5","2"
-```      
-The `format()` function allows you to convert non-string data to string data using a .Net format string:
-```
-stdout      = $15ef
+stdout      = $ffd2
 stdstring   .string format("The stdout routine is at ${0:X4}", stdout)
             ;; will assemble to:
-            ;; "The stdout routine is at $15EF"
+            ;; "The stdout routine is at $FFD2
 
 ```
 #### Encodings
@@ -333,7 +353,9 @@ charC:
             ldir
 ```
 ### Mathematical and Conditional Expressions
-All non-string operands are treated as math or conditional expressions. Compound expressions are nested in paranetheses. There are several available operators for both binary and unary expressions.
+
+All non-string operands are treated as math or conditional expressions. Compound expressions are nested in paranetheses. There are several available operators for both binary and unary expressions. The order of operation generally follows that the .Net languages for matching operators, with the byte extractors taking highest precedence.
+
 #### Binary Operations
 | Operator      | Meaning                        |
 | :-----------: | ------------------------------ |
@@ -356,6 +378,14 @@ All non-string operands are treated as math or conditional expressions. Compound
 | >             | Greater than                   |
 | &&            | Logical AND                    |
 | &#124;&#124;  | Logical OR                     |
+```
+            .addr   HIGHSCORE + 3 * 2 ; the third address from HIGHSCORE
+            .byte   * > $f000         ; if program counter > $f000, assemble as 1
+                                      ; else 0
+
+            ;; bounds check START_ADDR                          
+            .assert START_ADDR >= MIN && START_ADDR <= MAX
+```
 #### Unary Operations
 | Operator      | Meaning                        |
 | :-----------: | ------------------------------ |
@@ -365,19 +395,33 @@ All non-string operands are treated as math or conditional expressions. Compound
 | ^             | Bank (third) byte              |
 | !             | Logical NOT                    |
 ```
-            .addr   HIGHSCORE + 3 * 2 ; the third address from HIGHSCORE
-            .byte   * > $f000         ; if program counter > $f000, assemble as 1
-                                      ; else 0
 
-            ;; bounds check START_ADDR                          
-            .assert START_ADDR >= MIN && START_ADDR <= MAX
+            lda #>routine-1     ; routine MSB
+            pha
+            lda #<routine-1     ; routine LSB
+            pha                 
+            rts                 ; RTS jump to "routine"
+
+routine     lda &long_address   ; load the absolute value of long_address
+                                ; (truncate bank byte) into accummulator
 ```
+#### Math functions
 Several built-in math functions that can also be called as part of the expressions.
 ```
             ld  a,sqrt(25)
 ```
 See the section below on functions for a full list of available functions.
+
+#### Math constants
+The math constants π and _e_ are defined as `MATH_PI` and `MATH_E`, respectively, and can be referenced in expressions as follows:
+```
+            .dword sin(MATH_PI/3) * 10  ; > 08
+            .dword pow(MATH_E,2)        ; > 07
+```
+Not that no labels or variables can share these two names as they are reserved.
+
 ## Addressing model
+
 By default, programs start at address 0, but you can change this by setting the program counter before the first assembled byte. While many Z80 assemblers used `$` to denote the program counter, z80DotNet uses the `*` symbol. The assignment can be either a constant or expression:
 ```
             * = ZP + 1000       ; program counter now 1000 bytes offset from 
@@ -458,7 +502,8 @@ This macro expands to:
             inc (hl)
 +           ...
 ```
-Segments are conceptually identical to macros, except they do not accept parameters and are usually used as larger segments of relocatable code. Segments are defined between `.segment`/`.endsegment` blocks with the segment name after each closure directive.
+Segments are conceptually identical to macros, except they do not accept parameters and are usually used as larger segments of relocatable code. Segments are defined between `.segment`/`.endsegment` blocks with the segment name after each closure directive, then
+are declared into the source using the `.dsegment` directive, followed by the segment name. Unlike macros, segments can be declared before they are defined.
 ```
             .segment RAM
 
@@ -480,10 +525,10 @@ var2        .word ?
 Then you would assemble defined segments as follows:
 ```
             * = $0000
-            .code
+            .dsegment code
             .errorif * > $3fff, ".code segment outside of ROM space!"
             * = $4000
-            .RAM
+            .dsegment RAM
 
 ```        
 You can also define segments within other segment definitions. Note that doing this does not make them "nested." The above example would be re-written as:
@@ -505,13 +550,12 @@ variables   .byte ?
             .endsegment program
 
             * = $0000
-            .code
+            .dsegment code
             * = $4000
-            .bss
+            .dsegment bss
             * = $d000
-            .hivars
+            .dsegment hivars
 ```
-Macros and segments must be defined before they can be invoked.
 ## Flow Control
 In cases where you want to control the flow of assembly, either based on certain conditions (environmental or target architecture) or in certain iterations, z80DotNet provides certain directives to handle this.
 ### Conditional Assembly
@@ -1269,7 +1313,17 @@ glyph             ;12345678
 </table>
 <table>
 <tr><td><b>Name</b></td><td><code>.typedef</code></td></tr>
-<tr><td><b>Note</b></td><td>This feature is currently disabled for now due to a technical issue that caused it not to work correctly in all cases.</td></tr>
+<tr><td><b>Alias</b></td><td>None</td></tr>
+<tr><td><b>Definition</b></td><td>Define an existing Pseudo-Op to a user-defined type. The type name adheres to the same rules as labels and variables and cannot be an existing symbol or instruction.</td></tr>
+<tr><td><b>Arguments</b></td><td><code>type, typename</code></td></tr>
+<tr><td><b>Example</b></td><td>
+<pre>
+            .typedef   .byte, defb
+
+            * = $c000
+            defb 0,1,2,3 ; >c000 00 01 02 03
+</pre>
+</td></tr>
 </table>
 <table>
 <tr><td><b>Name</b></td><td><code>.unmap</code></td></tr>
