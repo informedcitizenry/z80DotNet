@@ -712,11 +712,11 @@ namespace NUnit.z80Tests
             TestInstruction(line, 0x0002, new byte[] { 0xdd, 0x63 }, "ld ixh,e");
 
             line.Operand = "ixh,h";
-            TestForFailure<ExpressionException>(line);
-            
+            TestForFailure<SymbolNotDefinedException>(line);
+
             line.Operand = "ixh,l";
-            TestForFailure<ExpressionException>(line);
-            
+            TestForFailure<SymbolNotDefinedException>(line);
+
             line.Operand = "ixh,ixh";
             TestInstruction(line, 0x0002, new byte[] { 0xdd, 0x64 }, "ld ixh,ixh");
 
@@ -742,10 +742,10 @@ namespace NUnit.z80Tests
             TestInstruction(line, 0x0002, new byte[] { 0xdd, 0x6b }, "ld ixl,e");
 
             line.Operand = "ixl,h";
-            TestForFailure<ExpressionException>(line);
+            TestForFailure<SymbolNotDefinedException>(line);
             
             line.Operand = "ixl,l";
-            TestForFailure<ExpressionException>(line);
+            TestForFailure<SymbolNotDefinedException>(line);
             
             line.Operand = "ixl,ixh";
             TestInstruction(line, 0x0002, new byte[] { 0xdd, 0x6c }, "ld ixl,ixh");
@@ -859,11 +859,11 @@ namespace NUnit.z80Tests
             TestInstruction(line, 0x0002, new byte[] { 0xfd, 0x63 }, "ld iyh,e");
 
             line.Operand = "iyh,h";
-            TestForFailure<ExpressionException>(line);
+            TestForFailure<SymbolNotDefinedException>(line);
             //TestInstruction(line, 0x0002, new byte[] { 0xfd, 0x64 }, "ld iyh,h");
 
             line.Operand = "iyh,l";
-            TestForFailure<ExpressionException>(line);
+            TestForFailure<SymbolNotDefinedException>(line);
             
             line.Operand = "iyh,iyh";
             TestInstruction(line, 0x0002, new byte[] { 0xfd, 0x64 }, "ld iyh,iyh");
@@ -890,11 +890,11 @@ namespace NUnit.z80Tests
             TestInstruction(line, 0x0002, new byte[] { 0xfd, 0x6b }, "ld iyl,e");
 
             line.Operand = "iyl,h";
-            TestForFailure<ExpressionException>(line);
+            TestForFailure<SymbolNotDefinedException>(line);
             //TestInstruction(line, 0x0002, new byte[] { 0xfd, 0x6c }, "ld iyl,h");
 
             line.Operand = "iyl,l";
-            TestForFailure<ExpressionException>(line);
+            TestForFailure<SymbolNotDefinedException>(line);
             //TestInstruction(line, 0x0002, new byte[] { 0xfd, 0x6d }, "ld iyl,l");
 
             line.Operand = "iyl,iyh";
