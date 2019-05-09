@@ -1,5 +1,5 @@
 # z80DotNet, A Simple .Net-Based Z80 Cross-Assembler
-### Version 1.13.0
+### Version 1.14.0
 ## Introduction
 
 The z80DotNet Macro Assembler is a simple cross-assembler targeting the Zilog Z80 and compatible CPU. It is written for .Net (Version 4.5.1) and supports all of the published (legal) instructions of the Z80 processor, as well as most of the unpublished (illegal) operations. Like the MOS 6502, the Z80 was a popular choice for video game system and microcomputer manufacturers in the 1970s and mid-1980s. For more information, see [wiki entry](https://en.wikipedia.org/wiki/Zilog_Z80) or [Z80 resource page](http://www.z80.info/) to learn more about this microprocessor.
@@ -47,7 +47,7 @@ When writing assembly, hand-coding branches, addresses and constants can be time
             ...
 setborder:  call $229b       ; poke border color with acc.
 ```
-Trailing colons for jump instructions are optional.
+Trailing colons for labels are optional.
 
 Once labels are defined they cannot be redinfed in other parts of code. This gets tricky as source grows, since one must choose a unique name for each label. There are a few ways to avoid this problem.
 ```
@@ -279,7 +279,7 @@ A further note about encodings and source files. As mentioned, source files are 
 
 #### Escape sequences
 
-All .Net escape sequences will also output, including Unicode.
+Most [.Net escape sequences](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/strings/#string-escape-sequences) will also output, including Unicode.
 
 ```
             .string "He said, \"How are you?\""
@@ -396,14 +396,9 @@ All non-string operands are treated as math or conditional expressions. Compound
 | !             | Logical NOT                    |
 ```
 
-            lda #>routine-1     ; routine MSB
-            pha
-            lda #<routine-1     ; routine LSB
-            pha                 
-            rts                 ; RTS jump to "routine"
-
-routine     lda &long_address   ; load the absolute value of long_address
-                                ; (truncate bank byte) into accummulator
+            ld  h, #>routine    ; routine MSB
+            ld  l, #<routine    ; routine LSB
+            jp  (hl)                        
 ```
 #### Math functions
 Several built-in math functions that can also be called as part of the expressions.
@@ -501,6 +496,21 @@ This macro expands to:
             inc hl
             inc (hl)
 +           ...
+```
+Parameter insertions also work in string literals, but the parameter formatting is more like a .Net string format with a `@` symbol in front:
+```
+hello       .macro name
+            .string "Hello, @{name}."
+            .endmacro
+```
+Parameters can be referenced by number in this way:
+```         
+today       .macro
+            .string "Today is @{1}"
+            .endmacro
+
+        ;; Expansion of ".today Tuesday""
+            .string "Today is Tuesday"
 ```
 Segments are conceptually identical to macros, except they do not accept parameters and are usually used as larger segments of relocatable code. Segments are defined between `.segment`/`.endsegment` blocks with the segment name after each closure directive, then
 are declared into the source using the `.dsegment` directive, followed by the segment name. Unlike macros, segments can be declared before they are defined.
@@ -971,9 +981,9 @@ done        ret
 <tr><td><b>Arguments</b></td><td>Segment name</td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
-      .dsegment code    ; >> a2 0f
+      .dsegment code    ; >> 06 0f
       .segment code
-            ldx #$0f
+            ld  b,$0f
       .endsegment
 </pre>
 </td></tr>
@@ -1749,7 +1759,9 @@ z80DotNet.exe --version
 
 ### Error messages
 
-`Assertion Failed` - An assertion failed due to the condition evaluating as false.
+`Addressing mode is not supported for instruction` - The instruction does not support the addressing mode of the operand expression.
+
+`Assertion failed` - An assertion failed due to the condition evaluating as false.
 
 `Attempted to divide by zero.` - The expression attempted a division by zero.
 
@@ -1765,7 +1777,11 @@ z80DotNet.exe --version
 
 `Could not process binary file` - The binary file could not be opened or processed.
 
+`Default parameter assignment error` - The parameter in the macro definition could not be a default value.
+
 `Directive takes no arguments` - An argument is present for a pseudo-op or directive that takes no arguments.
+
+`Duplicate paramater name found` - The macro definition contains one or more parameters that have already been defined.
 
 `Encoding is not a name or option` - The encoding selected is not a valid name.
 
@@ -1774,8 +1790,6 @@ z80DotNet.exe --version
 `error: option requires a value` -  An option was passed in the command-line that expected an argument that was not supplied.
 
 `<Feature> is depricated` - The instruction or feature is depricated (this is a warning by default).
-
-`File previously included. Possible circular reference?` - An input file was given in the command-line or a directive was issued to include a source file that was previously include.
 
 `Filename not specified` - A directive expected a filename that was not provided.
 
@@ -1789,9 +1803,13 @@ z80DotNet.exe --version
 
 `Invalid parameter reference` - The macro reference does not reference a defined parameter.
 
+`Invalid parameter(s)` - The parameters defined for the macro are not valid.
+
 `Invalid Program Counter assignment` - An attempt was made to set the program counter to an invalid value.
 
 `Label is not the leftmost character` - The label is not the leftmost character in the line (this is a warning by default).
+
+`Macro expects a value for parameter; no default value defined` - The macro expects a parameter that was not supplied.
 
 `Macro or segment is being called recursively` - A macro or segment is being invoked in its own definition.
 
@@ -1804,6 +1822,8 @@ z80DotNet.exe --version
 `Missing closure for macro` - The macro does not have a closure.
 
 `Missing closure for segment` - A segment does not have a closure.
+
+`Parameter name invalid` - The parameter for the macro definition has an invalid name.
 
 `Program Counter overflow` - The program counter overflowed passed the allowable limit.
 
@@ -1840,3 +1860,4 @@ z80DotNet.exe --version
 `Unknown instruction or incorrect parameters for instruction` - An directive or instruction was encountered that was unknown, or the operand provided is incorrect.
 
 `Unknown or invalid expression` - There was an error evaluating the expression.
+

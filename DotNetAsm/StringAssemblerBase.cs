@@ -28,7 +28,7 @@ namespace DotNetAsm
         /// <summary>
         /// Constructs a <see cref="T:DotNetAsm.StringAssemblerBase"/> class.
         /// </summary>
-        protected StringAssemblerBase()
+        protected StringAssemblerBase() 
         {
             Reserved.DefineType("Directives",
                     ".cstring", ".lsstring", ".nstring", ".pstring", ".string"
@@ -149,7 +149,7 @@ namespace DotNetAsm
                 {
                     throw new ArgumentException(p);
                 }
-            }
+            }   
             var unescaped = Regex.Unescape(quoted);
             if (unescaped.First().Equals('"'))
                 return unescaped.TrimOnce('"');
@@ -190,7 +190,7 @@ namespace DotNetAsm
                         }
                         else
                         {
-                            size += atoi.Length;//Assembler.Encoding.GetByteCount(atoi);
+                            size += atoi.Length;
                         }
                     }
                 }

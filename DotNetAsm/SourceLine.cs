@@ -6,9 +6,7 @@
 //-----------------------------------------------------------------------------
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 
 namespace DotNetAsm
 {
@@ -60,18 +58,9 @@ namespace DotNetAsm
         #region Methods
 
         /// <summary>
-        /// A unique identifier combination of the source's filename and line number.
+        /// Reset the SourceLine's label, instruction and operand.
         /// </summary>
-        /// <returns>The identifier string.</returns>
-        public string SourceInfo()
-        {
-            string file = Filename;
-            if (file.Length > 14)
-                file = Filename.Substring(0, 14) + "...";
-            return string.Format("{0, -17}({1})", file, LineNumber);
-        }
-
-        #endregion
+        public void Reset() => Label = Instruction = Operand = string.Empty;
 
         #region Override Methods
 
@@ -79,21 +68,28 @@ namespace DotNetAsm
         {
             if (DoNotAssemble)
                 return string.Format("Do Not Assemble {0}", SourceString);
+
+            if (IsParsed)
             return string.Format("Line {0} ${1:X4} [ID={2}] L:{3} I:{4} O:{5}",
                                                         LineNumber
                                                       , PC
                                                       , Id
-                                                      , Label
+                                                      , Label.Substring(0,30)
                                                       , Instruction
-                                                      , Operand);
+                                                      , Operand.Substring(0,30));
+            return string.Format("Line {0} ${1:X4} [ID={2}] {3}",
+                                                        LineNumber
+                                                      , PC
+                                                      , Id
+                                                      , SourceString);
         }
 
-        public override int GetHashCode() => LineNumber.GetHashCode() |
+        public override int GetHashCode() => LineNumber.GetHashCode() | 
                                              Filename.GetHashCode() |
                                              SourceString.GetHashCode();
 
         public override bool Equals(object obj)
-                => obj != null &&
+                => obj != null && 
                    (ReferenceEquals(this, obj) ||
                     (obj is SourceLine && this.Equals((SourceLine)obj)));
 
@@ -101,7 +97,7 @@ namespace DotNetAsm
 
         #region IEquatable
 
-        public bool Equals(SourceLine other) =>
+        public bool Equals(SourceLine other) => 
                     other.LineNumber == LineNumber &&
                     other.Filename.Equals(Filename) &&
                     other.SourceString.Equals(SourceString);
@@ -121,6 +117,8 @@ namespace DotNetAsm
             Scope = this.Scope,
             PC = this.PC
         };
+
+        #endregion
 
         #endregion
 

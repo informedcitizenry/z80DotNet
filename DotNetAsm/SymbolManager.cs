@@ -90,13 +90,13 @@ namespace DotNetAsm
             if (line.Label.Equals("+"))
             {
                 _anonPlusLines.Add(line.Id, line);
-            }
+            }    
             else if (line.Label.Equals("-"))
             {
                 _anonMinusLines.Add(line.Id, line);
                 // ordered dictionary is invalid now
                 _orderedMinusLines = null;
-            }
+            }    
         }
 
         long GetFirstAnonymousLabelFrom(SourceLine fromLine, string direction)
@@ -112,20 +112,20 @@ namespace DotNetAsm
                 if (forward)
                 {
                     searched = _anonPlusLines.FirstOrDefault(l => l.Key > id);
-                }
+                }    
                 else
                 {
                     if (_orderedMinusLines == null)
                         _orderedMinusLines = _anonMinusLines.OrderByDescending(l => l.Key).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
                     searched = _orderedMinusLines.FirstOrDefault(l => l.Key < id);
-                }
+                }  
                 found = searched.Value;
 
                 if (found == null)
                     break;
-
-                if (string.IsNullOrEmpty(found.Scope) || found.Scope.Equals(fromLine.Scope, Assembler.Options.StringComparison) ||
-                    (fromLine.Scope.Length > found.Scope.Length &&
+                
+                if (string.IsNullOrEmpty(found.Scope) || found.Scope.Equals(fromLine.Scope, Assembler.Options.StringComparison) || 
+                    (fromLine.Scope.Length > found.Scope.Length && 
                      found.Scope.Equals(fromLine.Scope.Substring(0, found.Scope.Length), Assembler.Options.StringComparison)))
                     count--;
 
@@ -213,7 +213,7 @@ namespace DotNetAsm
             }
             var elements = Assembler.Evaluator.ParseElements(translated.ToString()).ToList();
 
-            for (int i = 0; i < elements.Count; i++)
+            for(int i = 0; i < elements.Count; i++)
             {
                 if (elements[i].type == ExpressionElement.Type.Operand && (elements[i].word[0] == '_' || char.IsLetter(elements[i].word[0])))
                 {
@@ -228,7 +228,7 @@ namespace DotNetAsm
                         {
                             word = "-",
                             type = ExpressionElement.Type.Operator,
-                            subtype = ExpressionElement.Subtype.Unary
+                            subType = ExpressionElement.Subtype.Unary
                         });
                         i++;
                         symbol = symbol.Substring(1);
@@ -237,7 +237,7 @@ namespace DotNetAsm
                     {
                         word = symbol,
                         type = ExpressionElement.Type.Operand,
-                        subtype = ExpressionElement.Subtype.None
+                        subType = ExpressionElement.Subtype.None
                     };
                 }
             }

@@ -117,8 +117,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AddressingModeNotSupported" xml:space="preserve">
+    <value>Addressing mode not supported for instruction '{0}'</value>
+  </data>
   <data name="AssertionFailure" xml:space="preserve">
-    <value>Assertion Failed: '{0}'</value>
+    <value>Assertion failed: '{0}'</value>
   </data>
   <data name="BadExpression" xml:space="preserve">
     <value>Unknown or invalid expression: '{0}'</value>
@@ -150,11 +153,14 @@
   <data name="FilenameNotSpecified" xml:space="preserve">
     <value>Filename not specified</value>
   </data>
-  <data name="FilePreviouslyIncluded" xml:space="preserve">
-    <value>File {0} previously included. Possible circular reference?</value>
-  </data>
   <data name="IllegalQuantity" xml:space="preserve">
     <value>Illegal quantity '{0}'</value>
+  </data>
+  <data name="InstructionNotSupported" xml:space="preserve">
+    <value>The instruction '{0}' is not supported for the selected CPU</value>
+  </data>
+  <data name="InvalidParameters" xml:space="preserve">
+    <value>Invalid parameter(s) ({0})</value>
   </data>
   <data name="InvalidParamRef" xml:space="preserve">
     <value>Invalid parameter reference '{0}'</value>
@@ -177,6 +183,9 @@
   <data name="MacroParamIncorrect" xml:space="preserve">
     <value>Macro parameter reference must be a letter or digit</value>
   </data>
+  <data name="MacroParamNoDefault" xml:space="preserve">
+    <value>Macro '{0}' expects a value for parameter {1}; no default value defined</value>
+  </data>
   <data name="MacroParamNotSpecified" xml:space="preserve">
     <value>Macro parameter not specified</value>
   </data>
@@ -192,6 +201,9 @@
   <data name="None" xml:space="preserve">
     <value>General syntax error</value>
   </data>
+  <data name="ParameterNameInvalid" xml:space="preserve">
+    <value>Parameter name '{0}' invalid</value>
+  </data>
   <data name="PCOverflow" xml:space="preserve">
     <value>Program Counter overflow '{0}'</value>
   </data>
@@ -203,6 +215,9 @@
   </data>
   <data name="RecursiveMacro" xml:space="preserve">
     <value>Macro or segment '{0}' is being called recursively</value>
+  </data>
+  <data name="SegmentNotDefined" xml:space="preserve">
+    <value>Segment '{0}' is not defined</value>
   </data>
   <data name="TooFewArguments" xml:space="preserve">
     <value>Too few arguments for directive '{0}'</value>

@@ -47,6 +47,12 @@ namespace DotNetAsm {
             }
         }
         
+        public static string AddressingModeNotSupported {
+            get {
+                return ResourceManager.GetString("AddressingModeNotSupported", resourceCulture);
+            }
+        }
+        
         public static string AssertionFailure {
             get {
                 return ResourceManager.GetString("AssertionFailure", resourceCulture);
@@ -113,15 +119,21 @@ namespace DotNetAsm {
             }
         }
         
-        public static string FilePreviouslyIncluded {
-            get {
-                return ResourceManager.GetString("FilePreviouslyIncluded", resourceCulture);
-            }
-        }
-        
         public static string IllegalQuantity {
             get {
                 return ResourceManager.GetString("IllegalQuantity", resourceCulture);
+            }
+        }
+        
+        public static string InstructionNotSupported {
+            get {
+                return ResourceManager.GetString("InstructionNotSupported", resourceCulture);
+            }
+        }
+        
+        public static string InvalidParameters {
+            get {
+                return ResourceManager.GetString("InvalidParameters", resourceCulture);
             }
         }
         
@@ -167,6 +179,12 @@ namespace DotNetAsm {
             }
         }
         
+        public static string MacroParamNoDefault {
+            get {
+                return ResourceManager.GetString("MacroParamNoDefault", resourceCulture);
+            }
+        }
+        
         public static string MacroParamNotSpecified {
             get {
                 return ResourceManager.GetString("MacroParamNotSpecified", resourceCulture);
@@ -197,6 +215,12 @@ namespace DotNetAsm {
             }
         }
         
+        public static string ParameterNameInvalid {
+            get {
+                return ResourceManager.GetString("ParameterNameInvalid", resourceCulture);
+            }
+        }
+        
         public static string PCOverflow {
             get {
                 return ResourceManager.GetString("PCOverflow", resourceCulture);
@@ -218,6 +242,12 @@ namespace DotNetAsm {
         public static string RecursiveMacro {
             get {
                 return ResourceManager.GetString("RecursiveMacro", resourceCulture);
+            }
+        }
+        
+        public static string SegmentNotDefined {
+            get {
+                return ResourceManager.GetString("SegmentNotDefined", resourceCulture);
             }
         }
         

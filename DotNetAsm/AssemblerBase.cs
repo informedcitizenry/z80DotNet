@@ -39,7 +39,7 @@ namespace DotNetAsm
         /// passed will re-initialize the common Options object.
         /// </summary>
         /// <param name="args">The commandline arguments.</param>
-        public static void Initialize(string[] args)
+        public static void Initialize(string[] args) 
         {
             Options = new AsmCommandLineOptions();
 
@@ -100,7 +100,7 @@ namespace DotNetAsm
     /// </summary>
     public abstract class AssemblerBase
     {
-
+   
         #region Constructors
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace DotNetAsm
         /// </summary>
         /// <param name="token">The token to check if reserved</param>
         /// <returns><c>True</c> if reserved, otherwise <c>false</c>.</returns>
-        public virtual bool IsReserved(string token) { return false; }
+        public virtual bool IsReserved(string token) => Reserved.IsReserved(token);
 
         #endregion
 
