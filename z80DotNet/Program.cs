@@ -39,7 +39,7 @@ namespace z80DotNet
             string arch = Assembler.Options.Architecture.ToLower();
             ushort progstart = Convert.ToUInt16(Assembler.Output.ProgramStart);
             ushort progend = Convert.ToUInt16(Assembler.Output.ProgramCounter);
-            ushort size = Convert.ToUInt16(Assembler.Output.GetCompilation().Count);
+            int size = Assembler.Output.GetCompilation().Count;
             string name = Assembler.Options.OutputFile;
 
             using(MemoryStream ms = new MemoryStream()) {

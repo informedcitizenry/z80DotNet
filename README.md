@@ -1,5 +1,5 @@
 # z80DotNet, A Simple .Net-Based Z80 Cross-Assembler
-### Version 1.14.0
+### Version 1.14.0.1
 ## Introduction
 
 The z80DotNet Macro Assembler is a simple cross-assembler targeting the Zilog Z80 and compatible CPU. It is written for .Net (Version 4.5.1) and supports all of the published (legal) instructions of the Z80 processor, as well as most of the unpublished (illegal) operations. Like the MOS 6502, the Z80 was a popular choice for video game system and microcomputer manufacturers in the 1970s and mid-1980s. For more information, see [wiki entry](https://en.wikipedia.org/wiki/Zilog_Z80) or [Z80 resource page](http://www.z80.info/) to learn more about this microprocessor.
@@ -802,7 +802,7 @@ expressed bytes will be outputted until the point the program counter reaches it
             and a               ; clear carry
             ld  de,screenbuf
             ld  hl,message
-            -       ld  a,(hl)          ; next char
+-           ld  a,(hl)          ; next char
             rrca                ; shift right
             ld  (de),a          ; save in buffer
             jr  c,done          ; carry set on shift? done
@@ -875,7 +875,7 @@ message     .nstring "hello"
 <table>
 <tr><td><b>Name</b></td><td><code>.string</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Insert a string into the assembly. Multiple arguments can be passed, with a null only inserted at the end of the argument list. If <code>?</code> is passed then the data is an uninitialized byte. Enclosed text is assembled as string-literal while expressions are assembled to the minimum number of bytes required for storage, in little-endian byte order.</td></tr>
+<tr><td><b>Definition</b></td><td>Insert a string into the assembly. Multiple arguments can be passed. If <code>?</code> is passed then the data is an uninitialized byte. Enclosed text is assembled as string-literal while expressions are assembled to the minimum number of bytes required for storage, in little-endian byte order.</td></tr>
 <tr><td><b>Arguments</b></td><td><code>value[, value[, ...]</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
@@ -981,7 +981,7 @@ done        ret
 <tr><td><b>Arguments</b></td><td>Segment name</td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
-      .dsegment code    ; >> 06 0f
+      .dsegment code    ; > 06 0f
       .segment code
             ld  b,$0f
       .endsegment
@@ -1004,7 +1004,7 @@ is in quiet mode, no output will be given.</td></tr>
 <table>
 <tr><td><b>Name</b></td><td><code>.encoding</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Select the text encoding for assembly output. The default is <code>none</code>, which is not affected by <code>.map</code> and <code>.unmap</code> directives. Note: <code>none</code> is default and will not be affected by <code>.map</code> and <code>.unmap</code> directives.
+<tr><td><b>Definition</b></td><td>Select the text encoding for assembly output. The default is <code>none</code>, which is not affected by <code>.map</code> and <code>.unmap</code> directives.
 </td></tr>
 <tr><td><b>Arguments</b></td><td><code>encoding</code></td></tr>
 <tr><td><b>Example</b></td><td>
@@ -1046,7 +1046,7 @@ done        ...                 ; assembly will never
 <tr><td><b>Name</b></td><td><code>.equ</code></td></tr>
 <tr><td><b>Alias</b></td><td><code>=</code></td></tr>
 <tr><td><b>Definition</b></td><td>Assign the label, anonymous symbol, or program counter to the expression. Note that there is an implied version of this directive, such that if the directive and expression are ommitted altogether, the label or symbol is set to the program counter.</td></tr>
-<tr><td><b>Arguments</b></td><td><code>symbol, value</code></td></tr>
+<tr><td><b>Arguments</b></td><td><code>value</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
 stdin       .equ $10a8
@@ -1077,8 +1077,8 @@ start       ; same as start .equ *
             * = $5000
             nop
             .errorif * > $5001, "Uh oh!" ; if program counter
-                                        ; is greater than 20481,
-                                        ; raise a custom error
+                                         ; is greater than 20481,
+                                         ; raise a custom error
 </pre>
 </td></tr>
 </table>
@@ -1116,7 +1116,7 @@ start       ; same as start .equ *
 <table>
 <tr><td><b>Name</b></td><td><code>.for</code>/<code>.next</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Repeat until codition is met. The iteration variable can be used in source like any other variable. Multiple iteration expressions can be specified.</td></tr>
+<tr><td><b>Definition</b></td><td>Repeat until codition is met. The iteration variable can be used in source like any other variable. Multiple iteration expressions can be specified. This operation is only performed on first pass.</td></tr>
 <tr><td><b>Arguments</b></td><td><code>[init_expression], condition[, iteration_expression[, ...]</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
@@ -1157,7 +1157,7 @@ start       ; same as start .equ *
 <table>
 <tr><td><b>Name</b></td><td><code>.macro</code>/<code>.endmacro</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Define a macro that when invoked will expand into source. Must be named. Optional arguments are treated as parameters to pass as text substitutions in the macro source where referenced, with a leading backslash <code>\</code> and either the macro name or the number in the parameter list. Parameters can be given default values to make them optional upon invocation. Macros are called by name with a leading "." All symbols in the macro definition are local, so macros can be re-used with no symbol clashes.</td></tr>
+<tr><td><b>Definition</b></td><td>Define a macro that when invoked will expand into source. Must be named. Optional arguments are treated as parameters to pass as text substitutions in the macro source where referenced, with a leading either a backslash <code>\</code> or as <code>@{param}</code> from within a string, either by name or by number in the parameter list. Parameters can be given default values to make them optional upon invocation. Macros are invoked with a leading <code>.</code>. All symbols in the macro definition are local, so macros can be re-used with no symbol clashes.</td></tr>
 <tr><td><b>Arguments</b></td><td><code>parameter[, parameter[, ...]</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
@@ -1197,7 +1197,7 @@ print       .macro  value = 13, printsub = $15ef
 <tr><td><b>Alias</b></td><td>None</td></tr>
 <tr><td><b>Definition</b></td><td>Maps a character or range of characters to custom binary output in the selected encoding. Note: <code>none</code> is not affected by <code>.map</code> and <code>.unmap</code> directives. It is recommended to represent individual char literals as strings.
 </td></tr>
-<tr><td><b>Arguments</b></td><td><code>start[, end]</code>,<code>code</code>/<br>
+<tr><td><b>Arguments</b></td><td><code>start[, end]</code>/<br>
 <code>"&lt;start&gt;&lt;end&gt;"</code>,<code>code</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
@@ -1263,7 +1263,7 @@ highcode_end
 <table>
 <tr><td><b>Name</b></td><td><code>.repeat</code>/<code>.endrepeat</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Repeat the specified source the specified number of times. Can be nested, but must be terminated with an <code>.endrepeat</code>.</td></tr>
+<tr><td><b>Definition</b></td><td>Repeat the specified source the specified number of times. Can be nested, but must be terminated with an <code>.endrepeat</code>. This operation is only performed on first pass.</td></tr>
 <tr><td><b>Arguments</b></td><td><code>repeatvalue</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
@@ -1285,7 +1285,7 @@ highcode_end
 <table>
 <tr><td><b>Name</b></td><td><code>.segment</code>/<code>.endsegment</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
-<tr><td><b>Definition</b></td><td>Defines a block of code as a segment, to be declared into source with the <code>.dsegment</code> directive. Similar to macros but takes no parameters and symbols are not local. Useful for building large mix of source code and data without needing to relocate code manually. Segments can be defined within other segment block definitions, but are not considered "nested." Segment closures require the segment name after the directive.</td></tr>
+<tr><td><b>Definition</b></td><td>Defines a block of code as a segment, to be declared into source with the <code>.dsegment</code> directive. Segments are similar to macros but take no parameters and symbols are not local. Useful for building a large mix of source code and data without needing to relocate code manually. Segments can be defined within other segment block definitions, but are not considered "nested." Segment closures require the segment name after the directive.</td></tr>
 <tr><td><b>Arguments</b></td><td><code>segmentname</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
@@ -1330,7 +1330,7 @@ glyph             ;12345678
 <tr><td><b>Arguments</b></td><td><code>architecture</code></td></tr>
 <tr><td><b>Example</b></td><td>
 <pre>
-            .target "zxzx"
+            .target "zx"
             ;; the output binary will have an ZX Spectrum header
             ...
 </pre>
@@ -1344,7 +1344,6 @@ glyph             ;12345678
 <tr><td><b>Example</b></td><td>
 <pre>
             .typedef   .byte, defb
-
             * = $c000
             defb 0,1,2,3 ; >c000 00 01 02 03
 </pre>
