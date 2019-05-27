@@ -18,7 +18,7 @@ Multiple statements per line are allowed; they are separated by a colon (`:`) ch
 ```        
         ld (hl),MESSAGE:call STDOUT    ; multiple statement line
 ```
-Semi-colons denote the beginning of line comments, and remaining line text will not be processed by the assembler. 
+Semi-colons denote the beginning of line comments, and remaining line text will not be processed by the assembler.
 ### Numeric constants
 Integral constants can be expressed as decimal, hexadecimal, and binary. Decimal numbers are written as is, while hex numbers are prefixed with a `$` and binary numbers are prefixed with a `%`.
 ```
@@ -64,7 +64,7 @@ routine2    ld  c,flag
 _done       ret
 ```
 In the routine above, there are two labels called `_done` but the assembler will differentiate between them, since the second `_done` follows a different non-local label than the first.
-The first is to append the label with an underscore, making it a local label. 
+The first is to append the label with an underscore, making it a local label.
 
 
 In addition to local labels, scope blocks can be used. All source inside a pair of `.block` and `.endblock` directives are considered local to that block, but can also be nested, making them much like namespaces.
@@ -231,6 +231,14 @@ stdstring   .string format("The stdout routine is at ${0:X4}", stdout)
             ;; "The stdout routine is at $FFD2
 
 ```
+Many traditional assemblers allow programmers to use their character and value string pseudo-ops interchangeably, e.g. `.byte "HELLO"` and `.asc "HELLO"`. Note that z80DotNet treats character strings differently for the `.byte` and other value-based commands. For these pseudo-ops string characters are compacted, while the pseudo-op length is enforced:
+```
+            .byte "H"       ; okay
+            .dword "HELLO"  ; also okay, .dword can accomodate 4 ASCII bytes
+            .byte 'H','I'   ; still ok--two different literals
+            .byte "HELLO"   ; will error out
+```
+Generally, it is best to use the string commands for processing character string literals, and the value commands for multibyte values.
 #### Encodings
 Assembly source text is processed as UTF-8, and by default strings and character literals are encoded as such. You can change how text output with the `.encoding` and `.map` directives. Use `.encoding` to select an encoding. The encoding name follows the same rules as labels.
 
@@ -310,15 +318,15 @@ Other files can be included in final assembly, either as z80DotNet-compatible so
 +           .endmacro
             ...
 ```
-This file called `"library.s"` inside the path `../lib` contains a macro definition called `inc16` (See the [section below](#macros-and-segments) for more information about macros). 
+This file called `"library.s"` inside the path `../lib` contains a macro definition called `inc16` (See the [section below](#macros-and-segments) for more information about macros).
 ```
             .include "../lib/library.s"
 
             .inc16 $c000    ; 16-bit increment value at $033c and $033d
-``` 
+```
 If the included library file also contained its own symbols, caution would be required to ensure no symbol clashes. An alternative to `.include` is `.binclude`, which resolves this problem by enclosing the included source in its own scoped block.
 ```
-lib         .binclude "../lib/library.s"    ; all symbols in "library.s" 
+lib         .binclude "../lib/library.s"    ; all symbols in "library.s"
                                             ; are in the "lib" scope
 
             call lib.memcopy
@@ -346,7 +354,7 @@ charC:
             * = $c000
 
             ;; copy charA glyph graphics to $4000
-     
+
             ld hl,charA
             ld de,$4000
             ld bc,64
@@ -419,7 +427,7 @@ Not that no labels or variables can share these two names as they are reserved.
 
 By default, programs start at address 0, but you can change this by setting the program counter before the first assembled byte. While many Z80 assemblers used `$` to denote the program counter, z80DotNet uses the `*` symbol. The assignment can be either a constant or expression:
 ```
-            * = ZP + 1000       ; program counter now 1000 bytes offset from 
+            * = ZP + 1000       ; program counter now 1000 bytes offset from
                                     ; the value of the constant ZP
 ```                
 (Be aware of the pesky trap of trying to square the program counter using the `**` operator, i.e. `***`. This produces unexpected results. Instead consider the `pow()` function as described in the section on math functions below.)
@@ -1584,7 +1592,7 @@ z80DotNet.exe myasm.asm -output=myoutput
 <tr><td><b>Option</b></td><td><code>--arch</code></td></tr>
 <tr><td><b>Alias</b></td><td>None</td></tr>
 <tr><td><b>Definition</b></td><td>Specify the target architecture of the binary output. If architecture not specified, output defaults to <code>flat</code>. The options:
-<ul> 
+<ul>
     <li><code>flat</code> - Flat binary with no header</li>
     <li><code>zx</code> - ZX Spectrum TAP header</li>
     <li><code>amsdos</code> - Amstrad CPC DOS header</li>
@@ -1859,4 +1867,3 @@ z80DotNet.exe --version
 `Unknown instruction or incorrect parameters for instruction` - An directive or instruction was encountered that was unknown, or the operand provided is incorrect.
 
 `Unknown or invalid expression` - There was an error evaluating the expression.
-

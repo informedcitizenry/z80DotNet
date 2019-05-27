@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -157,15 +158,21 @@ namespace DotNetAsm
                 if (c == '\'' || c == '"')
                 {
                     var literal = expression.GetNextQuotedString(i);
-                    var unescaped = literal.TrimOnce('\'');
+                    var unescaped = literal.TrimOnce(c);
                     if (unescaped.Contains("\\"))
-                    {
                         unescaped = Regex.Unescape(unescaped);
+
+                    ulong encodedValue = 0;
+                    var places = 0;
+                    var textElementEnumerator = StringInfo.GetTextElementEnumerator(unescaped);
+                    while (textElementEnumerator.MoveNext())
+                    {
+                        var textElement = textElementEnumerator.GetTextElement();
+                        encodedValue += (ulong)(Assembler.Encoding.GetEncodedValue(textElement) << (8 * places++));
                     }
-                    var charval = Assembler.Encoding.GetEncodedValue(unescaped.Substring(0, 1)).ToString();
-                    translated.Append(charval);
+                    translated.Append(encodedValue);
                     i += literal.Length - 1;
-                    lastTokenChar = charval.Last();
+                    lastTokenChar = encodedValue.ToString().Last();
                 }
                 else if ((c == '*' || c == '-' || c == '+') &&
                          (lastTokenChar.IsOperator() || lastTokenChar == '(' || lastTokenChar == char.MinValue))
