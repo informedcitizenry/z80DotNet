@@ -28,16 +28,14 @@ namespace DotNetAsm
     /// <summary>
     /// Represents an error that occurs when an undefined symbol is referenced.
     /// </summary>
+    [Serializable]
     public class SymbolNotDefinedException : Exception
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="T:DotNetAsm.SymbolNotDefinedException"/> class.
         /// </summary>
         /// <param name="symbol">Symbol.</param>
-        public SymbolNotDefinedException(string symbol)
-        {
-            Symbol = symbol;
-        }
+        public SymbolNotDefinedException(string symbol) => Symbol = symbol;
 
         /// <summary>
         /// Gets the undefined symbol.
@@ -54,15 +52,13 @@ namespace DotNetAsm
     {
         #region Members
 
-        readonly Stack<ILineAssembler> _assemblers;
-        readonly List<IBlockHandler> _blockHandlers;
-        readonly List<SourceLine> _processedLines;
-        SourceLine _currentLine;
-        readonly SourceHandler _sourceHandler;
-
-        int _passes;
-
-        string _localLabelScope;
+        private readonly Stack<ILineAssembler> _assemblers;
+        private readonly List<IBlockHandler> _blockHandlers;
+        private readonly List<SourceLine> _processedLines;
+        private SourceLine _currentLine;
+        private readonly SourceHandler _sourceHandler;
+        private int _passes;
+        private string _localLabelScope;
 
         #endregion
 
@@ -96,7 +92,7 @@ namespace DotNetAsm
 
             Assembler.Evaluator.DefineParser(SymbolsToValues);
 
-            _localLabelScope = string.Empty; 
+            _localLabelScope = string.Empty;
 
             _assemblers = new Stack<ILineAssembler>();
             _assemblers.Push(new PseudoAssembler(IsInstruction,
@@ -139,7 +135,7 @@ namespace DotNetAsm
         public override bool IsReserved(string token) => IsInstruction(token) ||
                                                          Reserved.IsReserved(token);
 
-        bool IsSymbolName(string token, bool allowLeadUnderscore = true, bool allowDot = true)
+        private bool IsSymbolName(string token, bool allowLeadUnderscore = true, bool allowDot = true)
         {
             // empty string 
             if (string.IsNullOrEmpty(token))
@@ -161,14 +157,14 @@ namespace DotNetAsm
             return Assembler.Symbols.Labels.IsSymbolValid(token, true);
         }
 
-        List<ExpressionElement> SymbolsToValues(string expression)
+        private List<ExpressionElement> SymbolsToValues(string expression)
             => Assembler.Symbols.TranslateExpressionSymbols(_currentLine, expression, _localLabelScope, _passes > 0);
 
 
         /// <remarks>
         /// Define macros and segments, and add included source files.
         /// </remarks>
-        IEnumerable<SourceLine> Preprocess()
+        private IEnumerable<SourceLine> Preprocess()
         {
             var source = new List<SourceLine>();
 
@@ -200,14 +196,14 @@ namespace DotNetAsm
         /// <remarks>
         /// Add labels defined with command-line -D option
         /// </remarks>
-        IEnumerable<SourceLine> ProcessDefinedLabels()
+        private IEnumerable<SourceLine> ProcessDefinedLabels()
         {
             var labels = new List<SourceLine>();
 
             foreach (var label in Assembler.Options.LabelDefines)
             {
-                string name = label;
-                string definition = "1";
+                var name = label;
+                var definition = "1";
                 var eqix = label.IndexOf('=');
                 if (eqix > -1)
                 {
@@ -231,29 +227,28 @@ namespace DotNetAsm
             return labels;
         }
 
-        void OnCpuChanged(SourceLine line)
+        private void OnCpuChanged(SourceLine line)
         {
             if (CpuChanged != null)
-                CpuChanged.Invoke(new CpuChangedEventArgs { Line = line });
+                CpuChanged.Invoke(this, new CpuChangedEventArgs { Line = line });
             else
                 Assembler.Log.LogEntry(line, ErrorStrings.UnknownInstruction, line.Instruction);
         }
 
         public void DoPasses(IEnumerable<SourceLine> source)
         {
-            int id = 1;
+            var id = 1;
             var sourceList = source.ToList();
-            bool needPass = true;
+            var needPass = true;
             _passes = 0;
             while (needPass && !Assembler.Log.HasErrors)
             {
                 needPass = false;
                 Assembler.Output.Reset();
                 Assembler.Symbols.Variables.Clear();
-                for (int i = 0; i < sourceList.Count; i++)
+                for (var i = 0; i < sourceList.Count; i++)
                 {
                     _currentLine = sourceList[i];
-
                     try
                     {
                         if (_passes == 0)
@@ -274,89 +269,12 @@ namespace DotNetAsm
                             {
                                 if (string.IsNullOrWhiteSpace(_currentLine.SourceString))
                                     continue;
-                                StringBuilder tokenBuilder = new StringBuilder();
-                                for (int j = 0; j < _currentLine.SourceString.Length; j++)
+                                int x = 0;
+                                foreach (var line in _currentLine.Parse(s => IsInstruction(s) || s.Equals("=") || s[0] == '.'))
                                 {
-                                    var c = _currentLine.SourceString[j];
-                                    if (string.IsNullOrEmpty(_currentLine.Instruction))
-                                    {
-                                        string token = string.Empty;
-                                        if (char.IsWhiteSpace(c) || j == _currentLine.SourceString.Length - 1 || c == '=' || c == '*' || c == ':' || c == ';')
-                                        {
-                                            if (!char.IsWhiteSpace(c) && c != ':' && c != ';')
-                                                tokenBuilder.Append(c);
-                                            token = tokenBuilder.ToString();
-                                            tokenBuilder.Clear();
-                                        }
-                                        else
-                                        {
-                                            tokenBuilder.Append(c);
-                                        }
-                                        if (!string.IsNullOrEmpty(token))
-                                        {
-                                            if (IsInstruction(token) || token == "=" || token[0] == '.')
-                                            {
-                                                _currentLine.Instruction = token;
-                                                if (c == ':')
-                                                {
-                                                    if (j < _currentLine.SourceString.Length - 1)
-                                                        sourceList.Insert(i + 1, new SourceLine
-                                                        {
-                                                            SourceString = _currentLine.SourceString.Substring(j + 1)
-                                                        });
-                                                    break;
-                                                }
-                                            }
-                                            else
-                                            {
-                                                if (!string.IsNullOrEmpty(_currentLine.Label))
-                                                {
-                                                    Assembler.Log.LogEntry(_currentLine, ErrorStrings.UnknownInstruction, token);
-                                                    break;
-                                                }
-                                                _currentLine.Label = token;
-                                            }
-                                        }
-                                        if (c == ';')
-                                            break;
-                                    }
-                                    else
-                                    {
-                                        if (tokenBuilder.Length > 0 || !char.IsWhiteSpace(c))
-                                        {
-                                            if (c == '"' || c == '\'')
-                                            {
-                                                // process quotes separately
-                                                var quoted = _currentLine.SourceString.GetNextQuotedString(atIndex: j);
-                                                tokenBuilder.Append(quoted);
-                                                j += quoted.Length - 1;
-                                            }
-                                            else if (c == ';')
-                                            {
-                                                j = _currentLine.SourceString.Length - 1;
-                                            }
-                                            else if (c == ':')
-                                            {
-                                                _currentLine.Operand = tokenBuilder.ToString().TrimEnd();
-                                                tokenBuilder.Clear();
-                                                if (j < _currentLine.SourceString.Length - 1)
-                                                    sourceList.Insert(i + 1, new SourceLine
-                                                    {
-                                                        SourceString = _currentLine.SourceString.Substring(j + 1)
-                                                    });
-                                                break;
-                                            }
-                                            else
-                                            {
-                                                tokenBuilder.Append(c);
-                                            }
-                                        }
-                                        if (j == _currentLine.SourceString.Length - 1)
-                                        {
-                                            _currentLine.Operand = tokenBuilder.ToString().TrimEnd();
-                                            tokenBuilder.Clear();
-                                        }
-                                    }
+                                    // capture compound source lines into the list
+                                    if (line != null)
+                                        sourceList.Insert(i + ++x, line);
                                 }
                             }
                         }
@@ -367,7 +285,7 @@ namespace DotNetAsm
                         //------------------------------------------------------
                         if (_passes == 0)
                         {
-                            var currentHandler = _blockHandlers.FirstOrDefault(h => h.IsProcessing());
+                            IBlockHandler currentHandler = _blockHandlers.FirstOrDefault(h => h.IsProcessing());
                             if (currentHandler == null)
                                 currentHandler = _blockHandlers.FirstOrDefault(h => h.Processes(_currentLine.Instruction));
                             if (currentHandler != null)
@@ -402,7 +320,7 @@ namespace DotNetAsm
                         long value = Assembler.Output.LogicalPC;
                         if (_currentLine.Instruction.Equals(ConstStrings.VAR_DIRECTIVE, Assembler.Options.StringComparison))
                         {
-                            var varparts = Assembler.Symbols.Variables.SetVariable(_currentLine.Operand, _currentLine.Scope);
+                            KeyValuePair<string, string> varparts = Assembler.Symbols.Variables.SetVariable(_currentLine.Operand, _currentLine.Scope);
                             value = Assembler.Evaluator.Eval(varparts.Value);
                         }
                         else if (!string.IsNullOrEmpty(_currentLine.Label) && !_currentLine.Label.Equals("*"))
@@ -428,7 +346,6 @@ namespace DotNetAsm
                         if (_passes > 0 && !needPass)
                             needPass = _currentLine.PC != value;
                         _currentLine.PC = value;
-
                         //------------------------------------------------------
                         //
                         // Attempt to do assembly.
@@ -448,7 +365,7 @@ namespace DotNetAsm
                             else if (!needPass)
                             {
                                 // try to assemble as far as we can before we run
-                                // into an issue related to an undefined label
+                                // into an issue related to a label
                                 // (overflow error, not defined, etc.)
                                 try
                                 {
@@ -517,11 +434,11 @@ namespace DotNetAsm
             }
         }
 
-        void SetLabel(string symbol, long value)
+        private void SetLabel(string symbol, long value)
         {
             if (symbol != "+" && symbol != "-")
             {
-                string label = string.Empty;
+                var label = string.Empty;
                 if (symbol[0] == '_')
                 {
                     label = _currentLine.Scope + _localLabelScope + symbol;
@@ -554,7 +471,7 @@ namespace DotNetAsm
             }
             else
             {
-                var asm = _assemblers.FirstOrDefault(a => a.AssemblesInstruction(_currentLine.Instruction));
+                ILineAssembler asm = _assemblers.FirstOrDefault(a => a.AssemblesInstruction(_currentLine.Instruction));
                 asm?.AssembleLine(_currentLine);
             }
         }
@@ -564,11 +481,11 @@ namespace DotNetAsm
         /// some but not all syntax errors, concerned mostly with the probable 
         /// size of the instruction. 
         /// </remarks>
-        int GetInstructionSize()
+        private int GetInstructionSize()
         {
             try
             {
-                var asm = _assemblers.FirstOrDefault(a => a.AssemblesInstruction(_currentLine.Instruction));
+                ILineAssembler asm = _assemblers.FirstOrDefault(a => a.AssemblesInstruction(_currentLine.Instruction));
                 var size = (asm != null) ? asm.GetInstructionSize(_currentLine) : 0;
                 return size;
             }
@@ -579,7 +496,7 @@ namespace DotNetAsm
         }
 
         // Are we updating the program counter?
-        void UpdatePC()
+        private void UpdatePC()
         {
             long val = 0;
             if (_currentLine.Label.Equals("*"))
@@ -590,7 +507,7 @@ namespace DotNetAsm
                 }
                 else if (IsAssignmentDirective())
                 {
-                    val = Assembler.Evaluator.Eval(_currentLine.Operand, UInt16.MinValue, UInt16.MaxValue);
+                    val = Assembler.Evaluator.Eval(_currentLine.Operand, ushort.MinValue, ushort.MaxValue);
                     Assembler.Output.SetPC(Convert.ToUInt16(val));
                 }
                 else
@@ -599,7 +516,7 @@ namespace DotNetAsm
                     return;
                 }
             }
-            string instruction = Assembler.Options.CaseSensitive ? _currentLine.Instruction :
+            var instruction = Assembler.Options.CaseSensitive ? _currentLine.Instruction :
                 _currentLine.Instruction.ToLower();
 
             if (instruction.Equals(".relocate") || instruction.Equals(".pseudopc"))
@@ -624,19 +541,21 @@ namespace DotNetAsm
             }
         }
 
-        bool IsAssignmentDirective()
+        private bool IsAssignmentDirective()
         {
             if (_currentLine.Operand.EnclosedInQuotes())
                 return false; // define a constant string??
 
             if (_currentLine.Instruction.Equals("=") ||
                 _currentLine.Instruction.Equals(".equ", Assembler.Options.StringComparison))
+            {
                 return true;
+            }
 
             return false;
         }
 
-        void PrintStatus(Stopwatch stopwatch)
+        private void PrintStatus(Stopwatch stopwatch)
         {
             if (Assembler.Log.HasWarnings && !Assembler.Options.NoWarnings)
             {
@@ -670,7 +589,7 @@ namespace DotNetAsm
             }
         }
 
-        void ToListing()
+        private void ToListing()
         {
             if (string.IsNullOrEmpty(Assembler.Options.ListingFile) && string.IsNullOrEmpty(Assembler.Options.LabelFile))
                 return;
@@ -680,7 +599,7 @@ namespace DotNetAsm
             if (!string.IsNullOrEmpty(Assembler.Options.ListingFile))
             {
                 listing = GetListing();
-                using (StreamWriter writer = new StreamWriter(Assembler.Options.ListingFile))
+                using (var writer = new StreamWriter(Assembler.Options.ListingFile))
                 {
                     var exec = Path.GetFileName(System.Reflection.Assembly.GetEntryAssembly().Location);
                     var argstring = string.Join(" ", Assembler.Options.Arguments);
@@ -700,7 +619,7 @@ namespace DotNetAsm
             if (!string.IsNullOrEmpty(Assembler.Options.LabelFile))
             {
                 listing = GetLabelsAndVariables();
-                using (StreamWriter writer = new StreamWriter(Assembler.Options.LabelFile, false))
+                using (var writer = new StreamWriter(Assembler.Options.LabelFile, false))
                 {
                     writer.WriteLine(";; Input files:\n");
                     _sourceHandler.FileRegistry.ToList().ForEach(f => writer.WriteLine(";; {0}", f));
@@ -710,7 +629,7 @@ namespace DotNetAsm
             }
         }
 
-        string GetSymbolListing(string symbol, long value, bool isVar)
+        private string GetSymbolListing(string symbol, long value, bool isVar)
         {
             var symbolname = Regex.Replace(symbol, @"(?<=^|\.)[0-9]+(?=\.|$)", "::");
             var maxlen = symbolname.Length > 30 ? 30 : symbolname.Length;
@@ -729,14 +648,14 @@ namespace DotNetAsm
         /// <remarks>
         /// Used by the ToListing method to get a listing of all defined labels.
         /// </remarks>
-        string GetLabelsAndVariables()
+        private string GetLabelsAndVariables()
         {
             var listing = new StringBuilder();
 
-            foreach (var label in Assembler.Symbols.Labels)
+            foreach (KeyValuePair<string, long> label in Assembler.Symbols.Labels)
                 listing.Append(GetSymbolListing(label.Key, label.Value, false));
 
-            foreach (var variable in Assembler.Symbols.Variables)
+            foreach (KeyValuePair<string, long> variable in Assembler.Symbols.Variables)
                 listing.Append(GetSymbolListing(variable.Key, variable.Value, true));
 
             return listing.ToString();
@@ -745,7 +664,7 @@ namespace DotNetAsm
         /// <remarks>
         /// Used by the ToListing method to get the full listing.
         /// </remarks>
-        string GetListing()
+        private string GetListing()
         {
             var listing = new StringBuilder();
 
@@ -757,7 +676,7 @@ namespace DotNetAsm
             return listing.ToString();
         }
 
-        void SaveOutput()
+        private void SaveOutput()
         {
             if (!Assembler.Options.GenerateOutput)
                 return;
@@ -766,7 +685,7 @@ namespace DotNetAsm
             if (string.IsNullOrEmpty(Assembler.Options.OutputFile))
                 outputfile = "a.out";
 
-            using (BinaryWriter writer = new BinaryWriter(new FileStream(outputfile, FileMode.Create, FileAccess.Write)))
+            using (var writer = new BinaryWriter(new FileStream(outputfile, FileMode.Create, FileAccess.Write)))
             {
                 if (WritingHeader != null)
                     writer.Write(WritingHeader.Invoke(this));
@@ -777,7 +696,6 @@ namespace DotNetAsm
                     writer.Write(WritingFooter.Invoke(this));
             }
         }
-
         public void Assemble()
         {
             if (Assembler.Options.PrintVersion && DisplayingBanner != null)
@@ -800,11 +718,11 @@ namespace DotNetAsm
             var stopwatch = new Stopwatch();
 
             stopwatch.Start();
-            var source = Preprocess();
+            IEnumerable<SourceLine> source = Preprocess();
             if (Assembler.Log.HasErrors == false)
             {
                 DoPasses(source);
-              
+
                 if (Assembler.Log.HasErrors == false)
                 {
                     SaveOutput();

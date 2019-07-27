@@ -6,7 +6,6 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -18,13 +17,15 @@ namespace DotNetAsm
     /// </summary>
     public sealed class SymbolManager : ISymbolManager
     {
-        #region Members
 
-        Dictionary<int, SourceLine> _anonPlusLines, _anonMinusLines, _orderedMinusLines;
+        #region Members
+        private readonly Dictionary<int, SourceLine> _anonPlusLines;
+        private readonly Dictionary<int, SourceLine> _anonMinusLines;
+        private Dictionary<int, SourceLine> _orderedMinusLines;
 
         #region Static Members
 
-        static readonly Dictionary<string, double> _constants = new Dictionary<string, double>(StringComparer.Ordinal)
+        private static readonly Dictionary<string, double> _constants = new Dictionary<string, double>(StringComparer.Ordinal)
         {
             { "MATH_PI", Math.PI },
             { "MATH_E", Math.E }
@@ -60,7 +61,7 @@ namespace DotNetAsm
 
         #region Methods
 
-        string GetNamedSymbolValue(string symbol, SourceLine line, string scope)
+        private string GetNamedSymbolValue(string symbol, SourceLine line, string scope)
         {
             if (symbol.First() == '_')
                 symbol = string.Concat(scope, symbol);
@@ -74,7 +75,7 @@ namespace DotNetAsm
 
         }
 
-        string ConvertAnonymous(string symbol, SourceLine line, bool errorOnNotFound)
+        private string ConvertAnonymous(string symbol, SourceLine line, bool errorOnNotFound)
         {
             var trimmed = symbol.Trim(new char[] { '(', ')' });
             var addr = GetFirstAnonymousLabelFrom(line, trimmed);//GetAnonymousAddress(_currentLine, trimmed);
@@ -91,21 +92,21 @@ namespace DotNetAsm
             if (line.Label.Equals("+"))
             {
                 _anonPlusLines.Add(line.Id, line);
-            }    
+            }
             else if (line.Label.Equals("-"))
             {
                 _anonMinusLines.Add(line.Id, line);
                 // ordered dictionary is invalid now
                 _orderedMinusLines = null;
-            }    
+            }
         }
 
-        long GetFirstAnonymousLabelFrom(SourceLine fromLine, string direction)
+        private long GetFirstAnonymousLabelFrom(SourceLine fromLine, string direction)
         {
-            int id = fromLine.Id;
+            var id = fromLine.Id;
 
-            int count = direction.Length;
-            bool forward = direction[0] == '+';
+            var count = direction.Length;
+            var forward = direction[0] == '+';
             SourceLine found = null;
             while (count > 0)
             {
@@ -113,22 +114,24 @@ namespace DotNetAsm
                 if (forward)
                 {
                     searched = _anonPlusLines.FirstOrDefault(l => l.Key > id);
-                }    
+                }
                 else
                 {
                     if (_orderedMinusLines == null)
                         _orderedMinusLines = _anonMinusLines.OrderByDescending(l => l.Key).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
                     searched = _orderedMinusLines.FirstOrDefault(l => l.Key < id);
-                }  
+                }
                 found = searched.Value;
 
                 if (found == null)
                     break;
-                
-                if (string.IsNullOrEmpty(found.Scope) || found.Scope.Equals(fromLine.Scope, Assembler.Options.StringComparison) || 
-                    (fromLine.Scope.Length > found.Scope.Length && 
+
+                if (string.IsNullOrEmpty(found.Scope) || found.Scope.Equals(fromLine.Scope, Assembler.Options.StringComparison) ||
+                    (fromLine.Scope.Length > found.Scope.Length &&
                      found.Scope.Equals(fromLine.Scope.Substring(0, found.Scope.Length), Assembler.Options.StringComparison)))
+                {
                     count--;
+                }
 
                 id = found.Id;
             }
@@ -137,47 +140,32 @@ namespace DotNetAsm
             return -1;
         }
 
-        /// <summary>
-        /// Translates all special symbols in the expression into a 
-        /// <see cref="System.Collections.Generic.List{DotNetAsm.ExpressionElement}"/>
-        /// for use by the evualator.
-        /// </summary>
-        /// <returns>The expression symbols.</returns>
-        /// <param name="line">The current source line.</param>
-        /// <param name="expression">The expression to evaluate.</param>
-        /// <param name="scope">The current scope.</param>
-        /// <param name="errorOnNotFound">If set to <c>true</c> raise an error 
-        /// if a symbol encountered in the expression was not found.</param>
         public List<ExpressionElement> TranslateExpressionSymbols(SourceLine line, string expression, string scope, bool errorOnNotFound)
         {
-            char lastTokenChar = char.MinValue;
+            var lastTokenChar = char.MinValue;
             StringBuilder translated = new StringBuilder(), symbolBuilder = new StringBuilder();
-            for (int i = 0; i < expression.Length; i++)
+            for (var i = 0; i < expression.Length; i++)
             {
-                char c = expression[i];
+                var c = expression[i];
                 if (c == '\'' || c == '"')
                 {
-                    var literal = expression.GetNextQuotedString(i);
-                    var unescaped = literal.TrimOnce(c);
-                    if (unescaped.Contains("\\"))
-                        unescaped = Regex.Unescape(unescaped);
-
-                    ulong encodedValue = 0;
-                    var places = 0;
-                    var textElementEnumerator = StringInfo.GetTextElementEnumerator(unescaped);
-                    while (textElementEnumerator.MoveNext())
-                    {
-                        var textElement = textElementEnumerator.GetTextElement();
-                        encodedValue += (ulong)(Assembler.Encoding.GetEncodedValue(textElement) << (8 * places++));
-                    }
+                    var literal = expression.GetNextQuotedString(i, true);
+                    i += literal.Length + 1;
+                    if (literal.Contains("\\"))
+                        literal = Regex.Unescape(literal);
+                    var bytes = Assembler.Encoding.GetBytes(literal);
+                    if (bytes.Length > sizeof(int))
+                        throw new OverflowException(literal);
+                    if (bytes.Length < sizeof(int))
+                        Array.Resize(ref bytes, sizeof(int));
+                    var encodedValue = BitConverter.ToInt32(bytes, 0);
                     translated.Append(encodedValue);
-                    i += literal.Length - 1;
-                    lastTokenChar = encodedValue.ToString().Last();
+                    lastTokenChar = '0'; // can be any operand
                 }
                 else if ((c == '*' || c == '-' || c == '+') &&
                          (lastTokenChar.IsOperator() || lastTokenChar == '(' || lastTokenChar == char.MinValue))
                 {
-                    bool isSpecial = false;
+                    var isSpecial = false;
                     if (c == '*' && (lastTokenChar == '(' || i == 0 || expression[i - 1] != '*'))
                     {
                         isSpecial = true;
@@ -220,7 +208,7 @@ namespace DotNetAsm
             }
             var elements = Assembler.Evaluator.ParseElements(translated.ToString()).ToList();
 
-            for(int i = 0; i < elements.Count; i++)
+            for (var i = 0; i < elements.Count; i++)
             {
                 if (elements[i].type == ExpressionElement.Type.Operand && (elements[i].word[0] == '_' || char.IsLetter(elements[i].word[0])))
                 {
@@ -250,6 +238,9 @@ namespace DotNetAsm
             }
             return elements;
         }
+
+        public bool IsSymbol(string symbol) =>
+            Labels.IsSymbol(symbol) || Variables.IsSymbol(symbol);
 
         #endregion
 

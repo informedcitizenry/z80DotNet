@@ -5,13 +5,12 @@
 // 
 //-----------------------------------------------------------------------------
 
-using System;
 using System.Linq;
 using System.Text;
 
 namespace DotNetAsm
 {
-    public sealed class Disassembler: AssemblerBase, ILineDisassembler
+    public sealed class Disassembler : AssemblerBase, ILineDisassembler
     {
         #region Constructors
 
@@ -21,9 +20,9 @@ namespace DotNetAsm
         public Disassembler()
         {
             PrintingOn = true;
-            Reserved.DefineType("Blocks", ConstStrings.OPEN_SCOPE, ConstStrings.CLOSE_SCOPE );
+            Reserved.DefineType("Blocks", ConstStrings.OPEN_SCOPE, ConstStrings.CLOSE_SCOPE);
             Reserved.DefineType("Directives",
-                    ".cpu", ".elif", ".else", ".endif", ".eor", ".error", ".errorif", ".if", ".ifdef", 
+                    ".cpu", ".elif", ".else", ".endif", ".eor", ".error", ".errorif", ".if", ".ifdef",
                     ".warnif", ".relocate", ".pseudopc", ".realpc", ".endrelocate", ".warn"
                 );
         }
@@ -38,36 +37,38 @@ namespace DotNetAsm
         /// <param name="line">The The <see cref="T:DotNetAsm.SourceLine"/>.</param>
         /// <returns>A formatted representation of the filename and 
         /// line number of the source.</returns>
-        string DisassembleFileLine(SourceLine line)
+        private string DisassembleFileLine(SourceLine line)
         {
-            string lineinfo = line.Filename;
+            var lineinfo = line.Filename;
             if (string.IsNullOrEmpty(lineinfo) == false)
             {
                 if (lineinfo.Length > 14)
-                lineinfo = lineinfo.Substring(0, 11) + "...";
-                lineinfo += "(" + line.LineNumber.ToString() + ")";
+                    lineinfo = lineinfo.Substring(0, 11) + "...";
+                lineinfo += $"({line.LineNumber})";
             }
-            return string.Format("{0,-20}:", lineinfo);
+            return $"{lineinfo,-20}:";
         }
 
         /// <summary>
         /// Add the address of the source to the disassembly. The first method
         /// called in the DisassembleLine method.
         /// </summary>
-        /// <param name="line">The The <see cref="T:DotNetAsm.SourceLine"/>.</param>
+        /// <param name="line">The <see cref="T:DotNetAsm.SourceLine"/>.</param>
         /// <returns>A hex representation of the source line address.</returns>
-        string DisassembleAddress(SourceLine line)
+        private string DisassembleAddress(SourceLine line)
         {
             if ((string.IsNullOrEmpty(line.Label) && (string.IsNullOrEmpty(line.Instruction) ||
                 Reserved.IsReserved(line.Instruction))) ||
                 line.DoNotAssemble)
+            {
                 return string.Empty;
-                      
-            if (line.Instruction == "=" || 
+            }
+
+            if (line.Instruction == "=" ||
                 line.Instruction.Equals(".let", Assembler.Options.StringComparison) ||
                 line.Instruction.Equals(".equ", Assembler.Options.StringComparison))
             {
-                Int64 value = 0;
+                long value = 0;
                 if (line.Label == "*" || Assembler.Options.NoSource)
                     return string.Empty;
                 if (line.Label == "-" || line.Label == "+")
@@ -83,13 +84,15 @@ namespace DotNetAsm
                 {
                     value = Assembler.Symbols.Labels.GetSymbolValue(line.Scope + line.Label);
                 }
-                return string.Format("=${0:x" + value.Size() * 2 + "}", value);
+                return string.Format($"=${{0:x{value.Size() & 2}}}", value);
             }
             if (line.Instruction.StartsWith(".", Assembler.Options.StringComparison) &&
                     !Reserved.IsReserved(line.Instruction))
-                return string.Format(">{0:x4}", line.PC);
-            
-            return string.Format(".{0:x4}", line.PC);
+            {
+                return $">{line.PC:x4}";
+            }
+
+            return $".{line.PC:x4}";
         }
 
         /// <summary>
@@ -98,34 +101,31 @@ namespace DotNetAsm
         /// <param name="line">The source line</param>
         /// <returns>A string representation of the hex bytes of
         /// the source assembly.</returns>
-        string DisassembleAsm(SourceLine line, string source)
+        private string DisassembleAsm(SourceLine line, string source)
         {
             if (line.Assembly.Count == 0 || Assembler.Options.NoAssembly)
                 return string.Empty;
 
             var sb = new StringBuilder();
-            line.Assembly.ForEach(b => sb.AppendFormat(" {0:x2}", b));
+            line.Assembly.ForEach(b => sb.Append($" {b:x2}"));
 
             if (sb.Length > 24)
             {
-                long pc = line.PC;
-                
+                var pc = line.PC;
+
                 var subdisasms = sb.ToString().SplitByLength(24).ToList();
                 sb.Clear();
 
-                for (int i = 0; i < subdisasms.Count; i++)
+                for (var i = 0; i < subdisasms.Count; i++)
                 {
-                    sb.AppendFormat("{0,-29}{1,-10}",
-                                    subdisasms[i],
-                                    source).TrimEnd();
-                    sb.AppendLine();
+                    sb.AppendLine($"{subdisasms[i],-29}{source,-10}".TrimEnd());
                     pc += 8;
                     if (i < subdisasms.Count - 1)
                     {
-                        string format = ">{0:x4}    ";
+                        var pcHex = $">{pc:x4}    ";
                         if (Assembler.Options.VerboseList)
-                            format = "                    :" + format;
-                        sb.AppendFormat(format, pc);
+                            sb.Append("                    :");
+                        sb.Append(pcHex);
                     }
                     source = string.Empty;
                 }
@@ -150,7 +150,7 @@ namespace DotNetAsm
             if (!PrintingOn || line.SourceString.Equals(ConstStrings.SHADOW_SOURCE))
                 return;
 
-            string sourcestr = line.SourceString;
+            var sourcestr = line.SourceString;
             if (!Assembler.Options.VerboseList)
             {
                 if (line.DoNotAssemble || Reserved.IsReserved(line.Instruction))
@@ -178,7 +178,7 @@ namespace DotNetAsm
                     sourcestr = string.Empty;
                 sb.Append(DisassembleFileLine(line));
             }
-            sb.AppendFormat("{0,-9}", DisassembleAddress(line));
+            sb.Append($"{DisassembleAddress(line),-9}");
 
             if (Assembler.Options.NoAssembly == false)
             {
@@ -190,24 +190,24 @@ namespace DotNetAsm
                 }
 
                 if (string.IsNullOrEmpty(line.Disassembly) && Assembler.Options.NoDissasembly == false)
-                    sb.AppendFormat("{0,-29}", asm);
+                    sb.Append($"{asm,-29}");
                 else
-                    sb.AppendFormat("{0,-13}", asm);
+                    sb.Append($"{asm,-13}");
             }
-            
+
             if (Assembler.Options.NoDissasembly == false)
             {
                 if (string.IsNullOrEmpty(line.Disassembly) == false)
-                    sb.AppendFormat("{0,-16}", line.Disassembly);
+                    sb.Append($"{line.Disassembly,-16}");
                 else if (Assembler.Options.NoAssembly)
-                    sb.AppendFormat("{0,-28}", line.Disassembly);
+                    sb.Append($"{line.Disassembly,-28}");
             }
 
             if (Assembler.Options.NoSource == false)
-                sb.AppendFormat("{0,-10}", sourcestr);
+                sb.Append($"{sourcestr,-10}");
             else if (string.IsNullOrEmpty(line.Disassembly) && line.Assembly.Count == 0)
                 sb.TrimEnd();
-            
+
             sb.AppendLine();
         }
 

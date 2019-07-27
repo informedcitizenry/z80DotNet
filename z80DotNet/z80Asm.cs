@@ -7,7 +7,9 @@
 
 using DotNetAsm;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace z80DotNet
@@ -17,12 +19,6 @@ namespace z80DotNet
     /// </summary>
     public partial class z80Asm : AssemblerBase, ILineAssembler
     {
-        #region Members
-
-        IAssemblyController Controller;
-
-        #endregion
-
         #region Constructors
 
         /// <summary>
@@ -32,69 +28,22 @@ namespace z80DotNet
         /// this line assembler</param>
         public z80Asm(IAssemblyController controller) 
         {
-            Controller = controller;
-
-            _opcodes = _opcodes.OrderBy(o => o.Index).ToArray();
-
-            _builders = new FormatBuilder[]
+            _registers = new HashSet<string>(Assembler.Options.StringComparar)
             {
-                // a[,a]
-                new FormatBuilder(@"^([a-ehl])(\s*,\s*([a-ehl]))?$()","{0}{1}",string.Empty,string.Empty,1,2,4,4, Assembler.Options.RegexOption),
-                // a,i / i,a
-                new FormatBuilder(@"^([air])\s*,\s*([air])$()","{0},{1}",string.Empty,string.Empty,1,2,3,3,Assembler.Options.RegexOption),
-                // (c),a
-                new FormatBuilder(@"^\(\s*(c)\s*\)(\s*,\s*[a-ehl])?$()","{0}",string.Empty,string.Empty,0,3,3,3,Assembler.Options.RegexOption),
-                // a,(c)
-                new FormatBuilder(@"^[a-ehl]\s*,\s*\(\s*(c)\s*\)$()","{0}",string.Empty,string.Empty,0,2,2,2,Assembler.Options.RegexOption),
-                // [a,](hl)
-                new FormatBuilder(@"^(([a-ehl])\s*,\s*)?\(\s*(bc|de|hl|ix|iy)\s*\)$()","{0}",string.Empty,string.Empty,0,2,4,4, Assembler.Options.RegexOption),
-                // (hl),a
-                new FormatBuilder(@"^\(\s*(bc|de|hl)\s*\)\s*,\s*([a-ehl])$()","({0}),{1}",string.Empty,string.Empty,1,2,3,3,Assembler.Options.RegexOption),
-                // (sp)[,hl]
-                new FormatBuilder(@"^\(\s*(ix|iy|sp)\s*\)(\s*,\s*(hl|ix|iy))?$()", "{0}", string.Empty, string.Empty, 0,4,4,4, Assembler.Options.RegexOption),
-                // hl
-                new FormatBuilder(@"^(bc|de|hl|ix|iy)$()","{0}",string.Empty,string.Empty,1,2,2,2,Assembler.Options.RegexOption),
-                // af[,af']
-                new FormatBuilder(@"^af(\s*,\s*af')?$()","{0}", string.Empty,string.Empty,0,2,2,2,Assembler.Options.RegexOption),
-                // hl,bc
-                new FormatBuilder(@"^(hl|ix|iy|sp)(\s*,\s*(bc|de|hl|sp|ix|iy))?$()","{0}",string.Empty,string.Empty,0,4,4,4, Assembler.Options.RegexOption),
-                // de,hl
-                new FormatBuilder(@"^(de|sp)\s*,\s*(hl|ix|iy)$()","{0}",string.Empty,string.Empty,0,3,3,3,Assembler.Options.RegexOption),
-                // nz
-                new FormatBuilder(@"^((c|m|p|z)|(nc|nz|pe|po))$()","{0}",string.Empty,string.Empty,0,4,4,4,Assembler.Options.RegexOption),
-                // ixh,a
-                new FormatBuilder(@"^i(x|y)(h|l)(\s*,\s*([a-e]|i(x|y)(h|l)))?$()","{0}",string.Empty,string.Empty,0,7,7,7, Assembler.Options.RegexOption),
-                // a,ixh
-                new FormatBuilder(@"^([a-e])\s*,\s*(i(x|y)(h|l))$()", "{0},{1}", string.Empty, string.Empty, 1,2,5,5, Assembler.Options.RegexOption),
-                // (ix+$00)[,a]
-                new FormatBuilder(@"^\(\s*i(x|y)\s*((\+|-).+)\)(\s*,\s*([a-ehl]))?$()","(i{0}+{2}){1}","${0:x2}",string.Empty,1,4,2,6, Assembler.Options.RegexOption),
-                // a,(iy+$20)
-                new FormatBuilder(@"^([a-ehl])\s*,\s*\(\s*i(x|y)\s*((\+|-).+)\)$()","{0},(i{1}+{2})","${0:x2}",string.Empty,1,2,3,5,Assembler.Options.RegexOption),
-                // 0,(ix+$30)[,a]
-                new FormatBuilder(@"^([^\s]+)\s*,\s*\(\s*i(x|y)\s*((\+|-).+)\)(\s*,\s*[a-ehl])?$()","{3},(i{0}+{2}){1}","${0:x2}","{0}",2,5,3,1,Assembler.Options.RegexOption, Assembler.Evaluator),
-                // ($0000),a
-                new FormatBuilder(@"^(\(.+\))\s*,\s*([a-ehl])$()", "{2},{0}", "${0:x4}", string.Empty,2,3,1,3,Assembler.Options.RegexOption, true),
-                // nz,$0000
-                new FormatBuilder(@"^((c|m|p|z)|(nc|nz|pe|po))\s*,\s*(.+)$()","{0},{2}", "${0:x4}",string.Empty,1,5,4,5,Assembler.Options.RegexOption),
-                // a,($0000)
-                new FormatBuilder(@"^([a-ehl])\s*,\s*(.+)$()", "{0},{2}", "${0:x4}", string.Empty,1,3,2,3,Assembler.Options.RegexOption, true),
-                // a,$00 / a,($00)
-                new FormatBuilder(@"^([a-ehl]|i(x|y)(h|l))\s*,\s*(.+)$()","{0},{2}","${0:x2}",string.Empty,1,5,4,5,Assembler.Options.RegexOption, true),
-                // hl,($0000) / hl,$0000
-                new FormatBuilder(@"^(bc|de|hl|ix|iy|sp)\s*,\s*(.+)$()", "{0},{2}", "${0:x4}", string.Empty, 1, 3, 2, 3, Assembler.Options.RegexOption, true),
-                // ($0000),hl
-                new FormatBuilder(@"^(.+)\s*,\s*(bc|de|hl|ix|iy|sp)$()", "{2},{0}", "${0:x4}", string.Empty, 2, 3, 1, 3, Assembler.Options.RegexOption, true),
-                // (hl),$00
-                new FormatBuilder(@"^\((bc|de|hl|ix|iy|sp)\)\s*,\s*(.+)$()", "({0}),{2}", "${0:x2}", string.Empty, 1, 3, 2, 3, Assembler.Options.RegexOption),
-                // (ix+$00),$00
-                new FormatBuilder(@"^\(\s*i(x|y)\s*((\+|-).+)\)\s*,\s*(.+)$()", "(i{0}+{2}),{3}", "${0:x2}", "${1:x2}", 1, 5, 2, 4, Assembler.Options.RegexOption),
-                // 0,a / 0,(hl)
-                new FormatBuilder(@"^([^\s]+)\s*,\s*(([a-ehl])|\(hl\))$()", "{3},{0}", string.Empty, "{0}", 2, 4, 4, 1, Assembler.Options.RegexOption, Assembler.Evaluator),
-                // (c),0
-                new FormatBuilder(@"^\(\s*(c)\s*\)\s*,\s*([^\s]+)$()", "({0}),{3}", string.Empty, "{0}", 1, 3, 3, 2, Assembler.Options.RegexOption, Assembler.Evaluator),
-                // expression
-                new FormatBuilder(@"^.+$()", "{2}", "${0:x4}", string.Empty, 1,1,0,1, Assembler.Options.RegexOption, true)
+                // 8-bit registers 
+                "a", "b", "c", "d", "e", "h", "i", "ixl", "ixh", "iyl", "iyh", "l", "r",
+                // word registers
+                "af", "af'", "bc", "de", "hl", "ix", "iy", "sp",
+                // indirects
+                "(bc)", "(c)", "(de)", "(hl)", "(ix)", "(iy)", "(sp)"
             };
+
+            _flags = new HashSet<string>(Assembler.Options.StringComparar)
+            {
+                "c", "m", "nc", "nz", "p", "pe", "po", "z"
+            };
+
+            ConstructInstructionTable();
 
             Reserved.DefineType("Mnemonics",
                     "adc", "add", "ccf", "cpd", "cpdr", "cpi", "cpir", "cpl", 
@@ -131,98 +80,136 @@ namespace z80DotNet
                     "djnz", "jr"
                 );
 
-            Controller.AddSymbol("a");
-            Controller.AddSymbol("af");
-            Controller.AddSymbol("af'");
-            Controller.AddSymbol("b");
-            Controller.AddSymbol("bc");
-            Controller.AddSymbol("c");
-            Controller.AddSymbol("d");
-            Controller.AddSymbol("de");
-            Controller.AddSymbol("e");
-            Controller.AddSymbol("h");
-            Controller.AddSymbol("hl");
-            Controller.AddSymbol("i");
-            Controller.AddSymbol("ix");
-            Controller.AddSymbol("ixh");
-            Controller.AddSymbol("ixl");
-            Controller.AddSymbol("iy");
-            Controller.AddSymbol("iyl");
-            Controller.AddSymbol("l");
-            Controller.AddSymbol("r");
-            Controller.AddSymbol("sp");
+            controller.AddSymbol("a");
+            controller.AddSymbol("af");
+            controller.AddSymbol("af'");
+            controller.AddSymbol("b");
+            controller.AddSymbol("bc");
+            controller.AddSymbol("c");
+            controller.AddSymbol("d");
+            controller.AddSymbol("de");
+            controller.AddSymbol("e");
+            controller.AddSymbol("h");
+            controller.AddSymbol("hl");
+            controller.AddSymbol("i");
+            controller.AddSymbol("ix");
+            controller.AddSymbol("ixh");
+            controller.AddSymbol("ixl");
+            controller.AddSymbol("iy");
+            controller.AddSymbol("iyl");
+            controller.AddSymbol("l");
+            controller.AddSymbol("r");
+            controller.AddSymbol("sp");
+
         }
 
         #endregion
 
         #region Methods
 
-        /// <summary>
-        /// Parses a <see cref="T:DotNetAsm.SourceLine"/>'s instruction and operand to return a
-        /// DotNetAsm.OperandFormat and correspnding <see cref="T:DotNetAsm.Opcode"/>.
-        /// </summary>
-        /// <param name="line">The <see cref="T:DotNetAsm.SourceLine"/></param>
-        /// <returns>A <see cref="T:System.Tuple&lt;DotNetAsm.OperandFormat,DotNetAsm.Opcode&gt;"/>.</returns>
-        Tuple<OperandFormat, Opcode> GetFormatAndOpcode(SourceLine line)
+        (OperandFormat fmt, Opcode instruction) ParseToInstruction(SourceLine line)
         {
-            OperandFormat fmt = null;
-            Opcode opc = null;
-
-            string instruction = line.Instruction.ToLower();
-
-            if (string.IsNullOrEmpty(line.Operand))
+            var mnemonic = line.Instruction.ToLower();
+            var operand = line.Operand;
+            var fmt = new OperandFormat();
+            var formatBuilder = new StringBuilder(mnemonic);
+            
+            if (!string.IsNullOrEmpty(operand))
             {
-                fmt = new OperandFormat
+                formatBuilder.Append(' ');
+                if (Regex.IsMatch(operand, @"af\s*,\s*af'"))
                 {
-                    FormatString = instruction
-                };
-                opc = _opcodes.FirstOrDefault(o => o.DisasmFormat.Equals(instruction));//Opcode.LookupOpcode(instruction, _opcodes);
-            }
-            else
-            {
-                string operand = line.Operand;
-                if (Reserved.IsOneOf("ImpliedA", instruction))
-                {
-                    operand = Regex.Replace(operand, @"\s*,\s*a$", string.Empty);
-                }
-                if (instruction.Equals("rst") || Reserved.IsOneOf("Interrupt", instruction))
-                {
-                    fmt = new OperandFormat();
-                    if (instruction.Equals("rst"))
-                    {
-
-                        fmt.FormatString = string.Format("rst ${0:x2}",
-                            Assembler.Evaluator.Eval(operand));
-                    }
-                    else
-                    {
-                        fmt = new OperandFormat
-                        {
-                            FormatString = "im " + Assembler.Evaluator.Eval(operand).ToString()
-                        };
-                    }
-                    opc = _opcodes.FirstOrDefault(o => o.DisasmFormat.Equals(fmt.FormatString, Assembler.Options.StringComparison));
+                    formatBuilder.Append("af,af'");
                 }
                 else
                 {
-                    foreach (FormatBuilder builder in _builders)
+                    var csv = operand.CommaSeparate();
+                    var csvCount = csv.Count;
+                    for (int i = 0; i < csvCount; i++)
                     {
-                        fmt = builder.GetFormat(operand);
-                        if (fmt == null)
-                            continue;
-
-                        string instrFmt = string.Format("{0} {1}", instruction, fmt.FormatString);
-                        opc = _opcodes.FirstOrDefault(o => o.DisasmFormat.Equals(instrFmt, Assembler.Options.StringComparison));
-                        if (opc == null)
+                        var element = csv[i];
+                        if (csvCount == 2 && element.Equals("a", Assembler.Options.StringComparison) &&
+                             csv[1].Equals("a", Assembler.Options.StringComparison) &&
+                                 Reserved.IsOneOf("ImpliedA", line.Instruction))
                         {
-                            instrFmt = instrFmt.Replace("${0:x4}", "${0:x2}");
-                            opc = _opcodes.FirstOrDefault(o => o.DisasmFormat.Equals(instrFmt, Assembler.Options.StringComparison));
+                            formatBuilder.Append("a");
+                            break;
                         }
-                        break;
+                        if (i == 0 && mnemonic.Equals("rst"))
+                        {
+                            formatBuilder.Append($"${Assembler.Evaluator.Eval(element, sbyte.MinValue, byte.MaxValue):x2}");
+                        }
+                        else if (i == 0 && (Reserved.IsOneOf("Interrupt", mnemonic) || Reserved.IsOneOf("Bits", mnemonic)))
+                        {
+                            formatBuilder.Append(Assembler.Evaluator.Eval(element, 0, 7));
+                        }
+                        else if ((i == 0 && _flags.Contains(element)) ||
+                                 _registers.Contains(element) ||
+                                 (mnemonic.Equals("out") && 
+                                  i == csvCount - 1 && 
+                                  element.Equals("0")))
+                        {
+                            formatBuilder.Append(element.ToLower());
+                        }
+                        else if (element[0] == '(' && element[element.Length - 1] == ')')
+                        {
+                            int j = 1;
+                            while (char.IsWhiteSpace(element[j])) j++;
+                            if (j >= element.Length - 1)
+                                return (null, null);
+                            var substr = element.Substring(j, 2);
+                            if (substr.Equals("ix", Assembler.Options.StringComparison) ||
+                                substr.Equals("iy", Assembler.Options.StringComparison))
+                            {
+                                if (element.Length < 6)
+                                    return (null, null);
+                                // (ix+##)
+                                formatBuilder.Append($"({substr.ToLower()}+${{0:x2}})");
+                                j += 2;
+                                fmt.AddExpression(element.Substring(j, element.Length - j - 1));
+                            }
+                            else
+                            {
+                                
+                                if (fmt.Evaluations.Count > 0)
+                                {
+                                    formatBuilder.Append("${1:x2}");
+                                }
+                                else
+                                {
+                                    if (element.GetNextParenEnclosure().Equals(element))
+                                        formatBuilder.Append("(${0:x2})");
+                                    else
+                                        formatBuilder.Append("${0:x2}");
+                                }
+                                fmt.AddExpression(element);
+                            }
+                        }
+                        else
+                        {
+                            if (fmt.Evaluations.Count > 0)
+                                formatBuilder.Append("${1:x2}");
+                            else
+                                formatBuilder.Append("${0:x2}");
+                            fmt.AddExpression(element);
+                        }
+                        if (i < csvCount - 1)
+                            formatBuilder.Append(',');
                     }
-                }
+                }  
             }
-            return new Tuple<OperandFormat, Opcode>(fmt, opc);
+            string finalFormat = formatBuilder.ToString();
+            int sz = 0;
+            Opcode instruction;
+            while (!_z80instructions.TryGetValue(finalFormat, out instruction))
+            {
+                if (fmt.Evaluations.Count == 0 || fmt.EvaluationSizes[0] > 2 || sz++ > 1)
+                    return (null, null); // couldn't find it
+                finalFormat = finalFormat.Replace("x2", "x4");
+                fmt.EvaluationSizes[0] = 2;
+            }
+            fmt.FormatString = finalFormat;
+            return (fmt, instruction);
         }
 
         public void AssembleLine(SourceLine line)
@@ -234,124 +221,94 @@ namespace z80DotNet
                                         Assembler.Output.LogicalPC.ToString());
                 return;
             }
-            OperandFormat fmt = null;
-            Opcode opc = null;
-            var result = GetFormatAndOpcode(line);
-            fmt = result.Item1;
-            opc = result.Item2;
+            (OperandFormat fmt, Opcode opc) = ParseToInstruction(line);
 
             if (fmt == null)
             {
-                Assembler.Log.LogEntry(line, ErrorStrings.BadExpression, line.Operand);
+                Assembler.Log.LogEntry(line, ErrorStrings.AddressingModeNotSupported, line.Instruction + " " + line.Operand);
                 return;
             }
-            if (opc == null)
-            {
-                Assembler.Log.LogEntry(line, ErrorStrings.UnknownInstruction, line.Instruction);
-                return;
-            }
-            fmt.FormatString = opc.DisasmFormat;
-            long eval = long.MinValue, eval2 = long.MinValue;
-            long evalAbs = long.MinValue;
-
-            if (string.IsNullOrEmpty(fmt.Expression1) == false)
-            {
-                if (Regex.IsMatch(fmt.FormatString, @"\(i(x|y)\+\${0:x2}\)"))
-                {
-                    fmt.Expression1 = Regex.Replace(fmt.Expression1, @"(\+|-)\s+"
-                        , m => m.Groups[1].Value).Trim();
-                      
-                    eval = Assembler.Evaluator.Eval(fmt.Expression1, sbyte.MinValue, sbyte.MaxValue);
-                    if (eval < 0)
-                    {
-                        fmt.FormatString = fmt.FormatString.Replace("+", "-");
-                        evalAbs = Math.Abs(eval);
-                        eval &= 0xFF;
-                    }
-                    else
-                    {
-                        evalAbs = eval;
-                    }
-                }
-                else if (fmt.FormatString.Contains("${0:x4}"))
-                {
-                    evalAbs = Assembler.Evaluator.Eval(fmt.Expression1, short.MinValue, ushort.MaxValue);
-                    evalAbs &= 0xFFFF;
-                    if (Reserved.IsOneOf("Relatives", line.Instruction))
-                    {
-                        int pcOffs = Assembler.Output.LogicalPC + opc.Size;
-                        try
-                        {
-                            eval = Convert.ToSByte(Assembler.Output.GetRelativeOffset((int)evalAbs, pcOffs));
-                        }
-                        catch
-                        {
-                            throw new OverflowException(eval.ToString());
-                        }
-                    }
-                    else
-                    {
-                        eval = evalAbs;
-                    }
-                }
-                else
-                {
-                    eval = Assembler.Evaluator.Eval(fmt.Expression1, sbyte.MinValue, byte.MaxValue);
-                    eval &= 0xFF;
-                    evalAbs = eval;
-                }
-            }
-
-            if (string.IsNullOrEmpty(fmt.Expression2) == false)
-            {
-                eval2 = (byte)Assembler.Evaluator.Eval(fmt.Expression2, sbyte.MinValue, byte.MaxValue);
-                eval2 &= 0xFF;
-            }
-
-            if (eval2 != long.MinValue)
-                line.Disassembly = string.Format(fmt.FormatString, evalAbs, eval2);
-            else
-                line.Disassembly = string.Format(fmt.FormatString, evalAbs);
-
-            int exprsize = eval == long.MinValue ? 0 : eval.Size();
-
-            exprsize += eval2 == long.MinValue ? 0 : eval2.Size();
-
-            int opcodesize = 1;
-            int opcode = opc.Index;
-            var opclsb = opcode & 0xFF;
-
-            if (opclsb == 0xCB || opclsb == 0xED || opclsb == 0xDD || opclsb == 0xFD)
-            {
-                opcodesize++;
-
-                if ((opclsb == 0xDD || opclsb == 0xFD) && ((opcode >> 8) & 0xFF) == 0xCB)
-                    opcodesize++;
-            }
-            if (opcodesize + exprsize > opc.Size)
-            {
-                Assembler.Log.LogEntry(line, ErrorStrings.UnknownInstruction, line.Instruction);
-                return;
-            }
-
-            var opcbase = opcode & 0xFFFF;
-
-            if (opcbase == 0xCBDD || opcbase == 0xCBFD)
-                opcode = opcbase | ((int)eval << 16) | ((opcode & 0xFF0000) << 8);
-            else if (opcbase == 0x36DD || opcbase == 0x36FD)
-                opcode = opcbase | ((int)eval << 16) | ((int)eval2 << 24);
-            else if (eval != long.MinValue)
-                opcode |= ((int)eval << (opcodesize * 8));
             
-            line.Assembly = Assembler.Output.Add(opcode, opc.Size);
+            List<long> evals = new List<long>(fmt.Evaluations), evalDisplays = new List<long>(fmt.Evaluations);
+            int opcodeSize = (opc.Index == 0x00CB) ? 2 : ((long)opc.Index).Size();
+            if (Reserved.IsOneOf("Relatives", line.Instruction))
+            {
+                int pcOffs = Assembler.Output.LogicalPC + opc.Size;
+                try
+                {
+                    evals[0] = Convert.ToSByte(Assembler.Output.GetRelativeOffset((int)evals[0], pcOffs));
+                    evalDisplays[0] &= 0xFFFF;
+                    fmt.EvaluationSizes[0] = 1;
+                }
+                catch
+                {
+                    throw new OverflowException(evals[0].ToString());
+                }
+            }
+            else if (Regex.IsMatch(fmt.FormatString, @"\(i(x|y)\+"))
+            {
+                if (fmt.EvaluationSizes.Count == 0 || evals[0] < sbyte.MinValue || evals[0] > sbyte.MaxValue)
+                {
+                    Assembler.Log.LogEntry(line, ErrorStrings.AddressingModeNotSupported, line.Instruction);
+                    return;
+                }
+                if (evals[0] < 0)
+                {
+                    fmt.FormatString = fmt.FormatString.Replace("+", "-");
+                    evalDisplays[0] = Math.Abs(evals[0]);
+                }
+                if (evalDisplays.Count > 1)
+                    evalDisplays[1] &= 0xFF;
+            }
+            else
+            {
+                int instructionSize = opcodeSize;
+                for (var i = 0; i < evals.Count; i++)
+                {
+                    var operandsize = fmt.EvaluationSizes[i];
+                    if (evalDisplays[i] < 0)
+                    {
+                        if (fmt.EvaluationSizes[i] > 1)
+                            evalDisplays[i] &= 0xFFFF;
+                        else
+                            evalDisplays[i] &= 0xFF;
+
+                    }
+                    instructionSize += operandsize;
+                }
+                if (instructionSize > opc.Size)
+                {
+                    Assembler.Log.LogEntry(line, ErrorStrings.AddressingModeNotSupported, line.Instruction);
+                    return;
+                }
+            }
+            var assembly = new List<byte>();
+            
+            if ((opc.Index & 0xFF) == 0xCB || (opc.Index & 0xFF00) == 0xCB00)
+            {
+                assembly.AddRange(Assembler.Output.Add(opc.Index, 2));
+                if ((opc.Index & 0xFF) != 0xCB)
+                {
+                    assembly.AddRange(Assembler.Output.Add(evals[0], 1));
+                    assembly.AddRange(Assembler.Output.Add(opc.Index >> 16, 1));
+                }
+            }
+            else
+            {
+                assembly.AddRange(Assembler.Output.Add(opc.Index, opcodeSize));
+                for (var i = 0; i < evals.Count; i++)
+                    assembly.AddRange(Assembler.Output.Add(evals[i], fmt.EvaluationSizes[i]));
+            }
+            line.Assembly = assembly;
+            line.Disassembly = string.Format(fmt.FormatString, evalDisplays.Cast<object>().ToArray()); ;
         }
 
         public int GetInstructionSize(SourceLine line)
         {
-            var opc = GetFormatAndOpcode(line);
+            (OperandFormat fmt, Opcode opc) = ParseToInstruction(line);
 
-            if (opc.Item2 != null)
-                return opc.Item2.Size;
+            if (opc != null)
+                return opc.Size;
             return 0;
         }
 

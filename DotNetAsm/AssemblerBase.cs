@@ -39,7 +39,7 @@ namespace DotNetAsm
         /// passed will re-initialize the common Options object.
         /// </summary>
         /// <param name="args">The commandline arguments.</param>
-        public static void Initialize(string[] args) 
+        public static void Initialize(string[] args)
         {
             Options = new AsmCommandLineOptions();
 
@@ -100,7 +100,7 @@ namespace DotNetAsm
     /// </summary>
     public abstract class AssemblerBase
     {
-   
+
         #region Constructors
 
         /// <summary>
@@ -119,10 +119,7 @@ namespace DotNetAsm
         /// <summary>
         /// Constructs an instance of the class implementing the base class.
         /// </summary>
-        protected AssemblerBase()
-        {
-            Reserved = new ReservedWords(Assembler.Options.StringComparar);
-        }
+        protected AssemblerBase() => Reserved = new ReservedWords(Assembler.Options.StringComparar);
 
         #endregion
 
