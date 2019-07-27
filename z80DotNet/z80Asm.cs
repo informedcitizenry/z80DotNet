@@ -107,7 +107,7 @@ namespace z80DotNet
 
         #region Methods
 
-        (OperandFormat fmt, Opcode instruction) ParseToInstruction(SourceLine line)
+        (OperandFormat fmt, Instruction instruction) ParseToInstruction(SourceLine line)
         {
             var mnemonic = line.Instruction.ToLower();
             var operand = line.Operand;
@@ -166,7 +166,7 @@ namespace z80DotNet
                                 // (ix+##)
                                 formatBuilder.Append($"({substr.ToLower()}+${{0:x2}})");
                                 j += 2;
-                                fmt.AddExpression(element.Substring(j, element.Length - j - 1));
+                                fmt.AddElement(element.Substring(j, element.Length - j - 1));
                             }
                             else
                             {
@@ -182,7 +182,7 @@ namespace z80DotNet
                                     else
                                         formatBuilder.Append("${0:x2}");
                                 }
-                                fmt.AddExpression(element);
+                                fmt.AddElement(element);
                             }
                         }
                         else
@@ -191,7 +191,7 @@ namespace z80DotNet
                                 formatBuilder.Append("${1:x2}");
                             else
                                 formatBuilder.Append("${0:x2}");
-                            fmt.AddExpression(element);
+                            fmt.AddElement(element);
                         }
                         if (i < csvCount - 1)
                             formatBuilder.Append(',');
@@ -200,7 +200,7 @@ namespace z80DotNet
             }
             string finalFormat = formatBuilder.ToString();
             int sz = 0;
-            Opcode instruction;
+            Instruction instruction;
             while (!_z80instructions.TryGetValue(finalFormat, out instruction))
             {
                 if (fmt.Evaluations.Count == 0 || fmt.EvaluationSizes[0] > 2 || sz++ > 1)
@@ -221,7 +221,7 @@ namespace z80DotNet
                                         Assembler.Output.LogicalPC.ToString());
                 return;
             }
-            (OperandFormat fmt, Opcode opc) = ParseToInstruction(line);
+            (OperandFormat fmt, Instruction instruction) = ParseToInstruction(line);
 
             if (fmt == null)
             {
@@ -230,10 +230,10 @@ namespace z80DotNet
             }
             
             List<long> evals = new List<long>(fmt.Evaluations), evalDisplays = new List<long>(fmt.Evaluations);
-            int opcodeSize = (opc.Index == 0x00CB) ? 2 : ((long)opc.Index).Size();
+            int opcodeSize = (instruction.Opcode == 0x00CB) ? 2 : ((long)instruction.Opcode).Size();
             if (Reserved.IsOneOf("Relatives", line.Instruction))
             {
-                int pcOffs = Assembler.Output.LogicalPC + opc.Size;
+                int pcOffs = Assembler.Output.LogicalPC + instruction.Size;
                 try
                 {
                     evals[0] = Convert.ToSByte(Assembler.Output.GetRelativeOffset((int)evals[0], pcOffs));
@@ -276,7 +276,7 @@ namespace z80DotNet
                     }
                     instructionSize += operandsize;
                 }
-                if (instructionSize > opc.Size)
+                if (instructionSize > instruction.Size)
                 {
                     Assembler.Log.LogEntry(line, ErrorStrings.AddressingModeNotSupported, line.Instruction);
                     return;
@@ -284,18 +284,18 @@ namespace z80DotNet
             }
             var assembly = new List<byte>();
             
-            if ((opc.Index & 0xFF) == 0xCB || (opc.Index & 0xFF00) == 0xCB00)
+            if ((instruction.Opcode & 0xFF) == 0xCB || (instruction.Opcode & 0xFF00) == 0xCB00)
             {
-                assembly.AddRange(Assembler.Output.Add(opc.Index, 2));
-                if ((opc.Index & 0xFF) != 0xCB)
+                assembly.AddRange(Assembler.Output.Add(instruction.Opcode, 2));
+                if ((instruction.Opcode & 0xFF) != 0xCB)
                 {
                     assembly.AddRange(Assembler.Output.Add(evals[0], 1));
-                    assembly.AddRange(Assembler.Output.Add(opc.Index >> 16, 1));
+                    assembly.AddRange(Assembler.Output.Add(instruction.Opcode >> 16, 1));
                 }
             }
             else
             {
-                assembly.AddRange(Assembler.Output.Add(opc.Index, opcodeSize));
+                assembly.AddRange(Assembler.Output.Add(instruction.Opcode, opcodeSize));
                 for (var i = 0; i < evals.Count; i++)
                     assembly.AddRange(Assembler.Output.Add(evals[i], fmt.EvaluationSizes[i]));
             }
@@ -305,10 +305,10 @@ namespace z80DotNet
 
         public int GetInstructionSize(SourceLine line)
         {
-            (OperandFormat fmt, Opcode opc) = ParseToInstruction(line);
+            (OperandFormat fmt, Instruction instruction) = ParseToInstruction(line);
 
-            if (opc != null)
-                return opc.Size;
+            if (instruction != null)
+                return instruction.Size;
             return 0;
         }
 

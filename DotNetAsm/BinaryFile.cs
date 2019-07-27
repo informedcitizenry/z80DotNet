@@ -6,9 +6,7 @@
 //-----------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace DotNetAsm
 {
@@ -23,10 +21,7 @@ namespace DotNetAsm
         /// Constructs a new instance of a binary file load.
         /// </summary>
         /// <param name="filename">The filename of the binary file.</param>
-        public BinaryFile(string filename)
-        {
-            Filename = filename;
-        }
+        public BinaryFile(string filename) => Filename = filename;
 
         #endregion
 

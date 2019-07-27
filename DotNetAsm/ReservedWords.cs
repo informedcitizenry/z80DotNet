@@ -7,7 +7,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace DotNetAsm
 {
@@ -18,11 +17,9 @@ namespace DotNetAsm
     {
         #region Members
 
-        HashSet<string> _values;
-
-        Dictionary<string, HashSet<string>> _types;
-
-        StringComparer _comparer;
+        private HashSet<string> _values;
+        private Dictionary<string, HashSet<string>> _types;
+        private StringComparer _comparer;
 
         #endregion
 
@@ -62,7 +59,7 @@ namespace DotNetAsm
         /// </exception>
         public void AddWord(string type, string word)
         {
-            var t = _types[type];
+            HashSet<string> t = _types[type];
             t.Add(word);
             _values.Add(word);
         }

@@ -270,7 +270,7 @@ namespace DotNetAsm
                                 if (string.IsNullOrWhiteSpace(_currentLine.SourceString))
                                     continue;
                                 int x = 0;
-                                foreach (var line in _currentLine.Parse(s => IsInstruction(s) || s.Equals("=") || s[0] == '.'))
+                                foreach(var line in _currentLine.Parse(s => IsInstruction(s) || s.Equals("=") || s[0] == '.'))
                                 {
                                     // capture compound source lines into the list
                                     if (line != null)
