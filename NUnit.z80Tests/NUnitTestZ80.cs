@@ -2532,7 +2532,7 @@ namespace NUnit.z80Tests
 
             line.Operand = "0,(ix+$12),c";
             TestInstruction(line, 0x0004, new byte[] { 0xdd, 0xcb, 0x12, 0x41 }, "bit 0,(ix+$12),c");
-
+            
             line.Operand = "0,(ix+$12),d";
             TestInstruction(line, 0x0004, new byte[] { 0xdd, 0xcb, 0x12, 0x42 }, "bit 0,(ix+$12),d");
 
@@ -4324,8 +4324,8 @@ namespace NUnit.z80Tests
             TestInstruction(line, 0x0004, new byte[] { 0xdd, 0x36, 0x2e, 0x43 }, "ld (ix+$2e),$43");
 
             line.Operand = "(ix + $43),($43-1)";
-            TestInstruction(line, 0x0004, new byte[] { 0xdd, 0x36, 0x43, 0x42 }, "ld (ix+$43),$42");
-            //TestForFailure(line);
+            //TestInstruction(line, 0x0004, new byte[] { 0xdd, 0x36, 0x43, 0x42 }, "ld (ix+$43),$42");
+            TestForFailure(line);
 
             line.Operand = "(ix+129),a";
             TestForFailure(line);

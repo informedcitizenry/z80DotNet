@@ -35,7 +35,7 @@ namespace z80DotNet
                 // word registers
                 "af", "af'", "bc", "de", "hl", "ix", "iy", "sp",
                 // indirects
-                "(bc)", "(c)", "(de)", "(hl)", "(ix)", "(iy)", "(sp)"
+               // "(bc)", "(c)", "(de)", "(hl)", "(ix)", "(iy)", "(sp)"
             };
 
             _flags = new HashSet<string>(Assembler.Options.StringComparar)
@@ -151,39 +151,41 @@ namespace z80DotNet
                         {
                             formatBuilder.Append(element.ToLower());
                         }
-                        else if (element[0] == '(' && element[element.Length - 1] == ')')
+                        else if (element[0] == '(' && element.GetNextParenEnclosure().Equals(element))
                         {
+                            formatBuilder.Append("(");
                             int j = 1;
                             while (char.IsWhiteSpace(element[j])) j++;
                             if (j >= element.Length - 1)
                                 return (null, null);
-                            var substr = element.Substring(j, 2);
-                            if (substr.Equals("ix", Assembler.Options.StringComparison) ||
-                                substr.Equals("iy", Assembler.Options.StringComparison))
+                            var k = 0;
+                            while (char.IsLetter(element[j + k])) k++;
+                            var substr = element.Substring(j, k);
+                            j += k;
+                            if (!char.IsDigit(element[j]) && _registers.Contains(substr))
                             {
-                                if (element.Length < 6)
-                                    return (null, null);
-                                // (ix+##)
-                                formatBuilder.Append($"({substr.ToLower()}+${{0:x2}})");
-                                j += 2;
-                                fmt.AddElement(element.Substring(j, element.Length - j - 1));
+                                formatBuilder.Append(substr.ToLower());
+                                while (char.IsWhiteSpace(element[j])) j++;
+                                if (element[j] != ')')
+                                {
+                                    if (substr.Equals("ix", Assembler.Options.StringComparison) ||
+                                        substr.Equals("iy", Assembler.Options.StringComparison))
+                                    {
+                                        formatBuilder.Append("+${0:x2}");
+                                        fmt.AddElement(element.Substring(j, element.Length - j - 1));
+                                    }
+                                    else
+                                    {
+                                        return (null, null);
+                                    }
+                                }
                             }
                             else
                             {
-                                
-                                if (fmt.Evaluations.Count > 0)
-                                {
-                                    formatBuilder.Append("${1:x2}");
-                                }
-                                else
-                                {
-                                    if (element.GetNextParenEnclosure().Equals(element))
-                                        formatBuilder.Append("(${0:x2})");
-                                    else
-                                        formatBuilder.Append("${0:x2}");
-                                }
+                                formatBuilder.Append("${0:x2}");
                                 fmt.AddElement(element);
                             }
+                            formatBuilder.Append(")");
                         }
                         else
                         {
