@@ -179,7 +179,7 @@ namespace z80DotNet
                 else
                 {
                     string error = string.Format("Unknown architecture specified '{0}'", arch);
-                    throw new System.CommandLine.ArgumentSyntaxException(error);
+                    throw new Exception(error);
                 }
                 return ms.ToArray();
             }
