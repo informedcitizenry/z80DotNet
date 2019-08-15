@@ -227,7 +227,7 @@ namespace z80DotNet
 
             if (fmt == null)
             {
-                Assembler.Log.LogEntry(line, ErrorStrings.AddressingModeNotSupported, line.Instruction + " " + line.Operand);
+                Assembler.Log.LogEntry(line, ErrorStrings.AddressingModeNotSupported, line.Instruction);
                 return;
             }
             
