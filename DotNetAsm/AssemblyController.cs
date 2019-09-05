@@ -166,6 +166,9 @@ namespace DotNetAsm
         /// </remarks>
         private IEnumerable<SourceLine> Preprocess()
         {
+            if (!string.IsNullOrEmpty(Assembler.Options.CPU))
+                OnCpuChanged(new SourceLine { SourceString = ConstStrings.COMMANDLINE_ARG, Operand = Assembler.Options.CPU });
+
             var source = new List<SourceLine>();
 
             source.AddRange(ProcessDefinedLabels());
@@ -186,9 +189,6 @@ namespace DotNetAsm
                 _sourceHandler.Reset();
                 return source;
             }
-            if (!string.IsNullOrEmpty(Assembler.Options.CPU))
-                OnCpuChanged(new SourceLine { SourceString = ConstStrings.COMMANDLINE_ARG, Operand = Assembler.Options.CPU });
-
             return null;
         }
 
@@ -270,7 +270,7 @@ namespace DotNetAsm
                                 if (string.IsNullOrWhiteSpace(_currentLine.SourceString))
                                     continue;
                                 int x = 0;
-                                foreach(var line in _currentLine.Parse(s => IsInstruction(s) || s.Equals("=") || s[0] == '.'))
+                                foreach (var line in _currentLine.Parse(s => IsInstruction(s) || s.Equals("=") || s[0] == '.'))
                                 {
                                     // capture compound source lines into the list
                                     if (line != null)
