@@ -1,7 +1,7 @@
 # z80DotNet, A Simple .Net-Based Z80 Cross-Assembler
 ### Version 1.15
 
-_Please Note: I have merged this project with its sister project, [6502.Net](https://github.com/informedcitizenry/6502.Net), and will now no longer be maintained._
+_Please Note: I have merged this project with its sister project, [6502.Net](https://github.com/informedcitizenry/6502.Net), and it will now no longer be maintained._
 
 ## Introduction
 
